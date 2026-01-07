@@ -1,0 +1,59 @@
+import { auth, db } from '../firebaseConfig';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+
+export const login = async (email, password) => {
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        // Fetch user role from Firestore
+        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+        const userData = userDoc.exists() ? userDoc.data() : {};
+
+        return {
+            success: true,
+            user: { ...userCredential.user, ...userData }
+        };
+    } catch (error) {
+        return { success: false, message: error.message, code: error.code };
+    }
+};
+
+export const register = async (userData) => {
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+
+        // Store extra user details in Firestore
+        const userProfile = {
+            name: userData.name,
+            email: userData.email,
+            phone: userData.phone,
+            role: 'user', // Default role
+            createdAt: new Date().toISOString()
+        };
+
+        await setDoc(doc(db, 'users', userCredential.user.uid), userProfile);
+
+        return { success: true, user: { ...userCredential.user, ...userProfile } };
+    } catch (error) {
+        return { success: false, message: error.message, code: error.code };
+    }
+};
+
+export const logout = async () => {
+    try {
+        await signOut(auth);
+        return { success: true };
+    } catch (error) {
+        return { success: false, message: error.message, code: error.code };
+    }
+};
+
+// With Firebase, state is managed asynchronously via AuthContext. 
+// These sync helpers are less reliable but kept for compatibility where possible.
+export const getCurrentUser = () => {
+    return auth.currentUser;
+};
+
+export const isAuthenticated = () => {
+    return !!auth.currentUser;
+};
