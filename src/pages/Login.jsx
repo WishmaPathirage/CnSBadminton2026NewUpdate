@@ -115,7 +115,7 @@ const Login = () => {
                             className="glass-input"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="cnsb233@gmail.com"
+                            placeholder="john@example.com"
                         />
                     </div>
                     <div style={{ marginBottom: '2.5rem' }}>
