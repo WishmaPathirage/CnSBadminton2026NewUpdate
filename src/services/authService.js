@@ -62,7 +62,7 @@ export const register = async (userData) => {
             name: userData.name,
             email: userData.email,
             phone: userData.phone,
-            role: 'user', // Default role
+            role: userData.email === 'cnsb233@gmail.com' ? 'admin' : 'user',
             createdAt: new Date().toISOString()
         };
 
