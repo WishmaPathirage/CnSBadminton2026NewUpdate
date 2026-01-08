@@ -37,7 +37,7 @@ const BookingForm = () => {
                 }));
             }
             setLoadingAuth(false);
-        });
+        })
         return unsubscribe;
     }, []);
 
@@ -54,7 +54,7 @@ const BookingForm = () => {
 
     if (!currentUser) {
         return (
-            <section className="section-padding" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <section id="booking" className="section-padding" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div className="container">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
