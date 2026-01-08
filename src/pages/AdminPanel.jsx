@@ -1,16 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
-import { subscribeToBookings, updateBookingStatus, deleteBooking } from '../services/bookingService';
+import { subscribeToBookings, updateBookingStatus, deleteBooking, createBooking } from '../services/bookingService';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../services/authService';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { LogOut, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LogOut, Trash2, CalendarX, Plus, X, Home } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 
 const AdminPanel = () => {
     const [bookings, setBookings] = useState([]);
     const { currentUser, loading } = useAuth();
     const navigate = useNavigate();
     const prevBookingsRef = useRef([]);
+
+    // Manual Booking State
+    const [showManualModal, setShowManualModal] = useState(false);
+    const [manualForm, setManualForm] = useState({
+        date: new Date().toISOString().split('T')[0],
+        startTime: '08:00',
+        duration: '60',
+        court: '1',
+        name: '',
+        phone: ''
+    });
+    const [manualLoading, setManualLoading] = useState(false);
 
     // Request notification permission on mount
     useEffect(() => {
@@ -73,7 +86,43 @@ const AdminPanel = () => {
         await updateBookingStatus(id, newStatus);
 
         if (newStatus === 'confirmed' && booking) {
-            // Auto-open WhatsApp to notify user
+
+            // 1. Send Booking Confirmation Email
+            if (booking.userEmail) {
+                const templateParams = {
+                    user_name: booking.userName,
+                    booking_date: booking.date,
+                    booking_time: `${booking.startTime} (${booking.duration} mins)`,
+                    courts: booking.courts.join(', '),
+                    user_phone: booking.userPhone,
+                    to_email: booking.userEmail // Critical: Send TO the user
+                };
+
+                // NOTE: EmailJS requires 'emailjs-com' or '@emailjs/browser'. 
+                // Assuming it's available or importing it at top.
+                // We'll use the window.emailjs if simple script, or import.
+                // Since BookingForm uses '@emailjs/browser', we'll rely on import.
+
+                // Using the USER PROVIDED credentials:
+                // Service: service_i25io04
+                // Template: template_x9qs76e
+                // Public Key: cmyBcHcHxEP2ggwV3 (Reusing from BookingForm context if same account)
+
+                emailjs.send('service_i25io04', 'template_x9qs76e', templateParams, 'cmyBcHcHxEP2ggwV3')
+                    .then(() => {
+                        console.log("Confirmation Email Sent to User!");
+                        alert(`✅ Email Confirmation Sent to ${booking.userEmail}`);
+                    })
+                    .catch(err => {
+                        console.error("Failed to send confirmation email:", err);
+                        alert(`❌ Email Failed: ${JSON.stringify(err)}`);
+                    });
+            } else {
+                alert("⚠️ Booking accepted, but NO EMAIL found for this user. Email confirmation skipped.");
+            }
+
+
+            // 2. Auto-open WhatsApp to notify user (Existing Logic)
             const message = `Booking Confirmation - C & S Badminton Complex (PVT) Ltd
 
 Player Name: ${booking.userName}
@@ -100,8 +149,76 @@ Website: www.cnsbadminton.lk`;
 
             window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
         }
+    };
 
+    const handleManualSubmit = async (e) => {
+        e.preventDefault();
+        setManualLoading(true);
 
+        try {
+            // 1. Check for valid phone/name
+            if (!manualForm.name || !manualForm.phone) {
+                alert('Please fill in Name and Phone.');
+                setManualLoading(false);
+                return;
+            }
+
+            // 2. Strict Overlap Check
+            const timeToMin = (t) => {
+                const [h, m] = t.split(':').map(Number);
+                return h * 60 + m;
+            };
+
+            const newStart = timeToMin(manualForm.startTime);
+            const newEnd = newStart + parseInt(manualForm.duration);
+            const selectedDate = manualForm.date;
+            const selectedCourt = parseInt(manualForm.court);
+
+            const hasConflict = bookings.some(b => {
+                if (b.date !== selectedDate || b.status === 'rejected') return false;
+                if (!b.courts.includes(selectedCourt)) return false;
+
+                const existStart = timeToMin(b.startTime);
+                const existEnd = existStart + parseInt(b.duration);
+
+                return (newStart < existEnd && existStart < newEnd);
+            });
+
+            if (hasConflict) {
+                alert('⚠️ This slot conflicts with an existing booking!');
+                setManualLoading(false);
+                return;
+            }
+
+            // 3. Create Booking
+            await createBooking({
+                date: manualForm.date,
+                startTime: manualForm.startTime,
+                duration: parseInt(manualForm.duration),
+                courts: [selectedCourt],
+                userName: manualForm.name,
+                userPhone: manualForm.phone,
+                userId: 'admin-manual', // Flag for manual booking
+                status: 'confirmed' // Auto-confirm
+            });
+
+            alert('Booking successfully added!');
+            setShowManualModal(false);
+            setManualForm({
+                date: new Date().toISOString().split('T')[0],
+                startTime: '08:00',
+                duration: '60',
+                court: '1',
+                name: '',
+                phone: ''
+            });
+
+        } catch (err) {
+            console.error(err);
+            alert('Failed to create booking: ' + err.message);
+        } finally {
+            setManualLoading(false);
+        }
     };
 
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, bookingId: null });
@@ -144,6 +261,128 @@ Website: www.cnsbadminton.lk`;
 
     return (
         <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', paddingTop: '100px', position: 'relative' }}>
+            {/* Manual Booking Modal */}
+            <AnimatePresence>
+                {showManualModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed', inset: 0, zIndex: 1000,
+                            background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}
+                        onClick={() => setShowManualModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            onClick={e => e.stopPropagation()}
+                            className="glass-panel"
+                            style={{ padding: '2rem', width: '90%', maxWidth: '500px', background: '#1a1a1a' }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
+                                <h2 style={{ fontSize: '1.5rem', color: 'var(--brand-teal)' }}>New Manual Booking</h2>
+                                <button onClick={() => setShowManualModal(false)} style={{ background: 'none', color: '#666' }}><X /></button>
+                            </div>
+
+                            <form onSubmit={handleManualSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Date</label>
+                                        <input
+                                            type="date"
+                                            className="glass-input"
+                                            value={manualForm.date}
+                                            onChange={e => setManualForm({ ...manualForm, date: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Start Time</label>
+                                        <select
+                                            className="glass-input"
+                                            value={manualForm.startTime}
+                                            onChange={e => setManualForm({ ...manualForm, startTime: e.target.value })}
+                                        >
+                                            {Array.from({ length: 48 }, (_, i) => {
+                                                const h = Math.floor(i / 2);
+                                                const m = i % 2 === 0 ? '00' : '30';
+                                                return `${String(h).padStart(2, '0')}:${m}`;
+                                            }).map(t => (
+                                                <option key={t} value={t} style={{ color: 'black' }}>{t}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Duration</label>
+                                        <select
+                                            className="glass-input"
+                                            value={manualForm.duration}
+                                            onChange={e => setManualForm({ ...manualForm, duration: e.target.value })}
+                                        >
+                                            <option value="60" style={{ color: 'black' }}>1 Hour</option>
+                                            <option value="90" style={{ color: 'black' }}>1.5 Hours</option>
+                                            <option value="120" style={{ color: 'black' }}>2 Hours</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Court</label>
+                                        <select
+                                            className="glass-input"
+                                            value={manualForm.court}
+                                            onChange={e => setManualForm({ ...manualForm, court: e.target.value })}
+                                        >
+                                            <option value="1" style={{ color: 'black' }}>Court 1</option>
+                                            <option value="2" style={{ color: 'black' }}>Court 2</option>
+                                            <option value="3" style={{ color: 'black' }}>Court 3</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Customer Name</label>
+                                    <input
+                                        type="text"
+                                        className="glass-input"
+                                        placeholder="Enter name"
+                                        value={manualForm.name}
+                                        onChange={e => setManualForm({ ...manualForm, name: e.target.value })}
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        className="glass-input"
+                                        placeholder="07xxxxxxxx"
+                                        value={manualForm.phone}
+                                        onChange={e => setManualForm({ ...manualForm, phone: e.target.value })}
+                                        required
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={manualLoading}
+                                    className="btn-gradient"
+                                    style={{ marginTop: '1rem', padding: '1rem', fontWeight: 'bold' }}
+                                >
+                                    {manualLoading ? 'Checking...' : 'Confirm Booking'}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Confirmation Modal */}
             {confirmModal.isOpen && (
                 <div style={{
@@ -217,117 +456,292 @@ Website: www.cnsbadminton.lk`;
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
                     <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard</h1>
-                    <p style={{ color: 'rgba(255,255,255,0.7)' }}>Welcome, {currentUser.name}</p>
                 </div>
-                <button
-                    onClick={handleLogout}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.75rem 1.5rem',
-                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                        border: '1px solid #e74c3c',
-                        color: '#e74c3c',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        transition: 'all 0.3s'
-                    }}
-                >
-                    <LogOut size={18} /> Logout
-                </button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button
+                        onClick={() => setShowManualModal(true)}
+                        className="btn-gradient"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1.5rem',
+                            borderRadius: '8px',
+                            fontWeight: 'bold',
+                        }}
+                    >
+                        <Plus size={20} /> New Booking
+                    </button>
+                    <button
+                        onClick={() => navigate('/')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1.5rem',
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            color: 'white',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            transition: 'all 0.3s'
+                        }}
+                    >
+                        <Home size={18} /> Back to Site
+                    </button>
+                    <button
+                        onClick={handleLogout}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem 1.5rem',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            border: '1px solid #e74c3c',
+                            color: '#e74c3c',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            transition: 'all 0.3s'
+                        }}
+                    >
+                        <LogOut size={18} /> Logout
+                    </button>
+                </div>
             </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
+                {Object.keys(bookings.reduce((acc, b) => ({ ...acc, [b.date]: true }), {})).sort((a, b) => {
+                    const today = new Date().toISOString().split('T')[0];
+                    if (a === today) return -1;
+                    if (b === today) return 1;
+                    return a.localeCompare(b);
+                }).map(date => {
+                    // Filter bookings for this date
+                    const dayBookings = bookings.filter(b => b.date === date);
 
-            <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
-                    <thead>
-                        <tr style={{ borderBottom: '1px solid #333', textAlign: 'left' }}>
-                            <th style={{ padding: '1rem' }}>ID</th>
-                            <th style={{ padding: '1rem' }}>User</th>
-                            <th style={{ padding: '1rem' }}>Date & Time</th>
-                            <th style={{ padding: '1rem' }}>Courts</th>
-                            <th style={{ padding: '1rem' }}>Duration</th>
-                            <th style={{ padding: '1rem' }}>Status</th>
-                            <th style={{ padding: '1rem' }}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {bookings.map((booking) => (
-                            <motion.tr
-                                key={booking.id}
-                                style={{
-                                    borderBottom: '1px solid #222',
-                                    backgroundColor: booking.status === 'pending' ? 'rgba(46, 204, 113, 0.05)' : 'transparent'
-                                }}
-                            >
-                                <td style={{ padding: '1rem', opacity: 0.5, color: 'rgba(255,255,255,0.6)' }}>#{booking.id}</td>
-                                <td style={{ padding: '1rem', fontWeight: 'bold', color: 'white' }}>{booking.userName}</td>
-                                <td style={{ padding: '1rem', color: 'rgba(255,255,255,0.9)' }}>
-                                    {booking.date} <br />
-                                    <span style={{ color: 'var(--primary-green)' }}>{booking.startTime}</span>
-                                </td>
-                                <td style={{ padding: '1rem', color: 'white' }}>Court {booking.courts.join(', ')}</td>
-                                <td style={{ padding: '1rem', color: 'white' }}>{booking.duration} min</td>
-                                <td style={{ padding: '1rem' }}>
-                                    <span style={{
-                                        padding: '0.25rem 0.5rem',
-                                        borderRadius: '4px',
-                                        fontSize: '0.8rem',
-                                        backgroundColor: booking.status === 'confirmed' ? 'green' : (booking.status === 'rejected' ? 'red' : 'orange'),
-                                        color: 'white'
+                    // Group by Court (1, 2, 3)
+                    const courtBookings = { 1: [], 2: [], 3: [] };
+                    dayBookings.forEach(b => {
+                        b.courts.forEach(c => {
+                            if (courtBookings[c]) courtBookings[c].push(b);
+                        });
+                    });
+
+                    return (
+                        <motion.div
+                            key={date}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="glass-panel"
+                            style={{ padding: '2.5rem', marginBottom: '2rem' }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                                    <div style={{
+                                        background: 'linear-gradient(135deg, var(--brand-teal), var(--brand-yellow))',
+                                        color: '#000',
+                                        padding: '0.8rem 1.5rem',
+                                        borderRadius: '12px',
+                                        fontWeight: '800',
+                                        fontSize: '1.2rem',
+                                        boxShadow: '0 4px 15px rgba(120, 220, 202, 0.3)'
                                     }}>
-                                        {booking.status.toUpperCase()}
-                                    </span>
-                                </td>
-                                <td style={{ padding: '1rem' }}>
-                                    {booking.status === 'pending' && (
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button
-                                                onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                                                style={{ padding: '0.5rem', background: 'var(--primary-green)', borderRadius: '4px', color: 'black', border: 'none', cursor: 'pointer' }}
-                                                title="Confirm"
-                                            >
-                                                ✓
-                                            </button>
-                                            <button
-                                                onClick={() => handleStatusChange(booking.id, 'rejected')}
-                                                style={{ padding: '0.5rem', background: 'orange', borderRadius: '4px', color: 'white', border: 'none', cursor: 'pointer' }}
-                                                title="Reject"
-                                            >
-                                                ✕
-                                            </button>
-                                        </div>
-                                    )}
-                                    <div style={{ marginTop: booking.status === 'pending' ? '0.5rem' : '0' }}>
-                                        <button
-                                            onClick={(e) => handleDeleteClick(e, booking.id)}
-                                            disabled={deletingId === booking.id}
-                                            style={{
-                                                padding: '0.5rem',
-                                                background: 'rgba(231, 76, 60, 0.2)',
-                                                border: '1px solid #e74c3c',
-                                                borderRadius: '4px',
-                                                color: '#e74c3c',
-                                                cursor: deletingId === booking.id ? 'wait' : 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                width: booking.status === 'pending' ? '100%' : 'auto',
-                                                opacity: deletingId === booking.id ? 0.5 : 1,
-                                                position: 'relative',
-                                                zIndex: 10
-                                            }}
-                                            title="Delete Booking"
-                                        >
-                                            {deletingId === booking.id ? <span style={{ fontSize: '12px' }}>...</span> : <Trash2 size={16} />}
-                                        </button>
+                                        {date}
                                     </div>
-                                </td>
-                            </motion.tr>
-                        ))}
-                    </tbody>
-                </table>
+                                    <div style={{ color: 'var(--text-gray)', fontSize: '1.1rem' }}>
+                                        {dayBookings.length} Bookings
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+                                {[1, 2, 3].map(courtId => (
+                                    <div key={courtId} style={{
+                                        background: 'rgba(255,255,255,0.02)',
+                                        borderRadius: '20px',
+                                        overflow: 'hidden',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column'
+                                    }}>
+                                        <div style={{
+                                            padding: '1.2rem',
+                                            background: 'rgba(255,255,255,0.03)',
+                                            borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--brand-teal)', fontWeight: '700', fontSize: '1.1rem' }}>
+                                                🏸 Court {courtId}
+                                            </div>
+                                            <span style={{
+                                                fontSize: '0.85rem',
+                                                padding: '0.2rem 0.8rem',
+                                                borderRadius: '20px',
+                                                background: 'rgba(255,255,255,0.1)',
+                                                color: 'rgba(255,255,255,0.6)'
+                                            }}>
+                                                {courtBookings[courtId].length} slots
+                                            </span>
+                                        </div>
+
+                                        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                                            {courtBookings[courtId].length === 0 ? (
+                                                <div style={{
+                                                    flex: 1,
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    padding: '3rem 0',
+                                                    color: 'rgba(255,255,255,0.1)'
+                                                }}>
+                                                    <CalendarX size={40} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                                                    <span style={{ fontSize: '0.9rem' }}>No bookings</span>
+                                                </div>
+                                            ) : (
+                                                courtBookings[courtId]
+                                                    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                                                    .map(booking => {
+                                                        // Calculate End Time
+                                                        const [hours, minutes] = booking.startTime.split(':').map(Number);
+                                                        const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
+                                                        const endHour = Math.floor(totalMinutes / 60);
+                                                        const endMinute = totalMinutes % 60;
+                                                        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+
+                                                        // WhatsApp Link
+                                                        let phoneCode = booking.userPhone || '';
+                                                        phoneCode = phoneCode.replace(/\D/g, '');
+                                                        if (phoneCode.startsWith('0')) phoneCode = '94' + phoneCode.substring(1);
+                                                        const whatsappLink = `https://wa.me/${phoneCode}`;
+
+                                                        return (
+                                                            <motion.div
+                                                                key={`${booking.id}-${courtId}`}
+                                                                layout
+                                                                initial={{ opacity: 0 }}
+                                                                animate={{ opacity: 1 }}
+                                                                style={{
+                                                                    background: booking.status === 'pending' ? 'rgba(255, 180, 0, 0.08)' : 'rgba(255,255,255,0.03)',
+                                                                    border: booking.status === 'pending' ? '1px solid rgba(255, 180, 0, 0.3)' : '1px solid rgba(255,255,255,0.05)',
+                                                                    borderRadius: '16px',
+                                                                    padding: '1.2rem',
+                                                                    position: 'relative',
+                                                                    overflow: 'hidden'
+                                                                }}
+                                                            >
+                                                                {/* Status Badge */}
+                                                                <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+                                                                    <span style={{
+                                                                        fontSize: '0.75rem',
+                                                                        fontWeight: 'bold',
+                                                                        textTransform: 'uppercase',
+                                                                        padding: '0.25rem 0.75rem',
+                                                                        borderRadius: '20px',
+                                                                        background: booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.2)' : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.2)' : 'rgba(241, 196, 15, 0.2)'),
+                                                                        color: booking.status === 'confirmed' ? '#2ecc71' : (booking.status === 'rejected' ? '#e74c3c' : '#f1c40f'),
+                                                                        border: `1px solid ${booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.3)' : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.3)' : 'rgba(241, 196, 15, 0.3)')}`,
+                                                                        letterSpacing: '0.5px'
+                                                                    }}>
+                                                                        {booking.status}
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Time Range */}
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--brand-teal)' }}>
+                                                                    <div style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
+                                                                        {booking.startTime}
+                                                                    </div>
+                                                                    <div style={{ opacity: 0.5, fontSize: '0.9rem', paddingTop: '4px' }}>➔</div>
+                                                                    <div style={{ fontWeight: '600', fontSize: '1.1rem', opacity: 0.8, paddingTop: '2px' }}>
+                                                                        {endTime}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* User Details */}
+                                                                <div style={{ marginBottom: '1.2rem' }}>
+                                                                    <h4 style={{ color: 'white', fontSize: '1.1rem', marginBottom: '0.3rem' }}>{booking.userName}</h4>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                        <a
+                                                                            href={whatsappLink}
+                                                                            target="_blank"
+                                                                            rel="noreferrer"
+                                                                            style={{
+                                                                                color: 'rgba(255,255,255,0.6)',
+                                                                                fontSize: '0.9rem',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '0.4rem',
+                                                                                textDecoration: 'none',
+                                                                                transition: 'color 0.2s',
+                                                                                cursor: 'pointer'
+                                                                            }}
+                                                                            onMouseOver={(e) => e.target.style.color = '#25D366'}
+                                                                            onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.6)'}
+                                                                        >
+                                                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                                                            {booking.userPhone}
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Actions */}
+                                                                <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                    {booking.status === 'pending' && (
+                                                                        <>
+                                                                            <button
+                                                                                onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                                                                                style={{ flex: 1, padding: '0.6rem', background: 'var(--brand-teal)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem', color: '#000' }}
+                                                                            >
+                                                                                Accept
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => handleStatusChange(booking.id, 'rejected')}
+                                                                                style={{ flex: 1, padding: '0.6rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', cursor: 'pointer', color: 'white', fontSize: '0.9rem' }}
+                                                                            >
+                                                                                Reject
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+                                                                    <button
+                                                                        onClick={(e) => handleDeleteClick(e, booking.id)}
+                                                                        disabled={deletingId === booking.id}
+                                                                        title="Delete Booking"
+                                                                        style={{
+                                                                            padding: '0.6rem',
+                                                                            background: 'rgba(231, 76, 60, 0.1)',
+                                                                            border: '1px solid rgba(231, 76, 60, 0.2)',
+                                                                            borderRadius: '8px',
+                                                                            cursor: 'pointer',
+                                                                            color: '#e74c3c',
+                                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                            minWidth: '40px'
+                                                                        }}
+                                                                    >
+                                                                        <Trash2 size={18} />
+                                                                    </button>
+                                                                </div>
+                                                            </motion.div>
+                                                        );
+                                                    })
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    );
+                })}
+
+                {bookings.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)' }}>
+                        <h3>No Bookings Found</h3>
+                    </div>
+                )}
             </div>
         </div>
 

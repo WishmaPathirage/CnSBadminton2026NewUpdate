@@ -47,7 +47,7 @@ const Hero = () => {
                         marginBottom: '1rem',
                         display: 'inline-block' // needed for gradient text sometimes
                     }}>
-                        Welcome to C & S Badminton Complex (PVT) Ltd
+                        Welcome to C & S Badminton Complex (PVT) Ltd, Galle
                     </h2>
                     <h1 style={{
                         fontSize: 'clamp(3rem, 5vw, 5rem)',

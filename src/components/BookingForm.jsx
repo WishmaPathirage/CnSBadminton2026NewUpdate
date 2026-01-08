@@ -1,56 +1,77 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
-import emailjs from '@emailjs/browser';
-import { getAvailability, createBooking } from '../services/bookingService';
-import { Check, Clock, Calendar } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { doc, updateDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
+import { updateDoc, doc } from 'firebase/firestore';
+import { getAvailability, createBooking } from '../services/bookingService';
+import { getAuth } from 'firebase/auth'; // Import getAuth
+import { motion } from 'framer-motion';
+import { Calendar, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import emailjs from '@emailjs/browser';
 
 const BookingForm = () => {
-    const { currentUser } = useAuth();
-    const navigate = useNavigate();
-    const [step, setStep] = useState(1);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    const [slots, setSlots] = useState([]);
-    const [status, setStatus] = useState('idle');
-
-    // Selection State
+    const [duration, setDuration] = useState(30); // Default 30 minutes
     const [selectedTime, setSelectedTime] = useState(null);
-    const [duration, setDuration] = useState(60);
     const [selectedCourts, setSelectedCourts] = useState([]);
-    const [userDetails, setUserDetails] = useState({ name: '', Phone: '' });
+    const [slots, setSlots] = useState([]);
+    const [userDetails, setUserDetails] = useState({ name: '', email: '', Phone: '' });
+    const [status, setStatus] = useState('idle'); // idle, submitting, success, error
+    const [step, setStep] = useState(1); // 1: Select Time, 2: Details, 3: Payment/Success
 
-    // Auto-fill user details when logged in
+    // Auth State
+    const [currentUser, setCurrentUser] = useState(null);
+    const [loadingAuth, setLoadingAuth] = useState(true);
+    const navigate = useNavigate();
+
     useEffect(() => {
-        if (currentUser) {
-            setUserDetails({
-                name: currentUser.displayName || currentUser.name || '',
-                Phone: currentUser.phone || ''
-            });
-        }
-    }, [currentUser]);
+        const auth = getAuth();
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            setCurrentUser(user);
+            if (user) {
+                // Pre-fill email if available
+                setUserDetails(prev => ({
+                    ...prev,
+                    name: user.displayName || '',
+                    email: user.email || '',
+                    // We might not have phone yet, unless we stored it in Firestore 'users' collection
+                }));
+            }
+            setLoadingAuth(false);
+        });
+        return unsubscribe;
+    }, []);
+
+    useEffect(() => {
+        setStatus('loading');
+        getAvailability(date).then(data => {
+            setSlots(data);
+            setStatus('idle');
+        });
+    }, [date]);
+
+    // Redirect or Show Login Prompt if not logged in
+    if (loadingAuth) return <div style={{ color: 'white', textAlign: 'center', padding: '2rem' }}>Loading...</div>;
 
     if (!currentUser) {
         return (
-            <section id="booking" className="section-padding">
-                <div className="container" style={{ textAlign: 'center' }}>
+            <section className="section-padding" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="container">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        animate={{ opacity: 1, y: 0 }}
                         className="glass-panel"
-                        style={{ padding: '3rem', maxWidth: '600px', margin: '0 auto' }}
+                        style={{ padding: '3rem', textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}
                     >
+                        <Info size={48} color="var(--brand-teal)" style={{ marginBottom: '1rem' }} />
                         <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Login Required</h2>
                         <p style={{ color: 'var(--text-gray)', marginBottom: '2rem' }}>
-                            You must be logged in to book a court. This helps us manage bookings and contact you if needed.
+                            You must be logged in to make a booking. Please sign in or create an account to continue.
                         </p>
-                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                            <Link to="/login" className="btn-gradient" style={{ padding: '0.8rem 2rem', borderRadius: '50px', textDecoration: 'none', color: '#000', fontWeight: 'bold' }}>
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            <Link to="/login" className="btn-gradient" style={{ padding: '0.8rem 1.5rem', borderRadius: '50px', textDecoration: 'none', color: '#000', fontWeight: 'bold' }}>
                                 Login
                             </Link>
-                            <Link to="/register" style={{ padding: '0.8rem 2rem', border: '1px solid var(--brand-teal)', borderRadius: '50px', textDecoration: 'none', color: 'var(--brand-teal)', fontWeight: 'bold' }}>
+                            <Link to="/register" style={{ padding: '0.8rem 1.5rem', border: '1px solid var(--brand-teal)', borderRadius: '50px', textDecoration: 'none', color: 'var(--brand-teal)', fontWeight: 'bold' }}>
                                 Create Account
                             </Link>
                         </div>
@@ -96,31 +117,29 @@ const BookingForm = () => {
 
     const allTimes = getFilteredTimes();
 
-    useEffect(() => {
-        setStatus('loading');
-        getAvailability(date).then(data => {
-            setSlots(data);
-            setStatus('idle');
-        });
-    }, [date]);
+
+
+    // Auto-deselect removed to show visual conflict instead.
 
     const isSlotAvailable = (time, courtId) => {
-        // Check if this specific time + court is blocked by any booking
-        // Simple logic: if a booking starts at 8:00 for 60 mins, it blocks 8:00 and 8:30
+        const timeToMinutes = (t) => {
+            const [h, m] = t.split(':').map(Number);
+            return h * 60 + m;
+        };
+
+        const proposedStart = timeToMinutes(time);
+        const proposedEnd = proposedStart + duration;
+
         return !slots.some(booking => {
             if (!booking.courts.includes(courtId)) return false;
 
-            const bookingStart = parseInt(booking.startTime.replace(':', ''));
-            const timeNum = parseInt(time.replace(':', ''));
+            const bookingStart = timeToMinutes(booking.startTime);
+            const bookingEnd = bookingStart + booking.duration;
 
-            // Calculate end time of booking
-            const bookHour = parseInt(booking.startTime.split(':')[0]);
-            const bookMin = parseInt(booking.startTime.split(':')[1]);
-            const totalBookMin = bookHour * 60 + bookMin + booking.duration;
-            const bookingEndNum = parseInt(`${Math.floor(totalBookMin / 60)}${totalBookMin % 60 === 0 ? '00' : '30'}`);
-
-            // Check overlap
-            return timeNum >= bookingStart && timeNum < bookingEndNum;
+            // Check for overlap:
+            // Two time ranges (StartA, EndA) and (StartB, EndB) overlap if:
+            // StartA < EndB && EndA > StartB
+            return proposedStart < bookingEnd && proposedEnd > bookingStart;
         });
     };
 
@@ -135,8 +154,26 @@ const BookingForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (userDetails.Phone.length !== 10) {
-            alert("Please enter a valid 10-digit phone number.");
+        // 1. Strict Email Validation
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(userDetails.email)) {
+            alert("Strict Evaluation: Please enter a VALID email address.");
+            return;
+        }
+
+        // 2. Strict Phone Validation (International Format)
+        const phoneRegex = /^\+[1-9]\d{7,14}$/;
+        if (!phoneRegex.test(userDetails.Phone)) {
+            alert("Strict Evaluation: Phone Number MUST include Country Code (e.g. +94...)");
+            return;
+        }
+
+        // Final Validation: Check for overlaps before submitting
+        const hasOverlap = selectedCourts.some(courtId => !isSlotAvailable(selectedTime, courtId));
+        if (hasOverlap) {
+            alert("One or more selected slots are no longer available. Please choose another time.");
+            // Refresh slots to show latest status
+            getAvailability(date).then(setSlots);
             return;
         }
 
@@ -181,9 +218,10 @@ const BookingForm = () => {
                     userId: userId, // Link booking to user
                     userName: userDetails.name,
                     userPhone: userDetails.Phone,
+                    userEmail: userDetails.email, // Save strictly validated email
                     amount: totalAmount, // Store number in DB
                     orderId: orderId,
-                    status: 'confirmed'
+                    status: 'pending' // PREVIOUSLY 'confirmed'. Changed to 'pending' to require Admin Approval.
                 });
             } catch (e) {
                 console.warn("Booking save failed (Demo mode - proceeding to payment):", e);
@@ -204,7 +242,17 @@ const BookingForm = () => {
                 customer_name: userDetails.name,
                 customer_phone: userDetails.Phone,
                 date: date,
-                time: `Start: ${selectedTime} | End: ${endTime}`, // Explicit Start & End
+
+                // Sending multiple variations to match potential template variables
+                start_time: selectedTime,
+                startTime: selectedTime,
+                starting_time: selectedTime,
+
+                end_time: endTime,
+                endTime: endTime,
+                ending_time: endTime,
+
+                time: `Start: ${selectedTime} | End: ${endTime}`,
                 duration: duration + " mins",
                 courts: selectedCourts.map(c => `Court ${c}`).join(', '),
                 amount: `Rs. ${amountFormatted}`,
@@ -244,7 +292,7 @@ const BookingForm = () => {
                     transition={{ duration: 0.6 }}
                     className="glass-panel"
                     style={{
-                        padding: '3rem',
+                        padding: 'clamp(1.5rem, 5vw, 3rem)',
                         maxWidth: '1000px',
                         margin: '0 auto'
                     }}
@@ -295,89 +343,171 @@ const BookingForm = () => {
                                 </div>
                             </div>
 
-                            {/* Time Grid Header */}
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: '80px 1fr 1fr 1fr',
-                                gap: '1rem',
-                                marginBottom: '1rem',
-                                padding: '0 1rem',
-                                color: 'var(--text-gray)',
-                                fontSize: '0.9rem',
-                                letterSpacing: '1px',
-                                textTransform: 'uppercase'
-                            }}>
-                                <div>Time</div>
-                                <div style={{ textAlign: 'center' }}>Court 1</div>
-                                <div style={{ textAlign: 'center' }}>Court 2</div>
-                                <div style={{ textAlign: 'center' }}>Court 3</div>
-                            </div>
-
-                            {/* Time Grid Scrollable Area */}
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '0.8rem',
-                                maxHeight: '450px',
-                                overflowY: 'auto',
-                                paddingRight: '10px',
-                                paddingBottom: '10px'
-                            }}>
-                                {allTimes.map((time) => (
-                                    <div key={time} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr 1fr', gap: '1rem', alignItems: 'center' }}>
-                                        <div style={{ color: selectedTime === time ? 'var(--brand-teal)' : 'var(--text-gray)', fontWeight: selectedTime === time ? 'bold' : 'normal' }}>{time}</div>
-                                        {[1, 2, 3].map(courtId => {
-                                            const available = isSlotAvailable(time, courtId);
-                                            const isSelected = selectedTime === time && selectedCourts.includes(courtId);
-
-                                            return (
-                                                <motion.button
-                                                    key={courtId}
-                                                    disabled={!available}
-                                                    whileHover={available ? { scale: 1.02 } : {}}
-                                                    whileTap={available ? { scale: 0.95 } : {}}
-                                                    onClick={() => {
-                                                        if (selectedTime !== time) {
-                                                            setSelectedTime(time);
-                                                            setSelectedCourts([courtId]);
-                                                        } else {
-                                                            handleCourtToggle(courtId);
-                                                        }
-                                                    }}
-                                                    style={{
-                                                        padding: '1rem',
-                                                        borderRadius: '12px',
-                                                        border: isSelected ? '1px solid var(--brand-teal)' : '1px solid transparent',
-                                                        backgroundColor: isSelected ? 'rgba(120, 220, 202, 0.15)' : (available ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.02)'),
-                                                        color: available ? (isSelected ? 'var(--brand-teal)' : 'white') : 'rgba(255,255,255,0.2)',
-                                                        cursor: available ? 'pointer' : 'not-allowed',
-                                                        fontSize: '0.9rem',
-                                                        fontWeight: isSelected ? '600' : 'normal',
-                                                        transition: 'all 0.2s ease',
-                                                        boxShadow: isSelected ? '0 0 15px rgba(120, 220, 202, 0.1)' : 'none'
-                                                    }}
-                                                >
-                                                    {available ? (isSelected ? 'Selected' : 'Available') : 'Booked'}
-                                                </motion.button>
-                                            );
-                                        })}
+                            {/* Scrollable Container for Mobile */}
+                            <div style={{ overflowX: 'auto', paddingBottom: '1rem', margin: '0 -1rem' }}>
+                                <div style={{ minWidth: '600px', padding: '0 1rem' }}>
+                                    {/* Time Grid Header */}
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '80px 1fr 1fr 1fr',
+                                        gap: '1rem',
+                                        marginBottom: '1rem',
+                                        padding: '0 1rem',
+                                        color: 'var(--text-gray)',
+                                        fontSize: '0.9rem',
+                                        letterSpacing: '1px',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        <div>Time</div>
+                                        <div style={{ textAlign: 'center' }}>Court 1</div>
+                                        <div style={{ textAlign: 'center' }}>Court 2</div>
+                                        <div style={{ textAlign: 'center' }}>Court 3</div>
                                     </div>
-                                ))}
+
+                                    {/* Time Grid Scrollable Area */}
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '0.8rem',
+                                        maxHeight: '450px',
+                                        overflowY: 'auto',
+                                        paddingRight: '10px',
+                                        paddingBottom: '10px'
+                                    }}>
+                                        {allTimes.map((time) => (
+                                            <div key={time} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr 1fr', gap: '1rem', alignItems: 'center' }}>
+                                                <div style={{ color: selectedTime === time ? 'var(--brand-teal)' : 'var(--text-gray)', fontWeight: selectedTime === time ? 'bold' : 'normal' }}>{time}</div>
+                                                {[1, 2, 3].map(courtId => {
+                                                    // 1. Strict Occupancy Check (Is this specific 30-min block actually taken?)
+                                                    const timeToMinutes = (t) => {
+                                                        const [h, m] = t.split(':').map(Number);
+                                                        return h * 60 + m;
+                                                    };
+                                                    const slotStart = timeToMinutes(time);
+                                                    const slotEnd = slotStart + 30; // Slots are always 30 mins visually
+
+                                                    const isOccupied = slots.some(booking => {
+                                                        if (!booking.courts.includes(courtId)) return false;
+                                                        const bookingStart = timeToMinutes(booking.startTime);
+                                                        const bookingEnd = bookingStart + booking.duration;
+                                                        // Check strictly if this 30-min block overlaps with a booking
+                                                        return Math.max(slotStart, bookingStart) < Math.min(slotEnd, bookingEnd);
+                                                    });
+
+                                                    // 2. Fits Duration Check (Does the FULL duration fit?)
+                                                    const fitsDuration = isSlotAvailable(time, courtId);
+                                                    const isSelected = selectedTime === time && selectedCourts.includes(courtId);
+
+                                                    // Visual State:
+                                                    // Base State:
+                                                    // - Occupied -> Red (Booked)
+                                                    // - Not Occupied (even if too short) -> Green (Available)
+
+                                                    let label = 'Available';
+                                                    let bgColor = 'rgba(46, 204, 113, 0.1)';
+                                                    let borderColor = 'rgba(46, 204, 113, 0.3)';
+                                                    let textColor = '#2ecc71';
+                                                    let cursor = 'pointer';
+
+                                                    if (isOccupied) {
+                                                        label = 'Booked';
+                                                        bgColor = 'rgba(231, 76, 60, 0.15)';
+                                                        borderColor = 'rgba(231, 76, 60, 0.3)';
+                                                        textColor = '#e74c3c';
+                                                        cursor = 'not-allowed';
+                                                    }
+
+                                                    // Override Only If Selected
+                                                    if (isSelected) {
+                                                        if (!fitsDuration) {
+                                                            label = 'Conflict';
+                                                            bgColor = 'rgba(255, 68, 68, 0.2)';
+                                                            borderColor = '#ff4444';
+                                                            textColor = '#ff4444';
+                                                        } else {
+                                                            label = 'Selected';
+                                                            bgColor = 'rgba(120, 220, 202, 0.15)';
+                                                            borderColor = 'var(--brand-teal)';
+                                                            textColor = 'var(--brand-teal)';
+                                                        }
+                                                        cursor = 'pointer';
+                                                    }
+
+                                                    return (
+                                                        <motion.button
+                                                            key={courtId}
+                                                            disabled={isOccupied && !isSelected} // Only disable if strictly occupied (or let user deselect)
+                                                            whileHover={!isOccupied ? { scale: 1.02 } : {}}
+                                                            whileTap={!isOccupied ? { scale: 0.95 } : {}}
+                                                            onClick={() => {
+                                                                if (selectedTime !== time) {
+                                                                    if (!isOccupied) {
+                                                                        setSelectedTime(time);
+                                                                        setSelectedCourts([courtId]);
+                                                                    }
+                                                                } else {
+                                                                    handleCourtToggle(courtId);
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                padding: '1rem',
+                                                                borderRadius: '12px',
+                                                                border: isSelected ? (label === 'Conflict' ? '2px solid #ff4444' : '2px solid var(--brand-teal)') : '1px solid',
+                                                                borderColor: borderColor,
+                                                                backgroundColor: bgColor,
+                                                                color: textColor,
+                                                                cursor: cursor,
+                                                                fontSize: '0.9rem',
+                                                                fontWeight: isSelected ? '600' : 'normal',
+                                                                transition: 'all 0.2s ease',
+                                                                boxShadow: isSelected ? `0 0 15px ${borderColor}` : 'none',
+                                                                opacity: isOccupied && !isSelected ? 0.7 : 1
+                                                            }}
+                                                        >
+                                                            {label}
+                                                        </motion.button>
+                                                    );
+                                                })}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div style={{ marginTop: '3rem', display: 'flex', justifyContent: 'flex-end' }}>
+                            {/* visual conflict warning */}
+                            {selectedTime && selectedCourts.some(c => !isSlotAvailable(selectedTime, c)) && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    style={{
+                                        color: '#ff4444',
+                                        background: 'rgba(255, 68, 68, 0.1)',
+                                        padding: '1rem',
+                                        borderRadius: '8px',
+                                        marginTop: '1rem',
+                                        border: '1px solid rgba(255, 68, 68, 0.3)',
+                                        textAlign: 'center',
+                                        fontWeight: '500'
+                                    }}
+                                >
+                                    ⚠️ Selected time overlaps with an existing booking. Please shorten duration or select another time.
+                                </motion.div>
+                            )}
+
+                            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
                                 <button
-                                    disabled={selectedCourts.length === 0}
+                                    disabled={selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c))}
                                     onClick={() => setStep(2)}
                                     className="btn-gradient"
                                     style={{
-                                        padding: '1rem 3.5rem',
+                                        padding: '1rem 2rem',
                                         borderRadius: '50px',
                                         fontWeight: 'bold',
                                         fontSize: '1rem',
-                                        cursor: selectedCourts.length === 0 ? 'not-allowed' : 'pointer',
-                                        opacity: selectedCourts.length === 0 ? 0.5 : 1,
-                                        boxShadow: selectedCourts.length === 0 ? 'none' : '0 10px 30px rgba(120, 220, 202, 0.3)'
+                                        cursor: (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c))) ? 'not-allowed' : 'pointer',
+                                        opacity: (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c))) ? 0.5 : 1,
+                                        boxShadow: selectedCourts.length === 0 ? 'none' : '0 10px 30px rgba(120, 220, 202, 0.3)',
+                                        filter: selectedCourts.some(c => !isSlotAvailable(selectedTime, c)) ? 'grayscale(1)' : 'none'
                                     }}
                                 >
                                     Next Details →
@@ -429,28 +559,66 @@ const BookingForm = () => {
                                 />
                             </div>
 
+                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.8rem', marginLeft: '0.5rem' }}>Email Address <span style={{ color: '#ff4444' }}>*</span></label>
+                                <input
+                                    required
+                                    type="email"
+                                    className="glass-input"
+                                    value={userDetails.email}
+                                    onChange={e => setUserDetails({ ...userDetails, email: e.target.value })}
+                                    placeholder="example@domain.com"
+                                    style={{
+                                        borderColor: userDetails.email && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(userDetails.email) ? '#ff4444' : 'rgba(255,255,255,0.1)'
+                                    }}
+                                />
+                                {userDetails.email && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(userDetails.email) && (
+                                    <span style={{ color: '#ff4444', fontSize: '0.8rem', marginTop: '0.5rem', display: 'block', marginLeft: '0.5rem' }}>
+                                        Please enter a valid email address (e.g. user@example.com)
+                                    </span>
+                                )}
+                            </div>
+
                             <div className="form-group" style={{ marginBottom: '3rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.8rem', marginLeft: '0.5rem' }}>Phone Number <span style={{ fontSize: '0.85em', color: 'var(--text-gray)' }}>(for WhatsApp)</span></label>
+                                <label style={{ display: 'block', marginBottom: '0.8rem', marginLeft: '0.5rem' }}>
+                                    Phone Number <span style={{ color: '#ff4444' }}>*</span>
+                                    <span style={{ fontSize: '0.85em', color: 'var(--text-gray)', fontWeight: 'normal', marginLeft: '0.5rem' }}>
+                                        (with Country Code, e.g. +94)
+                                    </span>
+                                </label>
                                 <input
                                     required
                                     type="tel"
-                                    maxLength="10"
-                                    pattern="[0-9]{10}"
                                     className="glass-input"
                                     style={{
-                                        borderColor: userDetails.Phone && !/^\d{10}$/.test(userDetails.Phone) ? '#ff4444' : 'rgba(255,255,255,0.1)'
+                                        borderColor: userDetails.Phone && !/^\+[1-9]\d{7,14}$/.test(userDetails.Phone) ? '#ff4444' : 'rgba(255,255,255,0.1)'
                                     }}
                                     value={userDetails.Phone}
                                     onChange={e => {
-                                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                        // Allow + only at start, then digits
+                                        let val = e.target.value;
+                                        if (val.length > 0 && val[0] !== '+') {
+                                            val = '+' + val.replace(/\D/g, '');
+                                        } else {
+                                            val = val.replace(/[^0-9+]/g, '');
+                                            // Ensure only one plus at start
+                                            if (val.indexOf('+', 1) !== -1) {
+                                                val = val.substring(0, 1) + val.substring(1).replace(/\+/g, '');
+                                            }
+                                        }
                                         setUserDetails({ ...userDetails, Phone: val });
                                     }}
-                                    placeholder="077xxxxxxx (10 digits)"
+                                    placeholder="+94771234567"
                                 />
-                                {userDetails.Phone && userDetails.Phone.length === 10 && (
+                                {userDetails.Phone && !/^\+[1-9]\d{7,14}$/.test(userDetails.Phone) && (
+                                    <span style={{ color: '#ff4444', fontSize: '0.8rem', marginTop: '0.5rem', display: 'block', marginLeft: '0.5rem' }}>
+                                        Must be a valid international number starting with + (e.g. +94...)
+                                    </span>
+                                )}
+                                {userDetails.Phone && /^\+[1-9]\d{7,14}$/.test(userDetails.Phone) && (
                                     <div style={{ marginTop: '0.8rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <a
-                                            href={`https://wa.me/94${userDetails.Phone.substring(1)}`}
+                                            href={`https://wa.me/${userDetails.Phone.replace('+', '')}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             style={{
@@ -463,15 +631,9 @@ const BookingForm = () => {
                                                 fontWeight: '600'
                                             }}
                                         >
-                                            <i className="fab fa-whatsapp"></i> Test on WhatsApp →
+                                            <i className="fab fa-whatsapp"></i> Verify on WhatsApp →
                                         </a>
-                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>Click to verify if this is a valid WhatsApp number</span>
                                     </div>
-                                )}
-                                {userDetails.Phone && userDetails.Phone.length !== 10 && (
-                                    <span style={{ color: '#ff4444', fontSize: '0.8rem', marginTop: '0.5rem', display: 'block', marginLeft: '0.5rem' }}>
-                                        Please enter a valid 10-digit mobile number
-                                    </span>
                                 )}
                             </div>
 
@@ -511,8 +673,6 @@ const BookingForm = () => {
                             </div>
                         </motion.form>
                     )}
-
-                    {/* Step 3 Removed - Redirects to PayHere */}
 
                 </motion.div>
             </div>

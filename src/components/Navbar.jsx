@@ -51,7 +51,14 @@ const Navbar = () => {
             }}
         >
             <div className="container flex-center" style={{ justifyContent: 'space-between' }}>
-                <Link to="/" style={{ fontSize: '1.2rem', fontWeight: '800', fontFamily: 'var(--font-display)', color: 'var(--brand-yellow)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap' }}>
+                <Link
+                    to="/"
+                    onClick={() => {
+                        window.scrollTo(0, 0);
+                        setIsOpen(false);
+                    }}
+                    style={{ fontSize: '1.2rem', fontWeight: '800', fontFamily: 'var(--font-display)', color: 'var(--brand-yellow)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap' }}
+                >
                     <motion.div
                         animate={{ rotateY: 360 }}
                         transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
@@ -59,9 +66,10 @@ const Navbar = () => {
                     >
                         <img src="/logo.jpg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </motion.div>
-                    <span>
-                        C & S <span style={{ color: 'white' }}>Badminton Complex</span>
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.2' }}>
+                        <span style={{ fontSize: '1.2rem' }}>C & S</span>
+                        <span className="desktop-only-text" style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.8)' }}>Badminton Complex (PVT) Ltd</span>
+                    </div>
                 </Link>
 
                 {/* Desktop Menu */}
@@ -198,6 +206,9 @@ const Navbar = () => {
         }
         .nav-link:hover::after {
           width: 100%;
+        }
+        @media (max-width: 480px) {
+            .desktop-only-text { display: none; }
         }
       `}</style>
         </nav >

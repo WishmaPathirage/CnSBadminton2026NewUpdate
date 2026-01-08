@@ -70,13 +70,13 @@ const Login = () => {
     };
 
     return (
-        <section className="section-padding" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <section className="section-padding" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 1rem' }}>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="glass-panel"
                 style={{
-                    padding: '3rem',
+                    padding: '2rem',
                     borderRadius: '24px',
                     width: '100%',
                     maxWidth: '500px',

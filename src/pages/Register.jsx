@@ -73,13 +73,13 @@ const Register = () => {
     };
 
     return (
-        <section className="section-padding" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <section className="section-padding" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 1rem' }}>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="glass-panel"
                 style={{
-                    padding: '3rem',
+                    padding: '2rem',
                     borderRadius: '24px',
                     width: '100%',
                     maxWidth: '600px',
@@ -118,8 +118,8 @@ const Register = () => {
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                        <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                        <div style={{ flex: '1 1 200px' }}>
                             <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Email</label>
                             <input
                                 type="email"
@@ -130,7 +130,7 @@ const Register = () => {
                                 placeholder="john@example.com"
                             />
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: '1 1 200px' }}>
                             <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Phone</label>
                             <input
                                 type="tel"
@@ -143,8 +143,8 @@ const Register = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2.5rem' }}>
-                        <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
+                        <div style={{ flex: '1 1 200px' }}>
                             <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Password</label>
                             <input
                                 type="password"
@@ -155,7 +155,7 @@ const Register = () => {
                                 placeholder="••••••••"
                             />
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: '1 1 200px' }}>
                             <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Confirm Password</label>
                             <input
                                 type="password"

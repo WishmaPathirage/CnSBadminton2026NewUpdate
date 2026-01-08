@@ -1,8 +1,16 @@
+import { Link } from 'react-router-dom';
+
 const Footer = () => {
     return (
         <footer style={{ padding: '3rem 0', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '4rem' }}>
             <div className="container" style={{ textAlign: 'center' }}>
-                <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: '1rem', color: 'var(--primary-green)' }}>C & S Badminton Complex (PVT) Ltd</h3>
+                <Link
+                    to="/"
+                    onClick={() => window.scrollTo(0, 0)}
+                    style={{ textDecoration: 'none' }}
+                >
+                    <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: '1rem', color: 'var(--primary-green)', display: 'inline-block' }}>C & S Badminton Complex (PVT) Ltd</h3>
+                </Link>
                 <p style={{ color: 'gray' }}>Your premier destination for professional badminton.</p>
             </div>
             <div className="container" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '2rem', paddingTop: '1rem', textAlign: 'center' }}>
