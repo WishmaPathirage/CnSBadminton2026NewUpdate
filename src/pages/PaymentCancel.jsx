@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { XCircle } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const PaymentCancel = () => {
@@ -9,53 +9,91 @@ const PaymentCancel = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'var(--bg-dark)',
-            color: 'white',
-            textAlign: 'center',
-            padding: '2rem'
+            padding: '2rem',
+            position: 'relative',
+            overflow: 'hidden'
         }}>
+            {/* Background Effects */}
+            <div style={{ position: 'absolute', top: '20%', right: '10%', width: '300px', height: '300px', background: 'rgba(255, 68, 68, 0.1)', filter: 'blur(100px)', borderRadius: '50%' }}></div>
+
             <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="glass-panel"
                 style={{
-                    background: 'var(--bg-card)',
-                    padding: '3rem',
-                    borderRadius: '20px',
-                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-                    maxWidth: '500px',
-                    border: '1px solid rgba(255, 68, 68, 0.2)'
+                    padding: '4rem 3rem',
+                    textAlign: 'center',
+                    maxWidth: '480px',
+                    width: '100%',
+                    border: '1px solid rgba(255, 68, 68, 0.1)'
                 }}
             >
-                <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: 'spring' }}
-                    style={{ marginBottom: '1.5rem', display: 'inline-block' }}
-                >
-                    <XCircle size={80} color="#ff4444" />
-                </motion.div>
+                <div style={{ position: 'relative', display: 'inline-block', marginBottom: '2rem' }}>
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: 'spring' }}
+                        style={{
+                            width: '90px',
+                            height: '90px',
+                            borderRadius: '50%',
+                            background: 'rgba(255, 68, 68, 0.1)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid rgba(255, 68, 68, 0.2)'
+                        }}
+                    >
+                        <X size={40} color="#ff4444" />
+                    </motion.div>
+                </div>
 
-                <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Payment Cancelled</h1>
-                <p style={{ color: 'var(--text-gray)', marginBottom: '2rem' }}>
-                    Your transaction was cancelled or failed. No charges were made.
+                <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Payment Cancelled</h1>
+                <p style={{ color: 'var(--text-gray)', marginBottom: '2.5rem', lineHeight: '1.6' }}>
+                    It seems the transaction was not completed.<br />
+                    Don't worry, no charges were made.
                 </p>
 
-                <Link
-                    to="/"
-                    style={{
-                        display: 'inline-block',
-                        padding: '1rem 2rem',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        color: 'white',
-                        textDecoration: 'none',
-                        borderRadius: '50px',
-                        fontWeight: 'bold',
-                        fontSize: '1.1rem',
-                        border: '1px solid rgba(255,255,255,0.2)'
-                    }}
-                >
-                    Try Again
-                </Link>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                    <Link
+                        to="/"
+                        style={{
+                            padding: '0.8rem 2rem',
+                            color: 'var(--text-gray)',
+                            textDecoration: 'none',
+                            fontWeight: '500',
+                            transition: 'color 0.2s'
+                        }}
+                        onMouseOver={(e) => e.target.style.color = 'white'}
+                        onMouseOut={(e) => e.target.style.color = 'var(--text-gray)'}
+                    >
+                        Cancel
+                    </Link>
+                    <Link
+                        to="/"
+                        style={{
+                            padding: '0.8rem 2rem',
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            color: 'white',
+                            textDecoration: 'none',
+                            borderRadius: '50px',
+                            fontWeight: '600',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => {
+                            e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                            e.target.style.transform = 'translateY(-2px)';
+                        }}
+                        onMouseOut={(e) => {
+                            e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                            e.target.style.transform = 'translateY(0)';
+                        }}
+                    >
+                        Try Again
+                    </Link>
+                </div>
             </motion.div>
         </div>
     );

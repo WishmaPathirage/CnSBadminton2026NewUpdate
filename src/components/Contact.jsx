@@ -48,15 +48,15 @@ const Contact = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
                             <div className="contact-item" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                 <MapPin color="var(--primary-green)" />
-                                <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Galle, Sri Lanka</span>
+                                <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>No:38/2 Godaduwa Rd, Galle</span>
                             </div>
-                            <a href="tel:+94771234567" className="contact-item" style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none' }}>
+                            <a href="tel:+94777983264" className="contact-item" style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none' }}>
                                 <Phone color="var(--primary-green)" />
-                                <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>+94 77 123 4567</span>
+                                <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>+94 77 798 3264</span>
                             </a>
-                            <a href="mailto:info@csbadminton.lk" className="contact-item" style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none' }}>
+                            <a href="mailto:cnsb233@gmail.com" className="contact-item" style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none' }}>
                                 <Mail color="var(--primary-green)" />
-                                <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>info@csbadminton.lk</span>
+                                <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>cnsb233@gmail.com</span>
                             </a>
                         </div>
 

@@ -1,16 +1,33 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CheckCircle } from 'lucide-react';
+import { Check, Star, ShieldCheck } from 'lucide-react'; // Added ShieldCheck for Admin
 import { motion } from 'framer-motion';
+import { getBookingByOrderId } from '../services/bookingService';
 
 const PaymentSuccess = () => {
     const [searchParams] = useSearchParams();
     const orderId = searchParams.get('order_id');
+    const [booking, setBooking] = useState(null);
 
     useEffect(() => {
-        // ideally verify payment status with backend here
-        console.log("Payment Successful for Order:", orderId);
+        const fetchBooking = async () => {
+            if (orderId) {
+                const data = await getBookingByOrderId(orderId);
+                setBooking(data);
+            }
+        };
+        fetchBooking();
     }, [orderId]);
+
+    // Calculate End Time if booking exists
+    const getEndTime = (startTime, duration) => {
+        if (!startTime || !duration) return '';
+        const [h, m] = startTime.split(':').map(Number);
+        const totalMins = h * 60 + m + duration;
+        const endH = Math.floor(totalMins / 60);
+        const endM = totalMins % 60;
+        return `${endH < 10 ? '0' + endH : endH}:${endM < 10 ? '0' + endM : endM}`;
+    };
 
     return (
         <div style={{
@@ -18,52 +35,108 @@ const PaymentSuccess = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'var(--bg-dark)',
-            color: 'white',
-            textAlign: 'center',
-            padding: '2rem'
+            padding: '2rem',
+            position: 'relative',
+            overflow: 'hidden'
         }}>
+            {/* Background Decorations */}
+            <div style={{ position: 'absolute', top: '20%', left: '10%', width: '300px', height: '300px', background: 'var(--brand-teal)', filter: 'blur(150px)', opacity: 0.2, borderRadius: '50%' }}></div>
+            <div style={{ position: 'absolute', bottom: '20%', right: '10%', width: '300px', height: '300px', background: 'var(--brand-pink)', filter: 'blur(150px)', opacity: 0.2, borderRadius: '50%' }}></div>
+
             <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, type: "spring" }}
+                className="glass-panel"
                 style={{
-                    background: 'var(--bg-card)',
-                    padding: '3rem',
-                    borderRadius: '20px',
-                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-                    maxWidth: '500px'
+                    padding: '4rem 3rem',
+                    textAlign: 'center',
+                    maxWidth: '600px',
+                    width: '100%',
+                    position: 'relative',
+                    zIndex: 10
                 }}
             >
-                <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: 'spring' }}
-                    style={{ marginBottom: '1.5rem', display: 'inline-block' }}
-                >
-                    <CheckCircle size={80} color="var(--primary-green)" />
-                </motion.div>
+                <div style={{ position: 'relative', display: 'inline-block', marginBottom: '2rem' }}>
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
+                        style={{
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, var(--brand-teal), #2ecc71)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 10px 30px rgba(46, 204, 113, 0.4)'
+                        }}
+                    >
+                        <Check size={50} color="white" strokeWidth={3} />
+                    </motion.div>
 
-                <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Payment Successful!</h1>
-                <p style={{ color: 'var(--text-gray)', marginBottom: '2rem' }}>
-                    Thank you for your booking. Your court has been reserved.<br />
-                    Order ID: <span style={{ fontFamily: 'monospace', color: 'white' }}>{orderId || 'N/A'}</span>
+                    {/* Floating Stars */}
+                    <motion.div animate={{ y: [0, -10, 0], rotate: [0, 10, 0] }} transition={{ duration: 3, repeat: Infinity }} style={{ position: 'absolute', top: -10, right: -10, color: 'var(--brand-yellow)' }}>
+                        <Star size={24} fill="currentColor" />
+                    </motion.div>
+                    <motion.div animate={{ y: [0, 10, 0], rotate: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, delay: 1 }} style={{ position: 'absolute', bottom: 0, left: -20, color: 'var(--brand-pink)' }}>
+                        <Star size={20} fill="currentColor" />
+                    </motion.div>
+                </div>
+
+                <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem', background: 'linear-gradient(to right, #fff, #ccc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    Booking Confirmed!
+                </h1>
+
+                <p style={{ color: 'var(--text-gray)', marginBottom: '1.5rem', fontSize: '1.1rem', lineHeight: '1.6' }}>
+                    Your court is reserved and ready for action.
                 </p>
 
-                <Link
-                    to="/"
-                    style={{
+                {booking && (
+                    <div style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        borderRadius: '16px',
+                        padding: '1.5rem',
+                        marginBottom: '2rem',
+                        textAlign: 'left',
                         display: 'inline-block',
-                        padding: '1rem 2rem',
-                        backgroundColor: 'var(--primary-green)',
-                        color: 'black',
-                        textDecoration: 'none',
-                        borderRadius: '50px',
-                        fontWeight: 'bold',
-                        fontSize: '1.1rem'
-                    }}
-                >
-                    Back to Home
-                </Link>
+                        width: '100%'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ color: 'var(--text-gray)' }}>Order ID:</span>
+                            <span style={{ fontWeight: 'bold' }}>{orderId}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ color: 'var(--text-gray)' }}>Date:</span>
+                            <span>{booking.date}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ color: 'var(--text-gray)' }}>Time:</span>
+                            <span>{booking.startTime} - {getEndTime(booking.startTime, booking.duration)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: 'var(--text-gray)' }}>Courts:</span>
+                            <span style={{ color: 'var(--brand-teal)' }}>{booking.courts.map(c => `Court ${c}`).join(', ')}</span>
+                        </div>
+                    </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <Link
+                        to="/"
+                        className="btn-gradient"
+                        style={{
+                            padding: '1rem 2rem',
+                            borderRadius: '50px',
+                            fontWeight: '600',
+                            textDecoration: 'none',
+                            boxShadow: '0 4px 15px rgba(120, 220, 202, 0.3)'
+                        }}
+                    >
+                        Back to Home
+                    </Link>
+                </div>
             </motion.div>
         </div>
     );

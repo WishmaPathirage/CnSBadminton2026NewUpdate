@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { login } from '../services/authService';
+import { login, loginWithGoogle } from '../services/authService';
 import { validateEmail, getFriendlyErrorMessage } from '../utils/validators';
 
 const Login = () => {
@@ -10,6 +10,28 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    const handleGoogleLogin = async () => {
+        setIsLoading(true);
+        setError('');
+        try {
+            const result = await loginWithGoogle();
+            if (result.success) {
+                if (result.user.role === 'admin') {
+                    navigate('/admin');
+                } else {
+                    navigate('/');
+                }
+            } else {
+                setError(result.message);
+            }
+        } catch (err) {
+            console.error(err);
+            setError("Google Sign-In failed.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -52,10 +74,10 @@ const Login = () => {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="card-glass"
+                className="glass-panel"
                 style={{
                     padding: '3rem',
-                    borderRadius: '20px',
+                    borderRadius: '24px',
                     width: '100%',
                     maxWidth: '500px',
                     position: 'relative',
@@ -63,7 +85,7 @@ const Login = () => {
                 }}
             >
                 {/* Decorative Glow */}
-                <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'radial-gradient(circle, rgba(46, 204, 113, 0.1) 0%, transparent 70%)', zIndex: -1 }} />
+                <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'radial-gradient(circle, rgba(120, 220, 202, 0.1) 0%, transparent 70%)', zIndex: -1 }} />
 
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     <h2 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Welcome Back</h2>
@@ -76,7 +98,7 @@ const Login = () => {
                         border: '1px solid #e74c3c',
                         color: '#ff6b6b',
                         padding: '1rem',
-                        borderRadius: '8px',
+                        borderRadius: '12px',
                         marginBottom: '1.5rem',
                         textAlign: 'center'
                     }}>
@@ -86,22 +108,22 @@ const Login = () => {
 
                 <form onSubmit={handleSubmit}>
                     <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-light)' }}>Email Address</label>
+                        <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Email Address</label>
                         <input
                             type="email"
                             required
-                            style={inputStyle}
+                            className="glass-input"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="admin@cns.lk"
                         />
                     </div>
-                    <div style={{ marginBottom: '2rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-light)' }}>Password</label>
+                    <div style={{ marginBottom: '2.5rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Password</label>
                         <input
                             type="password"
                             required
-                            style={inputStyle}
+                            className="glass-input"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"
@@ -113,31 +135,49 @@ const Login = () => {
                         whileTap={{ scale: 0.98 }}
                         disabled={isLoading}
                         className="btn-gradient"
-                        style={{ width: '100%', padding: '1rem', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.1rem', cursor: isLoading ? 'wait' : 'pointer', opacity: isLoading ? 0.8 : 1 }}
+                        style={{ width: '100%', padding: '1rem', borderRadius: '50px', fontWeight: 'bold', fontSize: '1.1rem', cursor: isLoading ? 'wait' : 'pointer', opacity: isLoading ? 0.8 : 1, boxShadow: '0 10px 20px rgba(120, 220, 202, 0.3)' }}
                     >
                         {isLoading ? 'Logging In...' : 'Login'}
                     </motion.button>
                 </form>
+
+                <div style={{ margin: '1.5rem 0', textAlign: 'center', position: 'relative' }}>
+                    <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+                    <span style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: '#0f172a', padding: '0 10px', color: 'var(--text-gray)', fontSize: '0.9rem' }}>OR</span>
+                </div>
+
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                    style={{
+                        width: '100%',
+                        padding: '0.8rem',
+                        borderRadius: '50px',
+                        fontWeight: '600',
+                        fontSize: '1rem',
+                        cursor: isLoading ? 'wait' : 'pointer',
+                        background: 'white',
+                        color: '#333',
+                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px'
+                    }}
+                >
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: '20px', height: '20px' }} />
+                    Sign in with Google
+                </motion.button>
 
                 <div style={{ marginTop: '2rem', textAlign: 'center', color: 'var(--text-gray)' }}>
                     Don't have an account?{' '}
                     <Link to="/register" style={{ color: 'var(--brand-teal)', fontWeight: 'bold' }}>Register Here</Link>
                 </div>
             </motion.div>
-        </section>
+        </section >
     );
-};
-
-const inputStyle = {
-    width: '100%',
-    padding: '1rem',
-    background: 'rgba(255, 255, 255, 0.05)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '8px',
-    color: 'white',
-    fontSize: '1rem',
-    outline: 'none',
-    transition: 'border-color 0.3s'
 };
 
 export default Login;

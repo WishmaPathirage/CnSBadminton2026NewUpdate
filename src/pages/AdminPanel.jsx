@@ -104,10 +104,28 @@ Website: www.cnsbadminton.lk`;
 
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this booking? This action cannot be undone.')) {
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, bookingId: null });
+    const [deletingId, setDeletingId] = useState(null);
+
+    const handleDeleteClick = (e, id) => {
+        e.stopPropagation();
+        setConfirmModal({ isOpen: true, bookingId: id });
+    };
+
+    const confirmDelete = async () => {
+        const id = confirmModal.bookingId;
+        if (!id) return;
+
+        setConfirmModal({ isOpen: false, bookingId: null }); // Close modal immediately
+        setDeletingId(id); // Show loader on button
+
+        try {
             await deleteBooking(id);
-            // loadBookings(); // Not needed with real-time listener
+        } catch (error) {
+            console.error("Delete failed:", error);
+            alert("Error: " + error.message);
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -125,7 +143,77 @@ Website: www.cnsbadminton.lk`;
     }
 
     return (
-        <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', paddingTop: '100px' }}>
+        <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', paddingTop: '100px', position: 'relative' }}>
+            {/* Confirmation Modal */}
+            {confirmModal.isOpen && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000,
+                    backdropFilter: 'blur(5px)'
+                }} onClick={() => setConfirmModal({ isOpen: false, bookingId: null })}>
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            background: '#1a1a1a',
+                            border: '1px solid #333',
+                            borderRadius: '16px',
+                            padding: '2rem',
+                            maxWidth: '400px',
+                            width: '90%',
+                            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                            textAlign: 'center'
+                        }}
+                    >
+                        <div style={{ marginBottom: '1.5rem', color: '#e74c3c' }}>
+                            <Trash2 size={48} />
+                        </div>
+                        <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'white' }}>Delete Booking?</h3>
+                        <p style={{ color: '#aaa', marginBottom: '2rem' }}>
+                            Are you sure you want to delete this booking? This action cannot be undone.
+                        </p>
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                            <button
+                                onClick={() => setConfirmModal({ isOpen: false, bookingId: null })}
+                                style={{
+                                    padding: '0.8rem 1.5rem',
+                                    borderRadius: '8px',
+                                    border: '1px solid #333',
+                                    background: 'transparent',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                style={{
+                                    padding: '0.8rem 1.5rem',
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    background: '#e74c3c',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 4px 15px rgba(231, 76, 60, 0.3)'
+                                }}
+                            >
+                                Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
                     <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard</h1>
@@ -168,7 +256,6 @@ Website: www.cnsbadminton.lk`;
                         {bookings.map((booking) => (
                             <motion.tr
                                 key={booking.id}
-                                layout
                                 style={{
                                     borderBottom: '1px solid #222',
                                     backgroundColor: booking.status === 'pending' ? 'rgba(46, 204, 113, 0.05)' : 'transparent'
@@ -214,22 +301,26 @@ Website: www.cnsbadminton.lk`;
                                     )}
                                     <div style={{ marginTop: booking.status === 'pending' ? '0.5rem' : '0' }}>
                                         <button
-                                            onClick={() => handleDelete(booking.id)}
+                                            onClick={(e) => handleDeleteClick(e, booking.id)}
+                                            disabled={deletingId === booking.id}
                                             style={{
                                                 padding: '0.5rem',
                                                 background: 'rgba(231, 76, 60, 0.2)',
                                                 border: '1px solid #e74c3c',
                                                 borderRadius: '4px',
                                                 color: '#e74c3c',
-                                                cursor: 'pointer',
+                                                cursor: deletingId === booking.id ? 'wait' : 'pointer',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                width: booking.status === 'pending' ? '100%' : 'auto'
+                                                width: booking.status === 'pending' ? '100%' : 'auto',
+                                                opacity: deletingId === booking.id ? 0.5 : 1,
+                                                position: 'relative',
+                                                zIndex: 10
                                             }}
                                             title="Delete Booking"
                                         >
-                                            <Trash2 size={16} />
+                                            {deletingId === booking.id ? <span style={{ fontSize: '12px' }}>...</span> : <Trash2 size={16} />}
                                         </button>
                                     </div>
                                 </td>

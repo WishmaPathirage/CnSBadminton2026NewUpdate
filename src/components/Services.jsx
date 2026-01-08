@@ -1,32 +1,47 @@
 import { motion } from 'framer-motion';
-import { ShoppingBag, Zap, Coffee, Trophy, Users, Layers } from 'lucide-react';
+import { ShoppingBag, Zap, Coffee, Layers, CreditCard, Smartphone, Utensils, Store } from 'lucide-react';
 
 const Services = () => {
     const services = [
         {
-            title: 'BWF Standard Courts',
+            title: 'Court Rental',
             icon: <Layers size={40} />,
-            desc: '4 International standard synthetic courts with glare-free lighting.'
+            desc: '3 indoor courts, open 24/7.'
         },
         {
-            title: 'Coaching Academy',
-            icon: <Users size={40} />,
-            desc: 'Professional training programs for beginners to advanced players.'
+            title: 'Phone & Online Booking',
+            icon: <Smartphone size={40} />,
+            desc: 'Easy and flexible booking options.'
         },
         {
-            title: 'Pro Shop',
+            title: 'Card & QR Payments',
+            icon: <CreditCard size={40} />,
+            desc: 'Multiple payment options for your convenience.'
+        },
+        {
+            title: 'Racket Gutting',
+            icon: <Zap size={40} />,
+            desc: 'Fast, pro-level stringing services.'
+        },
+        {
+            title: 'Equipment Shop',
             icon: <ShoppingBag size={40} />,
-            desc: 'Exclusive range of branded rackets, shoes, and restringing services.'
+            desc: 'Rackets, shuttles, grips & more.'
         },
         {
-            title: 'Tournaments',
-            icon: <Trophy size={40} />,
-            desc: 'Hosting corporate, inter-club, and open badminton championships.'
-        },
-        {
-            title: 'Cafe & Juice Bar',
+            title: 'Juice Bar',
             icon: <Coffee size={40} />,
-            desc: 'Fresh juices, protein shakes, and snacks to refuel your game.'
+            desc: 'Fresh juices & energy drinks.'
+        },
+        {
+            title: 'Restaurant',
+            icon: <Utensils size={40} />,
+            desc: 'Tasty meals on-site.'
+        },
+        {
+            title: 'Mini Mart',
+            icon: <Store size={40} />,
+            desc: 'Snacks & essentials.'
         },
     ];
 
@@ -41,7 +56,7 @@ const Services = () => {
                     style={{ textAlign: 'center', marginBottom: '3rem' }}
                 >
                     <h2 style={{ fontSize: '2.5rem' }}>
-                        <span className="text-gradient">Our Premium Facilities</span>
+                        <span className="text-gradient">Our Premium Services</span>
                     </h2>
                 </motion.div>
 

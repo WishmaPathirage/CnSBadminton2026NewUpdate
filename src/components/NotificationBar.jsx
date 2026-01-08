@@ -30,7 +30,9 @@ const NotificationBar = () => {
                     }}
                     style={{ display: 'inline-block' }}
                 >
-                    <span style={{ opacity: 0.9, paddingRight: '50px' }}>🏸 BWF Standard Courts &nbsp; • &nbsp; 👟 Pro Shop &nbsp; • &nbsp; 🏸 Coaching Academy &nbsp; • &nbsp; ☕ Cafe & Juice Bar</span>
+                    <span style={{ opacity: 0.9, paddingRight: '50px' }}>
+                        Court Rental &nbsp; • &nbsp; Phone & Online Booking &nbsp; • &nbsp; Card & QR Payments &nbsp; • &nbsp; Racket Gutting &nbsp; • &nbsp; Equipment Shop &nbsp; • &nbsp; Juice Bar &nbsp; • &nbsp; Restaurant &nbsp; • &nbsp; Mini Mart
+                    </span>
                 </motion.div>
             </div>
         </motion.div>

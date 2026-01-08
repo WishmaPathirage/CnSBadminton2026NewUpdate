@@ -61,6 +61,24 @@ export const deleteBooking = async (id) => {
     }
 };
 
+export const getBookingByOrderId = async (orderId) => {
+    try {
+        const q = query(
+            collection(db, BOOKINGS_COL),
+            where("orderId", "==", orderId)
+        );
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) return null;
+
+        // Assuming orderId is unique, return first match
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() };
+    } catch (error) {
+        console.error("Error fetching booking by order ID:", error);
+        return null;
+    }
+};
+
 // Returns only booked slots for privacy (no user names)
 export const getAvailability = async (date) => {
     try {

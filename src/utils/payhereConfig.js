@@ -2,8 +2,8 @@ import md5 from 'crypto-js/md5';
 
 // PayHere Sandbox Credentials
 // REPLACE THESE WITH YOUR ACTUAL SANDBOX CREDENTIALS IF YOU HAVE THEM
-export const PAYHERE_MERCHANT_ID = '1211149'; // Default Demo Merchant ID
-export const PAYHERE_MERCHANT_SECRET = '4587498579485798457984759834759847598'; // Replace with real secret from PayHere Dashboard
+export const PAYHERE_MERCHANT_ID = '1233494'.trim();
+export const PAYHERE_MERCHANT_SECRET = 'Mzc5NTI5ODk1MDM4MjIyMTAyNTUzNjU2NTI2NTc4MjkwNDA1MTQzNQ=='.trim();
 export const PAYHERE_URL = 'https://sandbox.payhere.lk/pay/checkout';
 
 /**
@@ -22,5 +22,17 @@ export const generatePaymentHash = (orderId, amount, currency = 'LKR') => {
     const hashString = `${PAYHERE_MERCHANT_ID}${orderId}${formattedAmount}${currency}${hashedSecret}`;
 
     // 3. Generate final hash
-    return md5(hashString).toString().toUpperCase();
+    const finalHash = md5(hashString).toString().toUpperCase();
+
+    // Debugging Logs (Remove in production)
+    console.log("PayHere Debug:");
+    console.log("Merchant ID:", PAYHERE_MERCHANT_ID);
+    console.log("Order ID:", orderId);
+    console.log("Formatted Amount:", formattedAmount);
+    console.log("Currency:", currency);
+    console.log("Hashed Secret (Upper):", hashedSecret);
+    console.log("Hash String:", hashString);
+    console.log("Final Hash:", finalHash);
+
+    return finalHash;
 };

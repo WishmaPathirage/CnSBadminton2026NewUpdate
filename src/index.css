@@ -101,15 +101,17 @@ button {
 }
 
 .btn-gradient {
-  background: linear-gradient(90deg, var(--brand-teal), var(--brand-pink), var(--brand-yellow));
+  background: var(--brand-teal);
   color: #000;
   border: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(120, 220, 202, 0.3);
 }
 
 .btn-gradient:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(120, 220, 202, 0.4);
+  background: #6cd1bf;
+  box-shadow: 0 8px 25px rgba(120, 220, 202, 0.5);
 }
 
 .btn-hero-cta {
@@ -122,7 +124,7 @@ button {
   letter-spacing: 1px;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-  box-shadow: 0 0 20px rgba(120, 220, 202, 0.3);
+  box-shadow: 0 4px 15px rgba(120, 220, 202, 0.3);
   z-index: 1;
 }
 
@@ -133,7 +135,7 @@ button {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background: rgba(255, 255, 255, 0.2);
   transform: translateX(-100%);
   transition: transform 0.6s;
   z-index: -1;
@@ -142,7 +144,7 @@ button {
 .btn-hero-cta:hover {
   transform: translateY(-3px) scale(1.02);
   background: #6cd1bf;
-  box-shadow: 0 0 40px rgba(120, 220, 202, 0.6), 0 0 10px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 25px rgba(120, 220, 202, 0.5);
 }
 
 .btn-hero-cta:hover::before {
@@ -151,22 +153,82 @@ button {
 
 .btn-hero-cta:active {
   transform: translateY(-1px) scale(0.98);
-  box-shadow: 0 0 10px rgba(120, 220, 202, 0.4);
+  box-shadow: 0 2px 10px rgba(120, 220, 202, 0.3);
 }
 
-.card-glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 24px;
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  color: white;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  font-family: var(--font-main);
+  transition: all 0.3s ease;
+  width: 100%;
 }
 
-/* Cleaner Text Utilities */
-h1,
-h2,
-h3 {
-  letter-spacing: -0.5px;
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--brand-teal);
+  box-shadow: 0 0 0 4px rgba(120, 220, 202, 0.1);
+  outline: none;
+}
+
+/* Enhanced Animations */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(120, 220, 202, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(120, 220, 202, 0.4);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s infinite;
+}
+
+/* Checkbox/Radio Custom Styles */
+.custom-checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.custom-checkbox-label:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Background Refinement */
@@ -177,7 +239,7 @@ body::before {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle at center, rgba(120, 220, 202, 0.03) 0%, rgba(233, 78, 143, 0.03) 30%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(120, 220, 202, 0.05) 0%, rgba(233, 78, 143, 0.05) 30%, transparent 70%);
   pointer-events: none;
   z-index: -2;
 }

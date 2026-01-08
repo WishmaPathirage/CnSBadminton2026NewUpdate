@@ -68,29 +68,11 @@ const Hero = () => {
                         color: 'var(--text-gray)',
                         marginBottom: '2rem'
                     }}>
-                        Experience Sri Lanka's premium 24/7 indoor badminton facility.
+                        Experience Galle's premium 24/7 indoor badminton facility.
                         Professional courts, expert services, and a community of champions.
                     </p>
 
-                    {/* Decorative Spinning Logo */}
-                    <motion.img
-                        src="/logo.jpg"
-                        alt="Decorative Logo"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                        style={{
-                            position: 'absolute',
-                            top: '50%',
-                            right: '-150px',
-                            transform: 'translateY(-50%)',
-                            width: '500px',
-                            height: '500px',
-                            opacity: 0.1,
-                            borderRadius: '50%',
-                            zIndex: -1,
-                            pointerEvents: 'none'
-                        }}
-                    />
+
 
                     <motion.a
                         href="#booking"

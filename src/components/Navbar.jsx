@@ -24,7 +24,7 @@ const Navbar = () => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/');
+        window.location.href = '/'; // Force reload to prevent state issues
     };
 
     const links = [
@@ -41,7 +41,7 @@ const Navbar = () => {
             style={{
                 position: 'sticky',
                 top: 0,
-                zIndex: 1000,
+                zIndex: 2000,
                 backgroundColor: scrolled ? 'rgba(10, 10, 10, 0.95)' : 'transparent',
                 backdropFilter: scrolled ? 'blur(10px)' : 'none',
                 borderBottom: scrolled ? '1px solid transparent' : 'none',
@@ -51,21 +51,21 @@ const Navbar = () => {
             }}
         >
             <div className="container flex-center" style={{ justifyContent: 'space-between' }}>
-                <Link to="/" style={{ fontSize: '1.2rem', fontWeight: '800', fontFamily: 'var(--font-display)', color: 'var(--brand-yellow)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Link to="/" style={{ fontSize: '1.2rem', fontWeight: '800', fontFamily: 'var(--font-display)', color: 'var(--brand-yellow)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap' }}>
                     <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                        style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', border: '2px solid white', backgroundColor: 'white' }}
+                        animate={{ rotateY: 360 }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                        style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', border: '2px solid white', backgroundColor: 'white', flexShrink: 0 }}
                     >
                         <img src="/logo.jpg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     </motion.div>
                     <span>
-                        C & S <span style={{ color: 'white' }}>Badminton Complex (PVT) Ltd</span>
+                        C & S <span style={{ color: 'white' }}>Badminton Complex</span>
                     </span>
                 </Link>
 
                 {/* Desktop Menu */}
-                <div className="desktop-menu" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                <div className="desktop-menu" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
                     {links.map((link) => (
                         <a
                             key={link.name}
@@ -76,7 +76,8 @@ const Navbar = () => {
                                 position: 'relative',
                                 color: 'white',
                                 textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                                letterSpacing: '0.5px'
+                                letterSpacing: '0.5px',
+                                whiteSpace: 'nowrap'
                             }}
                             className="nav-link"
                         >
@@ -136,7 +137,9 @@ const Navbar = () => {
                         exit={{ opacity: 0, height: 0 }}
                         style={{
                             overflow: 'hidden',
-                            backgroundColor: 'rgba(10, 10, 10, 0.98)',
+                            background: 'rgba(10, 10, 10, 0.8)',
+                            backdropFilter: 'blur(20px)',
+                            WebkitBackdropFilter: 'blur(20px)',
                             borderBottom: '1px solid rgba(255,255,255,0.1)'
                         }}
                     >
@@ -183,6 +186,19 @@ const Navbar = () => {
           .mobile-toggle { display: none !important; }
         }
         .nav-link:hover { color: var(--primary-green); }
+        .nav-link::after {
+          content: '';
+          position: absolute;
+          width: 0;
+          height: 2px;
+          bottom: -4px;
+          left: 0;
+          background-color: var(--brand-yellow);
+          transition: width 0.3s ease-in-out;
+        }
+        .nav-link:hover::after {
+          width: 100%;
+        }
       `}</style>
         </nav >
     );

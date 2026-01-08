@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { register } from '../services/authService';
+import { register, loginWithGoogle, logout } from '../services/authService';
 import { validateEmail, validatePhone, validatePassword, getFriendlyErrorMessage } from '../utils/validators';
 
 const Register = () => {
@@ -57,7 +57,8 @@ const Register = () => {
             });
 
             if (result.success) {
-                navigate('/');
+                await logout();
+                navigate('/login');
             } else {
                 // Use the returned code if available, otherwise fall back to message or generic
                 const msg = result.code ? getFriendlyErrorMessage(result.code) : result.message;
@@ -76,10 +77,10 @@ const Register = () => {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="card-glass"
+                className="glass-panel"
                 style={{
                     padding: '3rem',
-                    borderRadius: '20px',
+                    borderRadius: '24px',
                     width: '100%',
                     maxWidth: '600px',
                     position: 'relative'
@@ -96,7 +97,7 @@ const Register = () => {
                         border: '1px solid #e74c3c',
                         color: '#ff6b6b',
                         padding: '1rem',
-                        borderRadius: '8px',
+                        borderRadius: '12px',
                         marginBottom: '1.5rem',
                         textAlign: 'center'
                     }}>
@@ -106,35 +107,35 @@ const Register = () => {
 
                 <form onSubmit={handleSubmit}>
                     <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-light)' }}>Full Name</label>
+                        <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Full Name</label>
                         <input
                             type="text"
                             required
-                            style={inputStyle}
+                            className="glass-input"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             placeholder="John Doe"
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-light)' }}>Email</label>
+                            <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Email</label>
                             <input
                                 type="email"
                                 required
-                                style={inputStyle}
+                                className="glass-input"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 placeholder="john@example.com"
                             />
                         </div>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-light)' }}>Phone</label>
+                            <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Phone</label>
                             <input
                                 type="tel"
                                 required
-                                style={inputStyle}
+                                className="glass-input"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                 placeholder="077xxxxxxx"
@@ -142,24 +143,24 @@ const Register = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                    <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2.5rem' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-light)' }}>Password</label>
+                            <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Password</label>
                             <input
                                 type="password"
                                 required
-                                style={inputStyle}
+                                className="glass-input"
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 placeholder="••••••••"
                             />
                         </div>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-light)' }}>Confirm Password</label>
+                            <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Confirm Password</label>
                             <input
                                 type="password"
                                 required
-                                style={inputStyle}
+                                className="glass-input"
                                 value={formData.confirmPassword}
                                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                                 placeholder="••••••••"
@@ -172,11 +173,58 @@ const Register = () => {
                         whileTap={{ scale: 0.98 }}
                         disabled={isLoading}
                         className="btn-gradient"
-                        style={{ width: '100%', padding: '1rem', borderRadius: '8px', fontWeight: 'bold', fontSize: '1.1rem', cursor: isLoading ? 'wait' : 'pointer', opacity: isLoading ? 0.8 : 1 }}
+                        style={{ width: '100%', padding: '1rem', borderRadius: '50px', fontWeight: 'bold', fontSize: '1.1rem', cursor: isLoading ? 'wait' : 'pointer', opacity: isLoading ? 0.8 : 1, boxShadow: '0 10px 20px rgba(120, 220, 202, 0.3)' }}
                     >
                         {isLoading ? 'Creating Account...' : 'Register'}
                     </motion.button>
                 </form>
+
+
+                <div style={{ margin: '1.5rem 0', textAlign: 'center', position: 'relative' }}>
+                    <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+                    <span style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: '#0f172a', padding: '0 10px', color: 'var(--text-gray)', fontSize: '0.9rem' }}>OR</span>
+                </div>
+
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={async () => {
+                        setIsLoading(true);
+                        setError('');
+                        try {
+                            const result = await loginWithGoogle();
+                            if (result.success) {
+                                navigate('/');
+                            } else {
+                                setError(result.message);
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            setError("Google Sign-In failed.");
+                        } finally {
+                            setIsLoading(false);
+                        }
+                    }}
+                    disabled={isLoading}
+                    style={{
+                        width: '100%',
+                        padding: '0.8rem',
+                        borderRadius: '50px',
+                        fontWeight: '600',
+                        fontSize: '1rem',
+                        cursor: isLoading ? 'wait' : 'pointer',
+                        background: 'white',
+                        color: '#333',
+                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px'
+                    }}
+                >
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: '20px', height: '20px' }} />
+                    Sign up with Google
+                </motion.button>
 
                 <div style={{ marginTop: '2rem', textAlign: 'center', color: 'var(--text-gray)' }}>
                     Already have an account?{' '}
@@ -185,18 +233,6 @@ const Register = () => {
             </motion.div>
         </section>
     );
-};
-
-const inputStyle = {
-    width: '100%',
-    padding: '1rem',
-    background: 'rgba(255, 255, 255, 0.05)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '8px',
-    color: 'white',
-    fontSize: '1rem',
-    outline: 'none',
-    transition: 'border-color 0.3s'
 };
 
 export default Register;

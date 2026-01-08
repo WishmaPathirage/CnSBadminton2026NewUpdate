@@ -1,6 +1,41 @@
 import { auth, db } from '../firebaseConfig';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+
+export const loginWithGoogle = async () => {
+    try {
+        const provider = new GoogleAuthProvider();
+        const userCredential = await signInWithPopup(auth, provider);
+        const user = userCredential.user;
+
+        // Check if user exists in Firestore
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        let userProfile = {};
+
+        if (!userDoc.exists()) {
+            // Create new user profile if not exists
+            userProfile = {
+                name: user.displayName,
+                email: user.email,
+                phone: user.phoneNumber || '', // Google might provide phone
+                role: 'user',
+                createdAt: new Date().toISOString()
+            };
+            await setDoc(userDocRef, userProfile);
+        } else {
+            userProfile = userDoc.data();
+        }
+
+        return {
+            success: true,
+            user: { ...user, ...userProfile }
+        };
+    } catch (error) {
+        return { success: false, message: error.message, code: error.code };
+    }
+};
 
 export const login = async (email, password) => {
     try {
