@@ -852,7 +852,6 @@ Website: www.cnsbadminton.lk`;
     );
 
 
-    );
 };
 
 export default AdminPanel;
