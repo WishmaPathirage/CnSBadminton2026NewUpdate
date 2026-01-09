@@ -24,6 +24,32 @@ const AdminPanel = () => {
     });
     const [manualLoading, setManualLoading] = useState(false);
 
+    // Delete Confirmation State
+    const [deletingId, setDeletingId] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, bookingId: null });
+
+    const handleDeleteClick = (e, id) => {
+        e.stopPropagation();
+        setConfirmModal({ isOpen: true, bookingId: id });
+    };
+
+    const confirmDelete = async () => {
+        if (!confirmModal.bookingId) return;
+
+        setDeletingId(confirmModal.bookingId); // Show loading spinner on button
+        setConfirmModal({ isOpen: false, bookingId: null }); // Close modal immediately
+
+        try {
+            await deleteBooking(confirmModal.bookingId);
+            // State update happens via subscription
+        } catch (error) {
+            console.error("Failed to delete:", error);
+            alert("Failed to delete booking.");
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
     // Request notification permission on mount
     useEffect(() => {
         if ('Notification' in window && Notification.permission !== 'granted') {
