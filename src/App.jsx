@@ -8,6 +8,7 @@ import BookingForm from './components/BookingForm';
 import Memberships from './components/Memberships';
 import Services from './components/Services';
 import Events from './components/Events';
+import Directors from './components/Directors';
 import Reviews from './components/Reviews';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
