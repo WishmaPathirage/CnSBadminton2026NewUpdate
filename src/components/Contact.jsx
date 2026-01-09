@@ -29,17 +29,18 @@ const Contact = () => {
                     >
                         <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
                             <motion.div
-                                initial={{ y: -100, opacity: 0, rotate: -45 }}
-                                whileInView={{ y: 0, opacity: 1, rotate: 0 }}
+                                initial={{ y: -250, x: 100, opacity: 0, rotate: -120, scale: 0.5 }}
+                                whileInView={{ y: 0, x: 0, opacity: 1, rotate: -30, scale: 1 }}
                                 transition={{
                                     type: "spring",
-                                    stiffness: 300,
-                                    damping: 15,
+                                    stiffness: 600,
+                                    damping: 20,
+                                    mass: 0.8,
                                     delay: 0.2
                                 }}
                                 style={{
-                                    fontSize: '3rem',
-                                    filter: 'drop-shadow(0 0 10px rgba(46, 204, 113, 0.5))',
+                                    fontSize: '4rem',
+                                    filter: 'drop-shadow(-4px 4px 10px rgba(46, 204, 113, 0.6))',
                                     zIndex: 2
                                 }}
                             >
@@ -47,17 +48,17 @@ const Contact = () => {
                             </motion.div>
                             <motion.div
                                 initial={{ scale: 0, opacity: 0 }}
-                                whileInView={{ scale: [0, 1.5, 0], opacity: [0, 1, 0] }}
-                                transition={{ duration: 0.4, delay: 0.4 }}
+                                whileInView={{ scale: [0, 2, 0], opacity: [0, 0.8, 0] }}
+                                transition={{ duration: 0.3, delay: 0.3 }}
                                 style={{
                                     position: 'absolute',
-                                    top: '50%',
-                                    left: '50%',
+                                    top: '60%',
+                                    left: '40%',
                                     transform: 'translate(-50%, -50%)',
-                                    width: '50px',
-                                    height: '50px',
+                                    width: '80px',
+                                    height: '80px',
                                     borderRadius: '50%',
-                                    background: 'radial-gradient(circle, rgba(46,204,113,0.8) 0%, transparent 70%)',
+                                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(46, 204, 113, 0.5) 40%, transparent 70%)',
                                     zIndex: 1
                                 }}
                             />
