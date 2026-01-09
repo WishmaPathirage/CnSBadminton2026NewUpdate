@@ -33,7 +33,7 @@ const DevelopmentProgress = () => {
     // Auto-play
     useEffect(() => {
         const timer = setInterval(() => {
-            nextSlide();
+            prevSlide(); // Move Left-to-Right
         }, 4000);
         return () => clearInterval(timer);
     }, [currentIndex]);
