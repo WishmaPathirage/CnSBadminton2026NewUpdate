@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { subscribeToBookings, updateBookingStatus, deleteBooking, createBooking } from '../services/bookingService';
+import { subscribeToBookings, updateBookingStatus, deleteBooking, createBooking, subscribeToPermanentBookings, createPermanentBooking, deletePermanentBooking } from '../services/bookingService';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../services/authService';
 import { useNavigate } from 'react-router-dom';
@@ -144,10 +144,10 @@ const AdminPanel = () => {
 
     useEffect(() => {
         // Subscribe to Permanent Bookings too
-        // const unsubPerm = subscribeToPermanentBookings((data) => {
-        //     setPermanentBookings(data);
-        // });
-        // return () => unsubPerm();
+        const unsubPerm = subscribeToPermanentBookings((data) => {
+            setPermanentBookings(data);
+        });
+        return () => unsubPerm();
     }, []);
 
     // Manual Form Update
@@ -175,33 +175,64 @@ const AdminPanel = () => {
             const selectedDate = manualForm.date;
             const selectedCourt = parseInt(manualForm.court);
 
-            // Check Regular Conflicts
-            const hasConflict = bookings.some(b => {
-                if (b.date !== selectedDate || b.status === 'rejected') return false;
-                if (!b.courts.includes(selectedCourt)) return false;
-                const existStart = timeToMin(b.startTime);
-                const existEnd = existStart + parseInt(b.duration);
-                return (newStart < existEnd && existStart < newEnd);
-            });
+            if (bookingType === 'permanent') {
+                // Permanent Booking Logic
+                const dayOfWeek = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
 
-            if (hasConflict) {
-                alert('⚠️ This slot conflicts with an existing booking!');
-                setManualLoading(false);
-                return;
+                // Check conflicts with other permanent bookings
+                const permConflict = permanentBookings.some(b => {
+                    if (b.dayOfWeek !== dayOfWeek) return false;
+                    if (!b.courts.includes(selectedCourt)) return false;
+                    const existStart = timeToMin(b.startTime);
+                    const existEnd = existStart + parseInt(b.duration);
+                    return (newStart < existEnd && existStart < newEnd);
+                });
+
+                if (permConflict) {
+                    alert('⚠️ This slot conflicts with an existing PERMANENT booking!');
+                    setManualLoading(false);
+                    return;
+                }
+
+                await createPermanentBooking({
+                    dayOfWeek,
+                    startTime: manualForm.startTime,
+                    duration: parseInt(manualForm.duration),
+                    courts: [selectedCourt],
+                    userName: manualForm.name,
+                    userPhone: 'N/A', // No phone in manual form
+                });
+                alert('Permanent Booking successfully added for every ' + dayOfWeek + '!');
+
+            } else {
+                // Check Regular Conflicts
+                const hasConflict = bookings.some(b => {
+                    if (b.date !== selectedDate || b.status === 'rejected') return false;
+                    if (!b.courts.includes(selectedCourt)) return false;
+                    const existStart = timeToMin(b.startTime);
+                    const existEnd = existStart + parseInt(b.duration);
+                    return (newStart < existEnd && existStart < newEnd);
+                });
+
+                if (hasConflict) {
+                    alert('⚠️ This slot conflicts with an existing booking!');
+                    setManualLoading(false);
+                    return;
+                }
+
+                // Create Standard Booking
+                await createBooking({
+                    date: manualForm.date,
+                    startTime: manualForm.startTime,
+                    duration: parseInt(manualForm.duration),
+                    courts: [selectedCourt],
+                    userName: manualForm.name,
+                    userPhone: 'N/A', // No phone in manual form
+                    userId: 'admin-manual',
+                    status: 'confirmed'
+                });
+                alert('Booking successfully added!');
             }
-
-            // Create Standard Booking
-            await createBooking({
-                date: manualForm.date,
-                startTime: manualForm.startTime,
-                duration: parseInt(manualForm.duration),
-                courts: [selectedCourt],
-                userName: manualForm.name,
-                userPhone: 'N/A', // No phone in manual form
-                userId: 'admin-manual',
-                status: 'confirmed'
-            });
-            alert('Booking successfully added!');
 
             setShowManualModal(false);
             // Reset Form
@@ -265,6 +296,31 @@ const AdminPanel = () => {
                             </div>
 
                             <form onSubmit={handleManualSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {/* Type Toggle */}
+                                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '4px', marginBottom: '1.5rem' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setBookingType('one-time')}
+                                        style={{
+                                            flex: 1, padding: '0.8rem', borderRadius: '6px', border: 'none',
+                                            background: bookingType === 'one-time' ? 'var(--brand-teal)' : 'transparent',
+                                            color: bookingType === 'one-time' ? '#000' : '#aaa', fontWeight: 'bold', cursor: 'pointer'
+                                        }}
+                                    >
+                                        One-Time
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setBookingType('permanent')}
+                                        style={{
+                                            flex: 1, padding: '0.8rem', borderRadius: '6px', border: 'none',
+                                            background: bookingType === 'permanent' ? 'var(--brand-pink)' : 'transparent',
+                                            color: bookingType === 'permanent' ? '#fff' : '#aaa', fontWeight: 'bold', cursor: 'pointer'
+                                        }}
+                                    >
+                                        Permanent (Weekly)
+                                    </button>
+                                </div>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                     <div>
@@ -422,9 +478,43 @@ const AdminPanel = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
-                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.2.1 (Fixed Logout)</span></h1>
+                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.3</span></h1>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
+
+                    {/* View Toggle */}
+                    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', padding: '4px', gap: '4px' }}>
+                        <button
+                            onClick={() => setViewMode('bookings')}
+                            style={{
+                                padding: '0.6rem 1.2rem',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: viewMode === 'bookings' ? 'var(--brand-teal)' : 'transparent',
+                                color: viewMode === 'bookings' ? '#000' : '#aaa',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s'
+                            }}
+                        >
+                            Daily
+                        </button>
+                        <button
+                            onClick={() => setViewMode('permanent')}
+                            style={{
+                                padding: '0.6rem 1.2rem',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: viewMode === 'permanent' ? 'var(--brand-pink)' : 'transparent',
+                                color: viewMode === 'permanent' ? '#fff' : '#aaa',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s'
+                            }}
+                        >
+                            Recurring
+                        </button>
+                    </div>
 
                     <div style={{ display: 'flex', gap: '1rem' }}>
 
@@ -719,9 +809,74 @@ const AdminPanel = () => {
                     )}
                 </div>
             ) : (
-                <div style={{ textAlign: 'center', padding: '3rem', color: '#aaa', border: '1px dashed #444', borderRadius: '12px' }}>
-                    <h3>Maintenance Mode</h3>
-                    <p>Recurring Bookings view is temporarily disabled for debugging.</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                        const dayBookings = permanentBookings.filter(b => b.dayOfWeek === day);
+                        if (dayBookings.length === 0) return null;
+
+                        return (
+                            <motion.div
+                                key={day}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="glass-panel"
+                                style={{ padding: '2rem', borderTop: '4px solid var(--brand-pink)' }}
+                            >
+                                <h3 style={{ marginBottom: '1.5rem', fontSize: '1.4rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    {day} <span style={{ fontSize: '0.9rem', opacity: 0.5, fontWeight: 'normal' }}>({dayBookings.length})</span>
+                                </h3>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    {dayBookings.sort((a, b) => a.startTime.localeCompare(b.startTime)).map(booking => {
+                                        // Calculate end time properly
+                                        const [hours, minutes] = booking.startTime.split(':').map(Number);
+                                        const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
+                                        const endH = Math.floor(totalMinutes / 60);
+                                        const endM = totalMinutes % 60;
+                                        const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+                                        return (
+                                            <div key={booking.id} style={{
+                                                background: 'rgba(255,255,255,0.03)',
+                                                padding: '1rem',
+                                                borderRadius: '12px',
+                                                border: '1px solid rgba(255,255,255,0.05)',
+                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                                            }}>
+                                                <div>
+                                                    <div style={{ color: 'var(--brand-pink)', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                                        {booking.startTime} - {endTime}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.9rem', color: '#aaa', marginTop: '0.3rem' }}>
+                                                        {booking.userName} • Court {booking.courts.join(', ')}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDeletePermanent(booking.id)}
+                                                    style={{
+                                                        padding: '0.5rem',
+                                                        background: 'rgba(231, 76, 60, 0.1)',
+                                                        color: '#e74c3c',
+                                                        border: 'none',
+                                                        borderRadius: '8px',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+                    {permanentBookings.length === 0 && (
+                        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: '#666' }}>
+                            <CalendarX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                            <p>No recurring bookings found.</p>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
