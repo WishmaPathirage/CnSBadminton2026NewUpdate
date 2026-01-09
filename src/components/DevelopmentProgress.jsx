@@ -17,18 +17,6 @@ const images = [
 
 const DevelopmentProgress = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [isMobile, setIsMobile] = useState(false);
-
-    // Responsive check
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
-
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
 
     // Auto-play
     useEffect(() => {
@@ -71,7 +59,7 @@ const DevelopmentProgress = () => {
             transition: { duration: 0.5, ease: "easeInOut" }
         },
         left1: {
-            x: isMobile ? '-15%' : '-50%', // Tighter overlap on mobile
+            x: '-50%',
             scale: 0.85,
             zIndex: 5,
             opacity: 0.9,
@@ -81,17 +69,17 @@ const DevelopmentProgress = () => {
             transition: { duration: 0.5, ease: "easeInOut" }
         },
         left2: {
-            x: isMobile ? '-30%' : '-90%',
+            x: '-90%',
             scale: 0.7,
             zIndex: 1,
-            opacity: isMobile ? 0 : 0.6, // Hide far items on mobile
+            opacity: 0.6,
             filter: 'blur(3px)',
             boxShadow: 'none',
-            display: isMobile ? 'none' : 'block',
+            display: 'block',
             transition: { duration: 0.5, ease: "easeInOut" }
         },
         right1: {
-            x: isMobile ? '15%' : '50%',
+            x: '50%',
             scale: 0.85,
             zIndex: 5,
             opacity: 0.9,
@@ -101,13 +89,13 @@ const DevelopmentProgress = () => {
             transition: { duration: 0.5, ease: "easeInOut" }
         },
         right2: {
-            x: isMobile ? '30%' : '90%',
+            x: '90%',
             scale: 0.7,
             zIndex: 1,
-            opacity: isMobile ? 0 : 0.6,
+            opacity: 0.6,
             filter: 'blur(3px)',
             boxShadow: 'none',
-            display: isMobile ? 'none' : 'block',
+            display: 'block',
             transition: { duration: 0.5, ease: "easeInOut" }
         }
     };
@@ -124,7 +112,7 @@ const DevelopmentProgress = () => {
                     position: 'relative',
                     width: '100%',
                     maxWidth: '1200px',
-                    height: isMobile ? '300px' : '500px', // Adjust container height
+                    height: '500px',
                     margin: '0 auto',
                     display: 'flex',
                     alignItems: 'center',
@@ -140,9 +128,10 @@ const DevelopmentProgress = () => {
                             variants={variants}
                             style={{
                                 position: 'absolute',
-                                width: isMobile ? '85%' : '600px', // Responsive Width
-                                height: isMobile ? 'auto' : '400px', // Responsive Height
-                                aspectRatio: '3/2',
+                                width: '600px',
+                                maxWidth: '90vw', // Only constraint for mobile
+                                height: 'auto',
+                                aspectRatio: '3/2', // Maintain ratio
                                 borderRadius: '24px',
                                 overflow: 'hidden',
                                 cursor: 'pointer',
@@ -170,46 +159,46 @@ const DevelopmentProgress = () => {
                         onClick={prevSlide}
                         style={{
                             position: 'absolute',
-                            left: isMobile ? '10px' : '5%',
+                            left: '5%',
                             zIndex: 20,
                             background: 'rgba(255,255,255,0.1)',
                             border: '1px solid rgba(255,255,255,0.2)',
                             borderRadius: '50%',
-                            width: isMobile ? '40px' : '50px',
-                            height: isMobile ? '40px' : '50px',
+                            width: '50px',
+                            height: '50px',
                             color: 'white',
                             cursor: 'pointer',
                             backdropFilter: 'blur(10px)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}
                     >
-                        <ChevronLeft size={isMobile ? 20 : 24} />
+                        <ChevronLeft size={24} />
                     </button>
 
                     <button
                         onClick={nextSlide}
                         style={{
                             position: 'absolute',
-                            right: isMobile ? '10px' : '5%',
+                            right: '5%',
                             zIndex: 20,
                             background: 'rgba(255,255,255,0.1)',
                             border: '1px solid rgba(255,255,255,0.2)',
                             borderRadius: '50%',
-                            width: isMobile ? '40px' : '50px',
-                            height: isMobile ? '40px' : '50px',
+                            width: '50px',
+                            height: '50px',
                             color: 'white',
                             cursor: 'pointer',
                             backdropFilter: 'blur(10px)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}
                     >
-                        <ChevronRight size={isMobile ? 20 : 24} />
+                        <ChevronRight size={24} />
                     </button>
 
                     {/* Dots */}
                     <div style={{
                         position: 'absolute',
-                        bottom: isMobile ? '-20px' : '-50px', // Pull up on mobile
+                        bottom: '-50px',
                         left: '50%',
                         transform: 'translateX(-50%)',
                         display: 'flex',
