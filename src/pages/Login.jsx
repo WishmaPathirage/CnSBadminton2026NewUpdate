@@ -62,10 +62,10 @@ const Login = () => {
                 console.log("Login successful. Role:", result.user.role);
                 if (result.user.role === 'admin') {
                     console.log("Navigating to /admin via hard redirect");
-                    window.location.href = '/admin';
+                    window.location.href = '#/admin';
                 } else {
                     console.log("Navigating to / via hard redirect");
-                    window.location.href = '/';
+                    window.location.href = '#/';
                 }
             } else {
                 console.log("Login failed:", result.message);
@@ -102,7 +102,7 @@ const Login = () => {
 
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     <h2 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Welcome Back</h2>
-                    <p style={{ color: 'var(--text-gray)' }}>Login to access your dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>(v2.0)</span></p>
+                    <p style={{ color: 'var(--text-gray)' }}>Login to access your dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>(v2.2)</span></p>
                 </div>
 
                 {error && (
