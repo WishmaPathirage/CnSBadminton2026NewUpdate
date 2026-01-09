@@ -30,15 +30,27 @@ const Contact = () => {
                         <p style={{ marginBottom: '2rem', opacity: 0.9 }}>
                             Book your court today and enjoy <br />premium flooring and lighting.
                         </p>
-                        <a href="#booking" style={{
-                            backgroundColor: '#000',
-                            color: '#fff',
-                            padding: '1rem 2.5rem',
-                            borderRadius: '50px',
-                            fontWeight: '700'
-                        }}>
+                        <button
+                            onClick={() => {
+                                const bookingSection = document.getElementById('booking');
+                                if (bookingSection) {
+                                    bookingSection.scrollIntoView({ behavior: 'smooth' });
+                                }
+                            }}
+                            style={{
+                                backgroundColor: '#000',
+                                color: '#fff',
+                                padding: '1rem 2.5rem',
+                                borderRadius: '50px',
+                                fontWeight: '700',
+                                width: 'fit-content',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '1rem'
+                            }}
+                        >
                             Book Now
-                        </a>
+                        </button>
                     </motion.div>
 
                     {/* Contact Info & Map */}
