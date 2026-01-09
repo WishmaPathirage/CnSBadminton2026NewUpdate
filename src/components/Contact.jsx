@@ -12,24 +12,44 @@ const Contact = () => {
                         initial={{ scale: 0.9, opacity: 0 }}
                         whileInView={{ scale: 1, opacity: 1 }}
                         transition={{ type: 'spring' }}
+                        className="glass-panel"
                         style={{
-                            background: 'linear-gradient(135deg, var(--primary-green), #27ae60)',
+                            background: 'rgba(255, 255, 255, 0.03)',
                             padding: '3rem',
                             borderRadius: '24px',
-                            color: '#000',
+                            border: '1px solid rgba(46, 204, 113, 0.2)',
+                            color: '#fff',
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            textAlign: 'center'
+                            textAlign: 'center',
+                            boxShadow: '0 0 30px rgba(46, 204, 113, 0.1), inset 0 0 20px rgba(46, 204, 113, 0.05)'
                         }}
                     >
-                        <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: '600' }}>Standard Rate</h3>
-                        <div style={{ fontSize: '4rem', fontWeight: '800', lineHeight: 1 }}>900</div>
-                        <div style={{ fontSize: '1.2rem', marginBottom: '2rem', fontWeight: '600' }}>LKR / Hour</div>
-                        <p style={{ marginBottom: '2rem', opacity: 0.9 }}>
+                        <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>Standard Rate</h3>
+
+                        <div style={{
+                            fontSize: '5rem',
+                            fontWeight: '800',
+                            lineHeight: 1,
+                            marginBottom: '0.5rem',
+                            color: 'transparent',
+                            WebkitBackgroundClip: 'text',
+                            backgroundImage: 'linear-gradient(135deg, #2ecc71, #27ae60)',
+                            filter: 'drop-shadow(0 4px 10px rgba(46, 204, 113, 0.3))'
+                        }}>
+                            900
+                        </div>
+
+                        <div style={{ fontSize: '1.2rem', marginBottom: '2rem', fontWeight: '600', color: '#888' }}>
+                            LKR / Hour
+                        </div>
+
+                        <p style={{ marginBottom: '2.5rem', opacity: 0.7, lineHeight: '1.6', fontSize: '0.95rem' }}>
                             Book your court today and enjoy <br />premium flooring and lighting.
                         </p>
+
                         <button
                             onClick={() => {
                                 const bookingSection = document.getElementById('booking');
@@ -37,17 +57,20 @@ const Contact = () => {
                                     bookingSection.scrollIntoView({ behavior: 'smooth' });
                                 }
                             }}
+                            className="btn-gradient"
                             style={{
-                                backgroundColor: '#000',
-                                color: '#fff',
-                                padding: '1rem 2.5rem',
+                                padding: '1rem 3rem',
                                 borderRadius: '50px',
                                 fontWeight: '700',
                                 width: 'fit-content',
                                 border: 'none',
                                 cursor: 'pointer',
-                                fontSize: '1rem'
+                                fontSize: '1.1rem',
+                                boxShadow: '0 10px 20px rgba(46, 204, 113, 0.2)',
+                                transition: 'transform 0.2s',
                             }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                         >
                             Book Now
                         </button>
