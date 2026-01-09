@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { login, loginWithGoogle } from '../services/authService';
+import { motion, AnimatePresence } from 'framer-motion';
+import { login, loginWithGoogle, resetPassword } from '../services/authService';
 import { validateEmail, getFriendlyErrorMessage } from '../utils/validators';
+import { X } from 'lucide-react';
+import ForgotPasswordModal from '../components/ForgotPasswordModal';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -10,6 +12,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
 
     const handleGoogleLogin = async () => {
         setIsLoading(true);
@@ -70,6 +73,8 @@ const Login = () => {
     };
 
     return (
+
+
         <section className="section-padding" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 1rem' }}>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -118,7 +123,7 @@ const Login = () => {
                             placeholder="john@example.com"
                         />
                     </div>
-                    <div style={{ marginBottom: '2.5rem' }}>
+                    <div style={{ marginBottom: '1rem' }}>
                         <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Password</label>
                         <input
                             type="password"
@@ -128,6 +133,16 @@ const Login = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"
                         />
+                    </div>
+
+                    <div style={{ textAlign: 'right', marginBottom: '2rem' }}>
+                        <button
+                            type="button"
+                            onClick={() => setShowForgotPassword(true)}
+                            style={{ background: 'none', border: 'none', color: 'var(--brand-teal)', cursor: 'pointer', fontSize: '0.9rem' }}
+                        >
+                            Forgot Password?
+                        </button>
                     </div>
 
                     <motion.button
@@ -175,6 +190,11 @@ const Login = () => {
                     Don't have an account?{' '}
                     <Link to="/register" style={{ color: 'var(--brand-teal)', fontWeight: 'bold' }}>Register Here</Link>
                 </div>
+
+                {/* Forgot Password Modal */}
+                {showForgotPassword && (
+                    <ForgotPasswordModal onClose={() => setShowForgotPassword(false)} defaultEmail={email} />
+                )}
             </motion.div>
         </section >
     );

@@ -1,5 +1,5 @@
 import { auth, db } from '../firebaseConfig';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 export const loginWithGoogle = async () => {
@@ -93,6 +93,15 @@ export const register = async (userData) => {
 export const logout = async () => {
     try {
         await signOut(auth);
+        return { success: true };
+    } catch (error) {
+        return { success: false, message: error.message, code: error.code };
+    }
+};
+
+export const resetPassword = async (email) => {
+    try {
+        await sendPasswordResetEmail(auth, email);
         return { success: true };
     } catch (error) {
         return { success: false, message: error.message, code: error.code };
