@@ -82,6 +82,7 @@ export const getBookingByOrderId = async (orderId) => {
 // Returns only booked slots for privacy (no user names)
 export const getAvailability = async (date) => {
     try {
+        // 1. Fetch Regular Bookings
         const q = query(
             collection(db, BOOKINGS_COL),
             where("date", "==", date)
@@ -94,13 +95,64 @@ export const getAvailability = async (date) => {
             .map(b => ({
                 startTime: b.startTime,
                 duration: b.duration,
-                courts: b.courts
+                courts: b.courts,
+                type: 'regular'
             }));
 
-        return bookedSlots;
+        // 2. Fetch Permanent Bookings for this Day of Week
+        const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+        const permQ = query(
+            collection(db, 'permanent_bookings'),
+            where("dayOfWeek", "==", dayOfWeek)
+        );
+        const permSnapshot = await getDocs(permQ);
+
+        const permSlots = permSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                startTime: data.startTime,
+                duration: data.duration,
+                courts: data.courts,
+                type: 'permanent' // Special flag for UI
+            };
+        });
+
+        // Merge both
+        return [...bookedSlots, ...permSlots];
+
     } catch (error) {
         console.error("Error checking availability:", error);
         return [];
+    }
+};
+
+// Permanent Bookings (Admin Only)
+export const subscribeToPermanentBookings = (callback) => {
+    const q = collection(db, 'permanent_bookings');
+    return onSnapshot(q, (snapshot) => {
+        const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(bookings);
+    });
+};
+
+export const createPermanentBooking = async (details) => {
+    try {
+        await addDoc(collection(db, 'permanent_bookings'), {
+            ...details,
+            createdAt: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error("Error creating permanent booking:", error);
+        throw error;
+    }
+};
+
+export const deletePermanentBooking = async (id) => {
+    try {
+        await deleteDoc(doc(db, 'permanent_bookings', id));
+    } catch (error) {
+        console.error("Error deleting permanent booking:", error);
+        throw error;
     }
 };
 

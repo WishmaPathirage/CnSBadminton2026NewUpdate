@@ -364,6 +364,22 @@ const BookingForm = () => {
                                         <div style={{ textAlign: 'center' }}>Court 3</div>
                                     </div>
 
+                                    {/* Legend */}
+                                    <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(46, 204, 113, 0.2)', border: '1px solid #2ecc71' }}></div>
+                                            <span style={{ color: '#aaa' }}>Available</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(231, 76, 60, 0.2)', border: '1px solid #e74c3c' }}></div>
+                                            <span style={{ color: '#aaa' }}>Booked</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(255, 105, 180, 0.2)', border: '1px solid #ff69b4' }}></div>
+                                            <span style={{ color: '#aaa' }}>Permanent (Recurring)</span>
+                                        </div>
+                                    </div>
+
                                     {/* Time Grid Scrollable Area */}
                                     <div style={{
                                         display: 'flex',
@@ -378,31 +394,33 @@ const BookingForm = () => {
                                             <div key={time} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr 1fr', gap: '1rem', alignItems: 'center' }}>
                                                 <div style={{ color: selectedTime === time ? 'var(--brand-teal)' : 'var(--text-gray)', fontWeight: selectedTime === time ? 'bold' : 'normal' }}>{time}</div>
                                                 {[1, 2, 3].map(courtId => {
-                                                    // 1. Strict Occupancy Check (Is this specific 30-min block actually taken?)
+                                                    // 1. Strict Occupancy Check
                                                     const timeToMinutes = (t) => {
                                                         const [h, m] = t.split(':').map(Number);
                                                         return h * 60 + m;
                                                     };
                                                     const slotStart = timeToMinutes(time);
-                                                    const slotEnd = slotStart + 30; // Slots are always 30 mins visually
+                                                    const slotEnd = slotStart + 30;
 
-                                                    const isOccupied = slots.some(booking => {
-                                                        if (!booking.courts.includes(courtId)) return false;
+                                                    let isOccupied = false;
+                                                    let isPermanent = false;
+
+                                                    slots.forEach(booking => {
+                                                        if (!booking.courts.includes(courtId)) return;
                                                         const bookingStart = timeToMinutes(booking.startTime);
                                                         const bookingEnd = bookingStart + booking.duration;
-                                                        // Check strictly if this 30-min block overlaps with a booking
-                                                        return Math.max(slotStart, bookingStart) < Math.min(slotEnd, bookingEnd);
+
+                                                        if (Math.max(slotStart, bookingStart) < Math.min(slotEnd, bookingEnd)) {
+                                                            isOccupied = true;
+                                                            if (booking.type === 'permanent') isPermanent = true;
+                                                        }
                                                     });
 
-                                                    // 2. Fits Duration Check (Does the FULL duration fit?)
+                                                    // 2. Fits Duration Check
                                                     const fitsDuration = isSlotAvailable(time, courtId);
                                                     const isSelected = selectedTime === time && selectedCourts.includes(courtId);
 
-                                                    // Visual State:
-                                                    // Base State:
-                                                    // - Occupied -> Red (Booked)
-                                                    // - Not Occupied (even if too short) -> Green (Available)
-
+                                                    // Visual State Logic
                                                     let label = 'Available';
                                                     let bgColor = 'rgba(46, 204, 113, 0.1)';
                                                     let borderColor = 'rgba(46, 204, 113, 0.3)';
@@ -415,9 +433,17 @@ const BookingForm = () => {
                                                         borderColor = 'rgba(231, 76, 60, 0.3)';
                                                         textColor = '#e74c3c';
                                                         cursor = 'not-allowed';
+
+                                                        // Pink Override for Permanent
+                                                        if (isPermanent) {
+                                                            label = 'Permanent'; // Or 'Booked' if preferred, but user said 'Pink - Permanent'
+                                                            bgColor = 'rgba(255, 105, 180, 0.15)'; // Pink bg
+                                                            borderColor = 'rgba(255, 105, 180, 0.4)'; // Pink border
+                                                            textColor = '#ff69b4'; // HotPink text
+                                                        }
                                                     }
 
-                                                    // Override Only If Selected
+                                                    // Select Override
                                                     if (isSelected) {
                                                         if (!fitsDuration) {
                                                             label = 'Conflict';
@@ -436,7 +462,7 @@ const BookingForm = () => {
                                                     return (
                                                         <motion.button
                                                             key={courtId}
-                                                            disabled={isOccupied && !isSelected} // Only disable if strictly occupied (or let user deselect)
+                                                            disabled={isOccupied && !isSelected}
                                                             whileHover={!isOccupied ? { scale: 1.02 } : {}}
                                                             whileTap={!isOccupied ? { scale: 0.95 } : {}}
                                                             onClick={() => {
@@ -450,18 +476,20 @@ const BookingForm = () => {
                                                                 }
                                                             }}
                                                             style={{
-                                                                padding: '1rem',
-                                                                borderRadius: '12px',
+                                                                padding: '0.8rem',
+                                                                borderRadius: '8px',
                                                                 border: isSelected ? (label === 'Conflict' ? '2px solid #ff4444' : '2px solid var(--brand-teal)') : '1px solid',
                                                                 borderColor: borderColor,
                                                                 backgroundColor: bgColor,
                                                                 color: textColor,
                                                                 cursor: cursor,
-                                                                fontSize: '0.9rem',
+                                                                fontSize: '0.8rem',
                                                                 fontWeight: isSelected ? '600' : 'normal',
                                                                 transition: 'all 0.2s ease',
                                                                 boxShadow: isSelected ? `0 0 15px ${borderColor}` : 'none',
-                                                                opacity: isOccupied && !isSelected ? 0.7 : 1
+                                                                opacity: isOccupied && !isSelected ? 0.8 : 1,
+                                                                height: '100%',
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center'
                                                             }}
                                                         >
                                                             {label}

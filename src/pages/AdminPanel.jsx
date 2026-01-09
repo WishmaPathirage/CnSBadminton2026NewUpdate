@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { subscribeToBookings, updateBookingStatus, deleteBooking, createBooking } from '../services/bookingService';
+import { subscribeToBookings, updateBookingStatus, deleteBooking, createBooking, createPermanentBooking, subscribeToPermanentBookings, deletePermanentBooking } from '../services/bookingService';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../services/authService';
 import { useNavigate } from 'react-router-dom';
@@ -150,59 +150,97 @@ Website: www.cnsbadminton.lk`;
         }
     };
 
+    const [permanentBookings, setPermanentBookings] = useState([]);
+    const [viewMode, setViewMode] = useState('bookings'); // 'bookings' or 'permanent'
+
+    useEffect(() => {
+        // Subscribe to Permanent Bookings too
+        const unsubPerm = subscribeToPermanentBookings((data) => {
+            setPermanentBookings(data);
+        });
+        return () => unsubPerm();
+    }, []);
+
+    // Manual Form Update
+    const [bookingType, setBookingType] = useState('one-time'); // 'one-time' or 'permanent'
+
     const handleManualSubmit = async (e) => {
         e.preventDefault();
         setManualLoading(true);
 
         try {
-            // 1. Check for valid name (Phone optional for Admin Manual Booking)
             if (!manualForm.name) {
                 alert('Please fill in Name.');
                 setManualLoading(false);
                 return;
             }
 
-            // 2. Strict Overlap Check
-            const timeToMin = (t) => {
-                const [h, m] = t.split(':').map(Number);
-                return h * 60 + m;
-            };
+            if (bookingType === 'permanent') {
+                // Determine Day of Week from the selected date
+                const dayOfWeek = new Date(manualForm.date).toLocaleDateString('en-US', { weekday: 'long' });
 
-            const newStart = timeToMin(manualForm.startTime);
-            const newEnd = newStart + parseInt(manualForm.duration);
-            const selectedDate = manualForm.date;
-            const selectedCourt = parseInt(manualForm.court);
+                await createPermanentBooking({
+                    dayOfWeek: dayOfWeek,
+                    startTime: manualForm.startTime,
+                    duration: parseInt(manualForm.duration),
+                    courts: [parseInt(manualForm.court)],
+                    customerName: manualForm.name,
+                    type: 'permanent'
+                });
+                alert(`Permanent Booking Created for every ${dayOfWeek}!`);
+            } else {
+                // ... Existing One-Time Logic ...
+                // Strict Overlap Check (Include Permanent)
+                const timeToMin = (t) => {
+                    const [h, m] = t.split(':').map(Number);
+                    return h * 60 + m;
+                };
 
-            const hasConflict = bookings.some(b => {
-                if (b.date !== selectedDate || b.status === 'rejected') return false;
-                if (!b.courts.includes(selectedCourt)) return false;
+                const newStart = timeToMin(manualForm.startTime);
+                const newEnd = newStart + parseInt(manualForm.duration);
+                const selectedDate = manualForm.date;
+                const selectedCourt = parseInt(manualForm.court);
 
-                const existStart = timeToMin(b.startTime);
-                const existEnd = existStart + parseInt(b.duration);
+                // Check Regular Conflicts
+                const hasConflict = bookings.some(b => {
+                    if (b.date !== selectedDate || b.status === 'rejected') return false;
+                    if (!b.courts.includes(selectedCourt)) return false;
+                    const existStart = timeToMin(b.startTime);
+                    const existEnd = existStart + parseInt(b.duration);
+                    return (newStart < existEnd && existStart < newEnd);
+                });
 
-                return (newStart < existEnd && existStart < newEnd);
-            });
+                // Check Permanent Conflicts for this specific day
+                const dayName = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
+                const hasPermConflict = permanentBookings.some(pb => {
+                    if (pb.dayOfWeek !== dayName) return false;
+                    if (!pb.courts.includes(selectedCourt)) return false;
+                    const pStart = timeToMin(pb.startTime);
+                    const pEnd = pStart + parseInt(pb.duration);
+                    return (newStart < pEnd && pStart < newEnd);
+                });
 
-            if (hasConflict) {
-                alert('⚠️ This slot conflicts with an existing booking!');
-                setManualLoading(false);
-                return;
+                if (hasConflict || hasPermConflict) {
+                    alert('⚠️ This slot conflicts with an existing (or permanent) booking!');
+                    setManualLoading(false);
+                    return;
+                }
+
+                await createBooking({
+                    date: manualForm.date,
+                    startTime: manualForm.startTime,
+                    duration: parseInt(manualForm.duration),
+                    courts: [selectedCourt],
+                    userName: manualForm.name,
+                    userPhone: 'N/A',
+                    userId: 'admin-manual',
+                    status: 'confirmed'
+                });
+                alert('Booking successfully added!');
             }
 
-            // 3. Create Booking
-            await createBooking({
-                date: manualForm.date,
-                startTime: manualForm.startTime,
-                duration: parseInt(manualForm.duration),
-                courts: [selectedCourt],
-                userName: manualForm.name,
-                userPhone: 'N/A', // Phone removed from manual booking
-                userId: 'admin-manual', // Flag for manual booking
-                status: 'confirmed' // Auto-confirm
-            });
-
-            alert('Booking successfully added!');
             setShowManualModal(false);
+            // Reset Form...
             setManualForm({
                 date: new Date().toISOString().split('T')[0],
                 startTime: '08:00',
@@ -219,34 +257,10 @@ Website: www.cnsbadminton.lk`;
         }
     };
 
-    const [confirmModal, setConfirmModal] = useState({ isOpen: false, bookingId: null });
-    const [deletingId, setDeletingId] = useState(null);
-
-    const handleDeleteClick = (e, id) => {
-        e.stopPropagation();
-        setConfirmModal({ isOpen: true, bookingId: id });
-    };
-
-    const confirmDelete = async () => {
-        const id = confirmModal.bookingId;
-        if (!id) return;
-
-        setConfirmModal({ isOpen: false, bookingId: null }); // Close modal immediately
-        setDeletingId(id); // Show loader on button
-
-        try {
-            await deleteBooking(id);
-        } catch (error) {
-            console.error("Delete failed:", error);
-            alert("Error: " + error.message);
-        } finally {
-            setDeletingId(null);
+    const handleDeletePermanent = async (id) => {
+        if (window.confirm("Are you sure you want to delete this PERMANENT booking? This will free up all future slots.")) {
+            await deletePermanentBooking(id);
         }
-    };
-
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
     };
 
     if (loading) {
@@ -259,7 +273,7 @@ Website: www.cnsbadminton.lk`;
 
     return (
         <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', paddingTop: '100px', position: 'relative' }}>
-            {/* Manual Booking Modal */}
+            {/* ... Modal ... */}
             <AnimatePresence>
                 {showManualModal && (
                     <motion.div
@@ -287,9 +301,40 @@ Website: www.cnsbadminton.lk`;
                             </div>
 
                             <form onSubmit={handleManualSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+                                {/* Booking Type Toggle */}
+                                <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setBookingType('one-time')}
+                                        style={{
+                                            flex: 1, padding: '0.5rem', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                                            background: bookingType === 'one-time' ? 'white' : 'transparent',
+                                            color: bookingType === 'one-time' ? 'black' : '#888',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        One-Time
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setBookingType('permanent')}
+                                        style={{
+                                            flex: 1, padding: '0.5rem', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                                            background: bookingType === 'permanent' ? '#ff69b4' : 'transparent',
+                                            color: bookingType === 'permanent' ? 'white' : '#888',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        Permanent
+                                    </button>
+                                </div>
+
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                     <div>
-                                        <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Date</label>
+                                        <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                                            {bookingType === 'permanent' ? 'Date (Determines Day)' : 'Date'}
+                                        </label>
                                         <input
                                             type="date"
                                             className="glass-input"
@@ -297,6 +342,11 @@ Website: www.cnsbadminton.lk`;
                                             onChange={e => setManualForm({ ...manualForm, date: e.target.value })}
                                             required
                                         />
+                                        {bookingType === 'permanent' && (
+                                            <div style={{ fontSize: '0.8rem', color: '#ff69b4', marginTop: '4px' }}>
+                                                Check: {new Date(manualForm.date).toLocaleDateString('en-US', { weekday: 'long' })}s
+                                            </div>
+                                        )}
                                     </div>
                                     <div>
                                         <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Start Time</label>
@@ -446,6 +496,33 @@ Website: www.cnsbadminton.lk`;
                     <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard</h1>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
+
+                    {/* View Toggles */}
+                    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', padding: '4px' }}>
+                        <button
+                            onClick={() => setViewMode('bookings')}
+                            style={{
+                                padding: '0.5rem 1rem',
+                                background: viewMode === 'bookings' ? 'var(--brand-teal)' : 'transparent',
+                                color: viewMode === 'bookings' ? 'black' : 'white',
+                                border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600'
+                            }}
+                        >
+                            Daily Bookings
+                        </button>
+                        <button
+                            onClick={() => setViewMode('permanent')}
+                            style={{
+                                padding: '0.5rem 1rem',
+                                background: viewMode === 'permanent' ? 'var(--brand-teal)' : 'transparent',
+                                color: viewMode === 'permanent' ? 'black' : 'white',
+                                border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600'
+                            }}
+                        >
+                            Recurring (Permanent)
+                        </button>
+                    </div>
+
                     <button
                         onClick={() => setShowManualModal(true)}
                         className="btn-gradient"
@@ -498,240 +575,281 @@ Website: www.cnsbadminton.lk`;
                     </button>
                 </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
-                {Object.keys(bookings.reduce((acc, b) => ({ ...acc, [b.date]: true }), {})).sort((a, b) => {
-                    const today = new Date().toISOString().split('T')[0];
-                    if (a === today) return -1;
-                    if (b === today) return 1;
-                    return a.localeCompare(b);
-                }).map(date => {
-                    // Filter bookings for this date
-                    const dayBookings = bookings.filter(b => b.date === date);
 
-                    // Group by Court (1, 2, 3)
-                    const courtBookings = { 1: [], 2: [], 3: [] };
-                    dayBookings.forEach(b => {
-                        b.courts.forEach(c => {
-                            if (courtBookings[c]) courtBookings[c].push(b);
+            {/* Content Switch */}
+            {viewMode === 'bookings' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
+                    {/* ... Existing Bookings List ... */}
+                    {Object.keys(bookings.reduce((acc, b) => ({ ...acc, [b.date]: true }), {})).sort((a, b) => {
+                        const today = new Date().toISOString().split('T')[0];
+                        if (a === today) return -1;
+                        if (b === today) return 1;
+                        return a.localeCompare(b);
+                    }).map(date => {
+                        // Filter bookings for this date
+                        const dayBookings = bookings.filter(b => b.date === date);
+
+                        // Group by Court (1, 2, 3)
+                        const courtBookings = { 1: [], 2: [], 3: [] };
+                        dayBookings.forEach(b => {
+                            b.courts.forEach(c => {
+                                if (courtBookings[c]) courtBookings[c].push(b);
+                            });
                         });
-                    });
 
-                    return (
-                        <motion.div
-                            key={date}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="glass-panel"
-                            style={{ padding: '2.5rem', marginBottom: '2rem' }}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                                    <div style={{
-                                        background: 'linear-gradient(135deg, var(--brand-teal), var(--brand-yellow))',
-                                        color: '#000',
-                                        padding: '0.8rem 1.5rem',
-                                        borderRadius: '12px',
-                                        fontWeight: '800',
-                                        fontSize: '1.2rem',
-                                        boxShadow: '0 4px 15px rgba(120, 220, 202, 0.3)'
-                                    }}>
-                                        {date}
-                                    </div>
-                                    <div style={{ color: 'var(--text-gray)', fontSize: '1.1rem' }}>
-                                        {dayBookings.length} Bookings
+                        return (
+                            <motion.div
+                                key={date}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="glass-panel"
+                                style={{ padding: '2.5rem', marginBottom: '2rem' }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                                        <div style={{
+                                            background: 'linear-gradient(135deg, var(--brand-teal), var(--brand-yellow))',
+                                            color: '#000',
+                                            padding: '0.8rem 1.5rem',
+                                            borderRadius: '12px',
+                                            fontWeight: '800',
+                                            fontSize: '1.2rem',
+                                            boxShadow: '0 4px 15px rgba(120, 220, 202, 0.3)'
+                                        }}>
+                                            {date}
+                                        </div>
+                                        <div style={{ color: 'var(--text-gray)', fontSize: '1.1rem' }}>
+                                            {dayBookings.length} Bookings
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
-                                {[1, 2, 3].map(courtId => (
-                                    <div key={courtId} style={{
-                                        background: 'rgba(255,255,255,0.02)',
-                                        borderRadius: '20px',
-                                        overflow: 'hidden',
-                                        border: '1px solid rgba(255,255,255,0.05)',
-                                        height: '100%',
-                                        display: 'flex',
-                                        flexDirection: 'column'
-                                    }}>
-                                        <div style={{
-                                            padding: '1.2rem',
-                                            background: 'rgba(255,255,255,0.03)',
-                                            borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+                                    {[1, 2, 3].map(courtId => (
+                                        <div key={courtId} style={{
+                                            background: 'rgba(255,255,255,0.02)',
+                                            borderRadius: '20px',
+                                            overflow: 'hidden',
+                                            border: '1px solid rgba(255,255,255,0.05)',
+                                            height: '100%',
                                             display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center'
+                                            flexDirection: 'column'
                                         }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--brand-teal)', fontWeight: '700', fontSize: '1.1rem' }}>
-                                                🏸 Court {courtId}
-                                            </div>
-                                            <span style={{
-                                                fontSize: '0.85rem',
-                                                padding: '0.2rem 0.8rem',
-                                                borderRadius: '20px',
-                                                background: 'rgba(255,255,255,0.1)',
-                                                color: 'rgba(255,255,255,0.6)'
+                                            <div style={{
+                                                padding: '1.2rem',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
                                             }}>
-                                                {courtBookings[courtId].length} slots
-                                            </span>
-                                        </div>
-
-                                        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-                                            {courtBookings[courtId].length === 0 ? (
-                                                <div style={{
-                                                    flex: 1,
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    padding: '3rem 0',
-                                                    color: 'rgba(255,255,255,0.1)'
-                                                }}>
-                                                    <CalendarX size={40} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                                                    <span style={{ fontSize: '0.9rem' }}>No bookings</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--brand-teal)', fontWeight: '700', fontSize: '1.1rem' }}>
+                                                    🏸 Court {courtId}
                                                 </div>
-                                            ) : (
-                                                courtBookings[courtId]
-                                                    .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                                                    .map(booking => {
-                                                        // Calculate End Time
-                                                        const [hours, minutes] = booking.startTime.split(':').map(Number);
-                                                        const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
-                                                        const endHour = Math.floor(totalMinutes / 60);
-                                                        const endMinute = totalMinutes % 60;
-                                                        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+                                                <span style={{
+                                                    fontSize: '0.85rem',
+                                                    padding: '0.2rem 0.8rem',
+                                                    borderRadius: '20px',
+                                                    background: 'rgba(255,255,255,0.1)',
+                                                    color: 'rgba(255,255,255,0.6)'
+                                                }}>
+                                                    {courtBookings[courtId].length} slots
+                                                </span>
+                                            </div>
 
-                                                        // WhatsApp Link
-                                                        let phoneCode = booking.userPhone || '';
-                                                        phoneCode = phoneCode.replace(/\D/g, '');
-                                                        if (phoneCode.startsWith('0')) phoneCode = '94' + phoneCode.substring(1);
-                                                        const whatsappLink = `https://wa.me/${phoneCode}`;
+                                            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                                                {courtBookings[courtId].length === 0 ? (
+                                                    <div style={{
+                                                        flex: 1,
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        padding: '3rem 0',
+                                                        color: 'rgba(255,255,255,0.1)'
+                                                    }}>
+                                                        <CalendarX size={40} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                                                        <span style={{ fontSize: '0.9rem' }}>No bookings</span>
+                                                    </div>
+                                                ) : (
+                                                    courtBookings[courtId]
+                                                        .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                                                        .map(booking => {
+                                                            // Calculate End Time
+                                                            const [hours, minutes] = booking.startTime.split(':').map(Number);
+                                                            const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
+                                                            const endHour = Math.floor(totalMinutes / 60);
+                                                            const endMinute = totalMinutes % 60;
+                                                            const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
 
-                                                        return (
-                                                            <motion.div
-                                                                key={`${booking.id}-${courtId}`}
-                                                                layout
-                                                                initial={{ opacity: 0 }}
-                                                                animate={{ opacity: 1 }}
-                                                                style={{
-                                                                    background: booking.status === 'pending' ? 'rgba(255, 180, 0, 0.08)' : 'rgba(255,255,255,0.03)',
-                                                                    border: booking.status === 'pending' ? '1px solid rgba(255, 180, 0, 0.3)' : '1px solid rgba(255,255,255,0.05)',
-                                                                    borderRadius: '16px',
-                                                                    padding: '1.2rem',
-                                                                    position: 'relative',
-                                                                    overflow: 'hidden'
-                                                                }}
-                                                            >
-                                                                {/* Status Badge */}
-                                                                <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
-                                                                    <span style={{
-                                                                        fontSize: '0.75rem',
-                                                                        fontWeight: 'bold',
-                                                                        textTransform: 'uppercase',
-                                                                        padding: '0.25rem 0.75rem',
-                                                                        borderRadius: '20px',
-                                                                        background: booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.2)' : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.2)' : 'rgba(241, 196, 15, 0.2)'),
-                                                                        color: booking.status === 'confirmed' ? '#2ecc71' : (booking.status === 'rejected' ? '#e74c3c' : '#f1c40f'),
-                                                                        border: `1px solid ${booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.3)' : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.3)' : 'rgba(241, 196, 15, 0.3)')}`,
-                                                                        letterSpacing: '0.5px'
-                                                                    }}>
-                                                                        {booking.status}
-                                                                    </span>
-                                                                </div>
+                                                            // WhatsApp Link
+                                                            let phoneCode = booking.userPhone || '';
+                                                            phoneCode = phoneCode.replace(/\D/g, '');
+                                                            if (phoneCode.startsWith('0')) phoneCode = '94' + phoneCode.substring(1);
+                                                            const whatsappLink = `https://wa.me/${phoneCode}`;
 
-                                                                {/* Time Range */}
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--brand-teal)' }}>
-                                                                    <div style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
-                                                                        {booking.startTime}
+                                                            return (
+                                                                <motion.div
+                                                                    key={`${booking.id}-${courtId}`}
+                                                                    layout
+                                                                    initial={{ opacity: 0 }}
+                                                                    animate={{ opacity: 1 }}
+                                                                    style={{
+                                                                        background: booking.status === 'pending' ? 'rgba(255, 180, 0, 0.08)' : 'rgba(255,255,255,0.03)',
+                                                                        border: booking.status === 'pending' ? '1px solid rgba(255, 180, 0, 0.3)' : '1px solid rgba(255,255,255,0.05)',
+                                                                        borderRadius: '16px',
+                                                                        padding: '1.2rem',
+                                                                        position: 'relative',
+                                                                        overflow: 'hidden'
+                                                                    }}
+                                                                >
+                                                                    {/* Status Badge */}
+                                                                    <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+                                                                        <span style={{
+                                                                            fontSize: '0.75rem',
+                                                                            fontWeight: 'bold',
+                                                                            textTransform: 'uppercase',
+                                                                            padding: '0.25rem 0.75rem',
+                                                                            borderRadius: '20px',
+                                                                            background: booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.2)' : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.2)' : 'rgba(241, 196, 15, 0.2)'),
+                                                                            color: booking.status === 'confirmed' ? '#2ecc71' : (booking.status === 'rejected' ? '#e74c3c' : '#f1c40f'),
+                                                                            border: `1px solid ${booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.3)' : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.3)' : 'rgba(241, 196, 15, 0.3)')}`,
+                                                                            letterSpacing: '0.5px'
+                                                                        }}>
+                                                                            {booking.status}
+                                                                        </span>
                                                                     </div>
-                                                                    <div style={{ opacity: 0.5, fontSize: '0.9rem', paddingTop: '4px' }}>➔</div>
-                                                                    <div style={{ fontWeight: '600', fontSize: '1.1rem', opacity: 0.8, paddingTop: '2px' }}>
-                                                                        {endTime}
-                                                                    </div>
-                                                                </div>
 
-                                                                {/* User Details */}
-                                                                <div style={{ marginBottom: '1.2rem' }}>
-                                                                    <h4 style={{ color: 'white', fontSize: '1.1rem', marginBottom: '0.3rem' }}>{booking.userName}</h4>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                        <a
-                                                                            href={whatsappLink}
-                                                                            target="_blank"
-                                                                            rel="noreferrer"
+                                                                    {/* Time Range */}
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--brand-teal)' }}>
+                                                                        <div style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
+                                                                            {booking.startTime}
+                                                                        </div>
+                                                                        <div style={{ opacity: 0.5, fontSize: '0.9rem', paddingTop: '4px' }}>➔</div>
+                                                                        <div style={{ fontWeight: '600', fontSize: '1.1rem', opacity: 0.8, paddingTop: '2px' }}>
+                                                                            {endTime}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* User Details */}
+                                                                    <div style={{ marginBottom: '1.2rem' }}>
+                                                                        <h4 style={{ color: 'white', fontSize: '1.1rem', marginBottom: '0.3rem' }}>{booking.userName}</h4>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                            <a
+                                                                                href={whatsappLink}
+                                                                                target="_blank"
+                                                                                rel="noreferrer"
+                                                                                style={{
+                                                                                    color: 'rgba(255,255,255,0.6)',
+                                                                                    fontSize: '0.9rem',
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: '0.4rem',
+                                                                                    textDecoration: 'none',
+                                                                                    transition: 'color 0.2s',
+                                                                                    cursor: 'pointer'
+                                                                                }}
+                                                                                onMouseOver={(e) => e.target.style.color = '#25D366'}
+                                                                                onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.6)'}
+                                                                            >
+                                                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                                                                {booking.userPhone}
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Actions */}
+                                                                    <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                        {booking.status === 'pending' && (
+                                                                            <>
+                                                                                <button
+                                                                                    onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                                                                                    style={{ flex: 1, padding: '0.6rem', background: 'var(--brand-teal)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem', color: '#000' }}
+                                                                                >
+                                                                                    Accept
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => handleStatusChange(booking.id, 'rejected')}
+                                                                                    style={{ flex: 1, padding: '0.6rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', cursor: 'pointer', color: 'white', fontSize: '0.9rem' }}
+                                                                                >
+                                                                                    Reject
+                                                                                </button>
+                                                                            </>
+                                                                        )}
+                                                                        <button
+                                                                            onClick={(e) => handleDeleteClick(e, booking.id)}
+                                                                            disabled={deletingId === booking.id}
+                                                                            title="Delete Booking"
                                                                             style={{
-                                                                                color: 'rgba(255,255,255,0.6)',
-                                                                                fontSize: '0.9rem',
-                                                                                display: 'flex',
-                                                                                alignItems: 'center',
-                                                                                gap: '0.4rem',
-                                                                                textDecoration: 'none',
-                                                                                transition: 'color 0.2s',
-                                                                                cursor: 'pointer'
+                                                                                padding: '0.6rem',
+                                                                                background: 'rgba(231, 76, 60, 0.1)',
+                                                                                border: '1px solid rgba(231, 76, 60, 0.2)',
+                                                                                borderRadius: '8px',
+                                                                                cursor: 'pointer',
+                                                                                color: '#e74c3c',
+                                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                minWidth: '40px'
                                                                             }}
-                                                                            onMouseOver={(e) => e.target.style.color = '#25D366'}
-                                                                            onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.6)'}
                                                                         >
-                                                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                                                                            {booking.userPhone}
-                                                                        </a>
+                                                                            <Trash2 size={18} />
+                                                                        </button>
                                                                     </div>
-                                                                </div>
-
-                                                                {/* Actions */}
-                                                                <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                                                    {booking.status === 'pending' && (
-                                                                        <>
-                                                                            <button
-                                                                                onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                                                                                style={{ flex: 1, padding: '0.6rem', background: 'var(--brand-teal)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem', color: '#000' }}
-                                                                            >
-                                                                                Accept
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => handleStatusChange(booking.id, 'rejected')}
-                                                                                style={{ flex: 1, padding: '0.6rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', cursor: 'pointer', color: 'white', fontSize: '0.9rem' }}
-                                                                            >
-                                                                                Reject
-                                                                            </button>
-                                                                        </>
-                                                                    )}
-                                                                    <button
-                                                                        onClick={(e) => handleDeleteClick(e, booking.id)}
-                                                                        disabled={deletingId === booking.id}
-                                                                        title="Delete Booking"
-                                                                        style={{
-                                                                            padding: '0.6rem',
-                                                                            background: 'rgba(231, 76, 60, 0.1)',
-                                                                            border: '1px solid rgba(231, 76, 60, 0.2)',
-                                                                            borderRadius: '8px',
-                                                                            cursor: 'pointer',
-                                                                            color: '#e74c3c',
-                                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                            minWidth: '40px'
-                                                                        }}
-                                                                    >
-                                                                        <Trash2 size={18} />
-                                                                    </button>
-                                                                </div>
-                                                            </motion.div>
-                                                        );
-                                                    })
-                                            )}
+                                                                </motion.div>
+                                                            );
+                                                        })
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    );
-                })}
+                                    ))}
+                                </div>
+                            </motion.div>
+                        );
+                    })}
 
-                {bookings.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)' }}>
-                        <h3>No Bookings Found</h3>
-                    </div>
-                )}
-            </div>
+                    {bookings.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)' }}>
+                            <h3>No Bookings Found</h3>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                    {permanentBookings.map(pb => (
+                        <div key={pb.id} className="glass-panel" style={{ padding: '1.5rem', border: '1px solid #ff69b4', background: 'rgba(255, 105, 180, 0.05)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                <span style={{
+                                    background: '#ff69b4', color: 'black',
+                                    padding: '0.2rem 0.6rem', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.8rem',
+                                    textTransform: 'uppercase'
+                                }}>
+                                    {pb.dayOfWeek}s
+                                </span>
+                                <button
+                                    onClick={() => handleDeletePermanent(pb.id)}
+                                    style={{ background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer' }}
+                                >
+                                    <Trash2 size={20} />
+                                </button>
+                            </div>
+
+                            <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: 'white' }}>{pb.customerName}</h3>
+                            <div style={{ fontSize: '1.1rem', color: 'var(--brand-teal)', fontWeight: 'bold' }}>
+                                {pb.startTime} ({pb.duration} mins)
+                            </div>
+                            <div style={{ color: '#aaa', marginTop: '0.5rem' }}>
+                                Court {pb.courts.join(', ')}
+                            </div>
+                        </div>
+                    ))}
+                    {permanentBookings.length === 0 && (
+                        <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: '#666' }}>
+                            No Permanent Bookings Found.
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
+    );
 
 
     );
