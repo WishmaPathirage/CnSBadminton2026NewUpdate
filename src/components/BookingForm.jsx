@@ -23,6 +23,30 @@ const BookingForm = () => {
     const [loadingAuth, setLoadingAuth] = useState(true);
     const navigate = useNavigate();
 
+    // Handle Mobile Back Button
+    useEffect(() => {
+        // When component mounts or step changes
+        if (step === 2) {
+            // Push state when entering Step 2 so "Back" works
+            window.history.pushState({ step: 2 }, '', '');
+        }
+
+        const handlePopState = (event) => {
+            // If user hits Back Button
+            if (step === 2) {
+                // Prevent default back (which might leave site) if we just want to go to Step 1
+                // But history.back() already happened, so we just update UI
+                setStep(1);
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, [step]);
+
     useEffect(() => {
         const auth = getAuth();
         const unsubscribe = auth.onAuthStateChanged(user => {
@@ -668,7 +692,11 @@ const BookingForm = () => {
                             <div style={{ display: 'flex', gap: '1.5rem' }}>
                                 <button
                                     type="button"
-                                    onClick={() => setStep(1)}
+                                    onClick={() => {
+                                        setStep(1);
+                                        // Manually go back in history to keep sync
+                                        window.history.back();
+                                    }}
                                     style={{
                                         flex: 1,
                                         padding: '1rem',

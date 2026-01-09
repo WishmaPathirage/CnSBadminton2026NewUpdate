@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Check, Star, ShieldCheck } from 'lucide-react'; // Added ShieldCheck for Admin
 import { motion } from 'framer-motion';
 import { getBookingByOrderId } from '../services/bookingService';
@@ -9,7 +9,15 @@ const PaymentSuccess = () => {
     const orderId = searchParams.get('order_id');
     const [booking, setBooking] = useState(null);
 
+    const navigate = useNavigate(); // Add useNavigate
+
     useEffect(() => {
+        // Redirect if no order ID provided (prevent ghost view)
+        if (!orderId) {
+            navigate('/', { replace: true });
+            return;
+        }
+
         const fetchBooking = async () => {
             if (orderId) {
                 const data = await getBookingByOrderId(orderId);
@@ -17,7 +25,7 @@ const PaymentSuccess = () => {
             }
         };
         fetchBooking();
-    }, [orderId]);
+    }, [orderId, navigate]);
 
     // Calculate End Time if booking exists
     const getEndTime = (startTime, duration) => {
