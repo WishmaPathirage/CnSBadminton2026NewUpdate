@@ -17,6 +17,18 @@ const images = [
 
 const DevelopmentProgress = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Responsive check
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Auto-play
     useEffect(() => {
@@ -59,7 +71,7 @@ const DevelopmentProgress = () => {
             transition: { duration: 0.5, ease: "easeInOut" }
         },
         left1: {
-            x: '-50%',
+            x: isMobile ? '-15%' : '-50%', // Tighter overlap on mobile
             scale: 0.85,
             zIndex: 5,
             opacity: 0.9,
@@ -69,17 +81,17 @@ const DevelopmentProgress = () => {
             transition: { duration: 0.5, ease: "easeInOut" }
         },
         left2: {
-            x: '-90%',
+            x: isMobile ? '-30%' : '-90%',
             scale: 0.7,
             zIndex: 1,
-            opacity: 0.6,
+            opacity: isMobile ? 0 : 0.6, // Hide far items on mobile
             filter: 'blur(3px)',
             boxShadow: 'none',
-            display: 'block',
+            display: isMobile ? 'none' : 'block',
             transition: { duration: 0.5, ease: "easeInOut" }
         },
         right1: {
-            x: '50%',
+            x: isMobile ? '15%' : '50%',
             scale: 0.85,
             zIndex: 5,
             opacity: 0.9,
@@ -89,13 +101,13 @@ const DevelopmentProgress = () => {
             transition: { duration: 0.5, ease: "easeInOut" }
         },
         right2: {
-            x: '90%',
+            x: isMobile ? '30%' : '90%',
             scale: 0.7,
             zIndex: 1,
-            opacity: 0.6,
+            opacity: isMobile ? 0 : 0.6,
             filter: 'blur(3px)',
             boxShadow: 'none',
-            display: 'block',
+            display: isMobile ? 'none' : 'block',
             transition: { duration: 0.5, ease: "easeInOut" }
         }
     };
@@ -112,12 +124,13 @@ const DevelopmentProgress = () => {
                     position: 'relative',
                     width: '100%',
                     maxWidth: '1200px',
-                    height: '500px',
+                    height: isMobile ? '300px' : '500px', // Adjust container height
                     margin: '0 auto',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    perspective: '1000px'
+                    perspective: '1000px',
+                    overflow: 'hidden' // Ensure no scrollbar
                 }}>
                     {visibleImages.map((item) => (
                         <motion.div
@@ -127,8 +140,9 @@ const DevelopmentProgress = () => {
                             variants={variants}
                             style={{
                                 position: 'absolute',
-                                width: '600px', // Fixed Standard Width
-                                height: '400px', // Fixed Standard Height
+                                width: isMobile ? '85%' : '600px', // Responsive Width
+                                height: isMobile ? 'auto' : '400px', // Responsive Height
+                                aspectRatio: '3/2',
                                 borderRadius: '24px',
                                 overflow: 'hidden',
                                 cursor: 'pointer',
@@ -156,46 +170,46 @@ const DevelopmentProgress = () => {
                         onClick={prevSlide}
                         style={{
                             position: 'absolute',
-                            left: '5%',
+                            left: isMobile ? '10px' : '5%',
                             zIndex: 20,
                             background: 'rgba(255,255,255,0.1)',
                             border: '1px solid rgba(255,255,255,0.2)',
                             borderRadius: '50%',
-                            width: '50px',
-                            height: '50px',
+                            width: isMobile ? '40px' : '50px',
+                            height: isMobile ? '40px' : '50px',
                             color: 'white',
                             cursor: 'pointer',
                             backdropFilter: 'blur(10px)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}
                     >
-                        <ChevronLeft size={24} />
+                        <ChevronLeft size={isMobile ? 20 : 24} />
                     </button>
 
                     <button
                         onClick={nextSlide}
                         style={{
                             position: 'absolute',
-                            right: '5%',
+                            right: isMobile ? '10px' : '5%',
                             zIndex: 20,
                             background: 'rgba(255,255,255,0.1)',
                             border: '1px solid rgba(255,255,255,0.2)',
                             borderRadius: '50%',
-                            width: '50px',
-                            height: '50px',
+                            width: isMobile ? '40px' : '50px',
+                            height: isMobile ? '40px' : '50px',
                             color: 'white',
                             cursor: 'pointer',
                             backdropFilter: 'blur(10px)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}
                     >
-                        <ChevronRight size={24} />
+                        <ChevronRight size={isMobile ? 20 : 24} />
                     </button>
 
                     {/* Dots */}
                     <div style={{
                         position: 'absolute',
-                        bottom: '-50px',
+                        bottom: isMobile ? '-20px' : '-50px', // Pull up on mobile
                         left: '50%',
                         transform: 'translateX(-50%)',
                         display: 'flex',
