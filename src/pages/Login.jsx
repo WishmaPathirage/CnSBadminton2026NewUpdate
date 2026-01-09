@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { login, loginWithGoogle, resetPassword } from '../services/authService';
 import { validateEmail, getFriendlyErrorMessage } from '../utils/validators';
-import { X } from 'lucide-react';
+import { X, Eye, EyeOff } from 'lucide-react';
 import ForgotPasswordModal from '../components/ForgotPasswordModal';
 
 const Login = () => {
@@ -13,6 +13,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleGoogleLogin = async () => {
         setIsLoading(true);
@@ -130,16 +131,36 @@ const Login = () => {
                             placeholder="john@example.com"
                         />
                     </div>
-                    <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ marginBottom: '1rem', position: 'relative' }}>
                         <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-light)', marginLeft: '0.5rem' }}>Password</label>
-                        <input
-                            type="password"
-                            required
-                            className="glass-input"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                required
+                                className="glass-input"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                style={{ paddingRight: '40px' }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: 'absolute',
+                                    right: '10px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--text-gray)',
+                                    cursor: 'pointer',
+                                    padding: '5px'
+                                }}
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
                     </div>
 
                     <div style={{ textAlign: 'right', marginBottom: '2rem' }}>
