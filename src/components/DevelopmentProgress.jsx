@@ -38,44 +38,67 @@ const DevelopmentProgress = () => {
         return (currentIndex + offset + images.length) % images.length;
     };
 
-    // calculate visible images (prev, current, next)
+    // Calculate visible images (2 on left, center, 2 on right)
     const visibleImages = [
-        { index: getImageIndex(-1), position: 'left' },
+        { index: getImageIndex(-2), position: 'left2' },
+        { index: getImageIndex(-1), position: 'left1' },
         { index: currentIndex, position: 'center' },
-        { index: getImageIndex(1), position: 'right' }
+        { index: getImageIndex(1), position: 'right1' },
+        { index: getImageIndex(2), position: 'right2' }
     ];
 
     const variants = {
         center: {
             x: '0%',
-            scale: 1,
-            zIndex: 5,
+            scale: 1.1,
+            zIndex: 10,
             opacity: 1,
-            filter: 'blur(0px)',
-            transition: { duration: 0.5 }
+            filter: 'blur(0px) brightness(1.1)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+            transition: { duration: 0.6, ease: "easeOut" }
         },
-        left: {
-            x: '-60%',
+        left1: {
+            x: '-45%',
             scale: 0.8,
-            zIndex: 2,
-            opacity: 0.7,
-            filter: 'blur(4px)',
-            transition: { duration: 0.5 }
+            zIndex: 5,
+            opacity: 0.8,
+            filter: 'blur(2px) brightness(0.8)',
+            boxShadow: '0 10px 20px rgba(0,0,0,0.3)',
+            transition: { duration: 0.6, ease: "easeOut" }
         },
-        right: {
-            x: '60%',
+        left2: {
+            x: '-80%',
+            scale: 0.6,
+            zIndex: 1,
+            opacity: 0.5,
+            filter: 'blur(5px) brightness(0.5)',
+            boxShadow: 'none',
+            transition: { duration: 0.6, ease: "easeOut" }
+        },
+        right1: {
+            x: '45%',
             scale: 0.8,
-            zIndex: 2,
-            opacity: 0.7,
-            filter: 'blur(4px)',
-            transition: { duration: 0.5 }
+            zIndex: 5,
+            opacity: 0.8,
+            filter: 'blur(2px) brightness(0.8)',
+            boxShadow: '0 10px 20px rgba(0,0,0,0.3)',
+            transition: { duration: 0.6, ease: "easeOut" }
+        },
+        right2: {
+            x: '80%',
+            scale: 0.6,
+            zIndex: 1,
+            opacity: 0.5,
+            filter: 'blur(5px) brightness(0.5)',
+            boxShadow: 'none',
+            transition: { duration: 0.6, ease: "easeOut" }
         }
     };
 
     return (
         <section className="section-padding" style={{ position: 'relative', overflow: 'hidden', background: '#000', minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div className="container">
-                <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
                     <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: '#fff' }}>Building the Dream</h2>
                     <p style={{ color: 'var(--brand-teal)', fontSize: '1.1rem' }}>See how C & S Badminton Complex came to life</p>
                 </div>
@@ -84,7 +107,7 @@ const DevelopmentProgress = () => {
                     position: 'relative',
                     width: '100%',
                     maxWidth: '1200px',
-                    height: '500px',
+                    height: '450px',
                     margin: '0 auto',
                     display: 'flex',
                     alignItems: 'center',
@@ -93,23 +116,22 @@ const DevelopmentProgress = () => {
                 }}>
                     {visibleImages.map((item) => (
                         <motion.div
-                            key={item.index + item.position} // Unique key for transition
-                            layoutId={item.index} // Helps framer understand element identity
+                            key={item.index} // Use index as key for stability
                             initial={item.position}
                             animate={item.position}
                             variants={variants}
                             style={{
                                 position: 'absolute',
-                                width: '60%', // Width of the card
+                                width: '50%', // Adjusted width
                                 height: '100%',
                                 borderRadius: '24px',
                                 overflow: 'hidden',
-                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                                cursor: item.position === 'center' ? 'default' : 'pointer',
+                                cursor: 'pointer',
+                                background: '#111'
                             }}
                             onClick={() => {
-                                if (item.position === 'left') prevSlide();
-                                if (item.position === 'right') nextSlide();
+                                if (item.position.includes('left')) prevSlide();
+                                if (item.position.includes('right')) nextSlide();
                             }}
                         >
                             <img
@@ -121,13 +143,6 @@ const DevelopmentProgress = () => {
                                     objectFit: 'cover',
                                 }}
                             />
-                            {/* Overlay for depth */}
-                            <div style={{
-                                position: 'absolute',
-                                inset: 0,
-                                background: item.position === 'center' ? 'transparent' : 'rgba(0,0,0,0.4)',
-                                transition: 'background 0.5s'
-                            }} />
                         </motion.div>
                     ))}
 
@@ -137,7 +152,7 @@ const DevelopmentProgress = () => {
                         style={{
                             position: 'absolute',
                             left: '5%',
-                            zIndex: 10,
+                            zIndex: 20,
                             background: 'rgba(255,255,255,0.1)',
                             border: '1px solid rgba(255,255,255,0.2)',
                             borderRadius: '50%',
@@ -157,7 +172,7 @@ const DevelopmentProgress = () => {
                         style={{
                             position: 'absolute',
                             right: '5%',
-                            zIndex: 10,
+                            zIndex: 20,
                             background: 'rgba(255,255,255,0.1)',
                             border: '1px solid rgba(255,255,255,0.2)',
                             borderRadius: '50%',
@@ -175,7 +190,7 @@ const DevelopmentProgress = () => {
                     {/* Dots */}
                     <div style={{
                         position: 'absolute',
-                        bottom: '-40px',
+                        bottom: '-50px',
                         left: '50%',
                         transform: 'translateX(-50%)',
                         display: 'flex',
