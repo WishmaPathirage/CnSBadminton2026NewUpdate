@@ -61,7 +61,7 @@ const Login = () => {
             if (result.success) {
                 console.log("Login successful. Role:", result.user.role);
                 if (result.user.role === 'admin') {
-                    console.log("Navigating to /admin via hard redirect");
+                    console.log("Navigating to /#/admin via hard redirect");
                     window.location.href = '#/admin';
                 } else {
                     console.log("Navigating to / via hard redirect");

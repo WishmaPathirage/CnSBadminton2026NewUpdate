@@ -14,14 +14,27 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Fetch extra user details (like role) from Firestore if needed
-                // For now, checks if email is admin's fixed email or checks a 'users' collection
-                let role = 'user';
-                // Simple admin check based on email (or you can fetch from DB)
-                if (user.email === 'admin@cns.lk') {
-                    role = 'admin';
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    let role = 'user';
+
+                    if (userDoc.exists()) {
+                        const data = userDoc.data();
+                        role = data.role || 'user';
+                    } else if (user.email.toLowerCase() === 'cnsb233@gmail.com') {
+                        role = 'admin';
+                    }
+
+                    setCurrentUser({ ...user, role });
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    // Fallback for admin if firestore fails but email matches
+                    let role = 'user';
+                    if (user.email?.toLowerCase() === 'cnsb233@gmail.com') {
+                        role = 'admin';
+                    }
+                    setCurrentUser({ ...user, role });
                 }
-                setCurrentUser({ ...user, role });
             } else {
                 setCurrentUser(null);
             }
