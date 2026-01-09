@@ -79,48 +79,42 @@ const Contact = () => {
                         </div>
 
                         {/* Social Media Links */}
-                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                        <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', paddingLeft: '4px' }}>
                             <a
                                 href="https://www.facebook.com/share/1BjX2ZGFuA/?mibextid=wwXIfr"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="social-icon"
                                 style={{
-                                    width: '50px',
-                                    height: '50px',
-                                    borderRadius: '50%',
-                                    background: '#1877F2', // Facebook Blue
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    color: 'white',
-                                    border: 'none',
-                                    transition: 'all 0.3s ease',
-                                    boxShadow: '0 4px 15px rgba(24, 119, 242, 0.3)'
+                                    textDecoration: 'none',
+                                    transition: 'transform 0.3s ease'
                                 }}
+                                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                             >
-                                <Facebook size={24} fill="white" />
+                                <div style={{ minWidth: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Facebook color="var(--primary-green)" />
+                                </div>
                             </a>
                             <a
                                 href="https://www.instagram.com/cnsbadminton?igsh=MTA0eXVva2kwdzQ0ag%3D%3D&utm_source=qr"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="social-icon"
                                 style={{
-                                    width: '50px',
-                                    height: '50px',
-                                    borderRadius: '50%',
-                                    background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', // Instagram Gradient
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    color: 'white',
-                                    border: 'none',
-                                    transition: 'all 0.3s ease',
-                                    boxShadow: '0 4px 15px rgba(220, 39, 67, 0.3)'
+                                    textDecoration: 'none',
+                                    transition: 'transform 0.3s ease'
                                 }}
+                                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                             >
-                                <Instagram size={24} />
+                                <div style={{ minWidth: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Instagram color="var(--primary-green)" />
+                                </div>
                             </a>
                         </div>
 
