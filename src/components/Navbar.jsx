@@ -28,12 +28,12 @@ const Navbar = () => {
     };
 
     const links = [
-        { name: 'Home', href: '/#home' },
-        { name: 'Book Now', href: '/#booking' },
-        { name: 'Memberships', href: '/#memberships' },
-        { name: 'Services', href: '/#services' },
-        { name: 'Events', href: '/#events' },
-        { name: 'Contact', href: '/#contact' },
+        { name: 'Home', href: '/' },
+        { name: 'Book Now', href: '/booking' },
+        { name: 'Memberships', href: '/memberships' },
+        { name: 'Services', href: '/services' },
+        { name: 'Events', href: '/events' },
+        { name: 'Contact', href: '/contact' },
     ];
 
     return (
@@ -75,9 +75,9 @@ const Navbar = () => {
                 {/* Desktop Menu */}
                 <div className="desktop-menu" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
                     {links.map((link) => (
-                        <a
+                        <Link
                             key={link.name}
-                            href={link.href}
+                            to={link.href}
                             style={{
                                 fontWeight: '600',
                                 fontSize: '0.95rem',
@@ -85,12 +85,13 @@ const Navbar = () => {
                                 color: 'white',
                                 textShadow: '0 2px 4px rgba(0,0,0,0.5)',
                                 letterSpacing: '0.5px',
-                                whiteSpace: 'nowrap'
+                                whiteSpace: 'nowrap',
+                                textDecoration: 'none'
                             }}
                             className="nav-link"
                         >
                             {link.name}
-                        </a>
+                        </Link>
                     ))}
 
                     {/* Auth Section */}
@@ -153,14 +154,14 @@ const Navbar = () => {
                     >
                         <div className="container" style={{ display: 'flex', flexDirection: 'column', padding: '1rem 0' }}>
                             {links.map((link) => (
-                                <a
+                                <Link
                                     key={link.name}
-                                    href={link.href}
+                                    to={link.href}
                                     onClick={() => setIsOpen(false)}
-                                    style={{ padding: '1rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                                    style={{ padding: '1rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)', textDecoration: 'none', color: 'white' }}
                                 >
                                     {link.name}
-                                </a>
+                                </Link>
                             ))}
                             {currentUser ? (
                                 <>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar';
 import NotificationBar from './components/NotificationBar';
@@ -27,6 +27,23 @@ const LandingPage = () => {
     localStorage.setItem('greeting_shown_2026', 'true');
     setShowGreeting(false);
   };
+
+  const location = useLocation();
+
+  React.useEffect(() => {
+    // Auto-scroll to section based on path
+    const path = location.pathname.replace('/', '');
+    if (path) {
+      const element = document.getElementById(path);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100); // Small delay to ensure render
+      }
+    } else {
+      window.scrollTo(0, 0); // Scroll to top if home
+    }
+  }, [location]);
 
   return (
     <div className="app-container" style={{ position: 'relative' }}>
@@ -145,15 +162,15 @@ const LandingPage = () => {
 
       <Navbar />
       <NotificationBar />
-      <Hero />
+      <div id="home"><Hero /></div>
 
-      <BookingForm />
-      <Memberships />
-      <Services />
-      <Events />
+      <div id="booking"><BookingForm /></div>
+      <div id="memberships"><Memberships /></div>
+      <div id="services"><Services /></div>
+      <div id="events"><Events /></div>
       <DevelopmentProgress />
-      <Reviews />
-      <Contact />
+      <div id="reviews"><Reviews /></div>
+      <div id="contact"><Contact /></div>
       <Footer />
     </div>
   );
@@ -164,6 +181,14 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        {/* Section Routes that render LandingPage and scroll */}
+        <Route path="/booking" element={<LandingPage />} />
+        <Route path="/memberships" element={<LandingPage />} />
+        <Route path="/services" element={<LandingPage />} />
+        <Route path="/events" element={<LandingPage />} />
+        <Route path="/contact" element={<LandingPage />} />
+        <Route path="/reviews" element={<LandingPage />} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/admin" element={<AdminPanel />} />
