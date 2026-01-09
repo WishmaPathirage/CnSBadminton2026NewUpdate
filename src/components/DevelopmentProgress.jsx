@@ -50,48 +50,53 @@ const DevelopmentProgress = () => {
     const variants = {
         center: {
             x: '0%',
-            scale: 1.1,
+            scale: 1,
             zIndex: 10,
             opacity: 1,
-            filter: 'blur(0px) brightness(1.1)',
+            filter: 'blur(0px)',
             boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-            transition: { duration: 0.6, ease: "easeOut" }
+            display: 'block',
+            transition: { duration: 0.5, ease: "easeInOut" }
         },
         left1: {
-            x: '-45%',
-            scale: 0.8,
+            x: '-50%',
+            scale: 0.85,
             zIndex: 5,
-            opacity: 0.8,
-            filter: 'blur(2px) brightness(0.8)',
+            opacity: 0.9,
+            filter: 'blur(1px)',
             boxShadow: '0 10px 20px rgba(0,0,0,0.3)',
-            transition: { duration: 0.6, ease: "easeOut" }
+            display: 'block',
+            transition: { duration: 0.5, ease: "easeInOut" }
         },
         left2: {
-            x: '-80%',
-            scale: 0.6,
+            x: '-90%',
+            scale: 0.7,
             zIndex: 1,
-            opacity: 0.5,
-            filter: 'blur(5px) brightness(0.5)',
+            opacity: 0.6,
+            filter: 'blur(3px)',
             boxShadow: 'none',
-            transition: { duration: 0.6, ease: "easeOut" }
+            display: 'block',
+            transition: { duration: 0.5, ease: "easeInOut" }
         },
         right1: {
-            x: '45%',
-            scale: 0.8,
+            x: '50%',
+            scale: 0.85,
             zIndex: 5,
-            opacity: 0.8,
-            filter: 'blur(2px) brightness(0.8)',
+            opacity: 0.9,
+            filter: 'blur(1px)',
             boxShadow: '0 10px 20px rgba(0,0,0,0.3)',
-            transition: { duration: 0.6, ease: "easeOut" }
+            display: 'block',
+            transition: { duration: 0.5, ease: "easeInOut" }
         },
         right2: {
-            x: '80%',
-            scale: 0.6,
+            x: '90%',
+            scale: 0.7,
             zIndex: 1,
-            opacity: 0.5,
-            filter: 'blur(5px) brightness(0.5)',
+            opacity: 0.6,
+            filter: 'blur(3px)',
             boxShadow: 'none',
-            transition: { duration: 0.6, ease: "easeOut" }
+            display: 'block',
+            transition: { duration: 0.5, ease: "easeInOut" }
         }
     };
 
@@ -107,7 +112,7 @@ const DevelopmentProgress = () => {
                     position: 'relative',
                     width: '100%',
                     maxWidth: '1200px',
-                    height: '450px',
+                    height: '500px',
                     margin: '0 auto',
                     display: 'flex',
                     alignItems: 'center',
@@ -116,14 +121,14 @@ const DevelopmentProgress = () => {
                 }}>
                     {visibleImages.map((item) => (
                         <motion.div
-                            key={item.index} // Use index as key for stability
+                            key={item.index}
                             initial={item.position}
                             animate={item.position}
                             variants={variants}
                             style={{
                                 position: 'absolute',
-                                width: '50%', // Adjusted width
-                                height: '100%',
+                                width: '600px', // Fixed Standard Width
+                                height: '400px', // Fixed Standard Height
                                 borderRadius: '24px',
                                 overflow: 'hidden',
                                 cursor: 'pointer',
