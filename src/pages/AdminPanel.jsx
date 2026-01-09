@@ -20,7 +20,6 @@ const AdminPanel = () => {
         startTime: '08:00',
         duration: '60',
         court: '1',
-        name: '',
         name: ''
     });
     const [manualLoading, setManualLoading] = useState(false);
@@ -197,7 +196,7 @@ Website: www.cnsbadminton.lk`;
                 duration: parseInt(manualForm.duration),
                 courts: [selectedCourt],
                 userName: manualForm.name,
-                userPhone: manualForm.phone,
+                userPhone: 'N/A', // Phone removed from manual booking
                 userId: 'admin-manual', // Flag for manual booking
                 status: 'confirmed' // Auto-confirm
             });
