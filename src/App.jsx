@@ -28,20 +28,21 @@ const LandingPage = () => {
     setShowGreeting(false);
   };
 
+
   const location = useLocation();
 
   React.useEffect(() => {
-    // Auto-scroll to section based on path
-    const path = location.pathname.replace('/', '');
-    if (path) {
-      const element = document.getElementById(path);
+    // Check for targetId in location state (from Navbar navigation)
+    if (location.state && location.state.targetId) {
+      const element = document.getElementById(location.state.targetId);
       if (element) {
         setTimeout(() => {
           element.scrollIntoView({ behavior: 'smooth' });
-        }, 100); // Small delay to ensure render
+        }, 100);
       }
     } else {
-      window.scrollTo(0, 0); // Scroll to top if home
+      // If simply navigating to /, scroll to top
+      window.scrollTo(0, 0);
     }
   }, [location]);
 
@@ -181,14 +182,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        {/* Section Routes that render LandingPage and scroll */}
-        <Route path="/booking" element={<LandingPage />} />
-        <Route path="/memberships" element={<LandingPage />} />
-        <Route path="/services" element={<LandingPage />} />
-        <Route path="/events" element={<LandingPage />} />
-        <Route path="/contact" element={<LandingPage />} />
-        <Route path="/reviews" element={<LandingPage />} />
-
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/admin" element={<AdminPanel />} />

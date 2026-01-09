@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logout } from '../services/authService';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -27,14 +27,28 @@ const Navbar = () => {
         window.location.href = '/'; // Force reload to prevent state issues
     };
 
+    const location = useLocation();
+
     const links = [
-        { name: 'Home', href: '/' },
-        { name: 'Book Now', href: '/booking' },
-        { name: 'Memberships', href: '/memberships' },
-        { name: 'Services', href: '/services' },
-        { name: 'Events', href: '/events' },
-        { name: 'Contact', href: '/contact' },
+        { name: 'Home', id: 'home' },
+        { name: 'Book Now', id: 'booking' },
+        { name: 'Memberships', id: 'memberships' },
+        { name: 'Services', id: 'services' },
+        { name: 'Events', id: 'events' },
+        { name: 'Contact', id: 'contact' },
     ];
+
+    const handleNavClick = (id) => {
+        if (location.pathname === '/') {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        } else {
+            navigate('/', { state: { targetId: id } });
+        }
+        setIsOpen(false);
+    };
 
     return (
         <nav
@@ -75,9 +89,9 @@ const Navbar = () => {
                 {/* Desktop Menu */}
                 <div className="desktop-menu" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
                     {links.map((link) => (
-                        <Link
+                        <button
                             key={link.name}
-                            to={link.href}
+                            onClick={() => handleNavClick(link.id)}
                             style={{
                                 fontWeight: '600',
                                 fontSize: '0.95rem',
@@ -86,12 +100,16 @@ const Navbar = () => {
                                 textShadow: '0 2px 4px rgba(0,0,0,0.5)',
                                 letterSpacing: '0.5px',
                                 whiteSpace: 'nowrap',
-                                textDecoration: 'none'
+                                textDecoration: 'none',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontFamily: 'inherit'
                             }}
                             className="nav-link"
                         >
                             {link.name}
-                        </Link>
+                        </button>
                     ))}
 
                     {/* Auth Section */}
@@ -154,14 +172,13 @@ const Navbar = () => {
                     >
                         <div className="container" style={{ display: 'flex', flexDirection: 'column', padding: '1rem 0' }}>
                             {links.map((link) => (
-                                <Link
+                                <button
                                     key={link.name}
-                                    to={link.href}
-                                    onClick={() => setIsOpen(false)}
-                                    style={{ padding: '1rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)', textDecoration: 'none', color: 'white' }}
+                                    onClick={() => handleNavClick(link.id)}
+                                    style={{ padding: '1rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)', textDecoration: 'none', color: 'white', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left', fontSize: '1rem' }}
                                 >
                                     {link.name}
-                                </Link>
+                                </button>
                             ))}
                             {currentUser ? (
                                 <>
