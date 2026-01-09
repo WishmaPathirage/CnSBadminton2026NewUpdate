@@ -76,60 +76,58 @@ const Contact = () => {
                                 </div>
                                 <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>cnsb233@gmail.com</span>
                             </a>
+
+                            {/* Social Media Links merged into list */}
+                            <a
+                                href="https://www.facebook.com/share/1BjX2ZGFuA/?mibextid=wwXIfr"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="contact-item"
+                                style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none' }}
+                            >
+                                <div style={{ minWidth: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Facebook color="var(--primary-green)" />
+                                </div>
+                                <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>C & S Badminton Complex</span>
+                            </a>
+
+                            <a
+                                href="https://www.instagram.com/cnsbadminton?igsh=MTA0eXVva2kwdzQ0ag%3D%3D&utm_source=qr"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="contact-item"
+                                style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none' }}
+                            >
+                                <div style={{ minWidth: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Instagram color="var(--primary-green)" />
+                                </div>
+                                <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>cnsbadminton</span>
+                            </a>
                         </div>
 
-
-                        {/* Social Media Links merged into list */}
-                        <a
-                            href="https://www.facebook.com/share/1BjX2ZGFuA/?mibextid=wwXIfr"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="contact-item"
-                            style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none' }}
-                        >
-                            <div style={{ minWidth: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Facebook color="var(--primary-green)" />
-                            </div>
-                            <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>C & S Badminton Complex</span>
-                        </a>
-
-                        <a
-                            href="https://www.instagram.com/cnsbadminton?igsh=MTA0eXVva2kwdzQ0ag%3D%3D&utm_source=qr"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="contact-item"
-                            style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none' }}
-                        >
-                            <div style={{ minWidth: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Instagram color="var(--primary-green)" />
-                            </div>
-                            <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>cnsbadminton</span>
-                        </a>
+                        {/* Map Placeholder */}
+                        <div style={{
+                            width: '100%',
+                            height: '300px',
+                            backgroundColor: '#222',
+                            borderRadius: '16px',
+                            overflow: 'hidden',
+                            position: 'relative'
+                        }}>
+                            <iframe
+                                src="https://maps.google.com/maps?q=C%20%26%20S%20Badminton%20Complex%20Galle&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                                width="100%"
+                                height="100%"
+                                style={{ border: 0 }}
+                                allowFullScreen=""
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                            />
+                        </div>
                     </div>
 
-                    {/* Map Placeholder */}
-                    <div style={{
-                        width: '100%',
-                        height: '300px',
-                        backgroundColor: '#222',
-                        borderRadius: '16px',
-                        overflow: 'hidden',
-                        position: 'relative'
-                    }}>
-                        <iframe
-                            src="https://maps.google.com/maps?q=C%20%26%20S%20Badminton%20Complex%20Galle&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                            width="100%"
-                            height="100%"
-                            style={{ border: 0 }}
-                            allowFullScreen=""
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                        />
-                    </div>
                 </div>
-
             </div>
-        </div>
         </section >
     );
 };
