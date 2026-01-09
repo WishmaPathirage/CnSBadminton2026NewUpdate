@@ -74,8 +74,8 @@ const Hero = () => {
 
 
 
-                    <motion.a
-                        href="#booking"
+                    <motion.button
+                        onClick={() => document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' })}
                         className="btn-hero-cta"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -84,11 +84,14 @@ const Hero = () => {
                             padding: '0.8rem 2rem',
                             borderRadius: '50px',
                             fontSize: '1rem',
-                            textDecoration: 'none'
+                            textDecoration: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
                         }}
                     >
                         Book A Court
-                    </motion.a>
+                    </motion.button>
                 </motion.div>
             </div>
 
