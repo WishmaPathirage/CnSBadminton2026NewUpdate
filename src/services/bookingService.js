@@ -132,6 +132,8 @@ export const subscribeToPermanentBookings = (callback) => {
     return onSnapshot(q, (snapshot) => {
         const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         callback(bookings);
+    }, (error) => {
+        console.error("Error subscribing to permanent bookings:", error);
     });
 };
 

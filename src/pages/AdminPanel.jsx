@@ -815,7 +815,7 @@ Website: www.cnsbadminton.lk`;
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                     {permanentBookings.map(pb => (
-                        <div key={pb.id} className="glass-panel" style={{ padding: '1.5rem', border: '1px solid #ff69b4', background: 'rgba(255, 105, 180, 0.05)' }}>
+                        <div key={pb.id || Math.random()} className="glass-panel" style={{ padding: '1.5rem', border: '1px solid #ff69b4', background: 'rgba(255, 105, 180, 0.05)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                 <span style={{
                                     background: '#ff69b4', color: 'black',
@@ -832,12 +832,12 @@ Website: www.cnsbadminton.lk`;
                                 </button>
                             </div>
 
-                            <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: 'white' }}>{pb.customerName}</h3>
+                            <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: 'white' }}>{pb.customerName || 'Unnamed'}</h3>
                             <div style={{ fontSize: '1.1rem', color: 'var(--brand-teal)', fontWeight: 'bold' }}>
                                 {pb.startTime} ({pb.duration} mins)
                             </div>
                             <div style={{ color: '#aaa', marginTop: '0.5rem' }}>
-                                Court {pb.courts.join(', ')}
+                                Court {pb.courts?.join(', ')}
                             </div>
                         </div>
                     ))}
