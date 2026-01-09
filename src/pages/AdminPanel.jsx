@@ -156,9 +156,9 @@ Website: www.cnsbadminton.lk`;
         setManualLoading(true);
 
         try {
-            // 1. Check for valid phone/name
-            if (!manualForm.name || !manualForm.phone) {
-                alert('Please fill in Name and Phone.');
+            // 1. Check for valid name (Phone optional for Admin Manual Booking)
+            if (!manualForm.name) {
+                alert('Please fill in Name.');
                 setManualLoading(false);
                 return;
             }
@@ -362,10 +362,9 @@ Website: www.cnsbadminton.lk`;
                                     <input
                                         type="tel"
                                         className="glass-input"
-                                        placeholder="07xxxxxxxx"
+                                        placeholder="07xxxxxxxx (Optional)"
                                         value={manualForm.phone}
                                         onChange={e => setManualForm({ ...manualForm, phone: e.target.value })}
-                                        required
                                     />
                                 </div>
 
