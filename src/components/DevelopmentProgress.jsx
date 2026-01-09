@@ -112,6 +112,10 @@ const DevelopmentProgress = () => {
         }
     };
 
+    // Responsive dimensions
+    const cardWidth = isMobile ? '260px' : '600px';
+    const cardHeight = isMobile ? '175px' : '400px';
+
     return (
         <section className="section-padding" style={{ position: 'relative', overflow: 'hidden', background: '#000', minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div className="container">
@@ -129,8 +133,7 @@ const DevelopmentProgress = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    perspective: '1000px',
-                    overflow: 'hidden' // Ensure no scrollbar
+                    perspective: '1000px'
                 }}>
                     {visibleImages.map((item) => (
                         <motion.div
@@ -140,10 +143,8 @@ const DevelopmentProgress = () => {
                             variants={variants}
                             style={{
                                 position: 'absolute',
-                                width: '600px',
-                                maxWidth: '90vw', // Only constraint for mobile
-                                height: 'auto',
-                                aspectRatio: '3/2', // Maintain ratio
+                                width: cardWidth,
+                                height: cardHeight,
                                 borderRadius: '24px',
                                 overflow: 'hidden',
                                 cursor: 'pointer',
