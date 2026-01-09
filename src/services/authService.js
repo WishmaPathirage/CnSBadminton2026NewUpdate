@@ -41,8 +41,24 @@ export const login = async (email, password) => {
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         // Fetch user role from Firestore
-        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-        const userData = userDoc.exists() ? userDoc.data() : {};
+        const userDocRef = doc(db, 'users', userCredential.user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        let userData = {};
+
+        if (userDoc.exists()) {
+            userData = userDoc.data();
+        } else {
+            // Profile missing (e.g. database cleared)? Recreate it!
+            userData = {
+                name: userCredential.user.displayName || 'Admin User',
+                email: userCredential.user.email,
+                phone: '',
+                role: userCredential.user.email === 'cnsb233@gmail.com' ? 'admin' : 'user',
+                createdAt: new Date().toISOString()
+            };
+            await setDoc(userDocRef, userData);
+        }
 
         return {
             success: true,
