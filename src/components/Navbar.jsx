@@ -175,7 +175,7 @@ const Navbar = () => {
                                 <button
                                     key={link.name}
                                     onClick={() => handleNavClick(link.id)}
-                                    style={{ padding: '1rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)', textDecoration: 'none', color: 'white', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', textAlign: 'left', fontSize: '1rem' }}
+                                    style={{ padding: '1rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)', textDecoration: 'none', color: 'white', background: 'none', border: 'none', textAlign: 'left', fontSize: '1rem', width: '100%' }}
                                 >
                                     {link.name}
                                 </button>
