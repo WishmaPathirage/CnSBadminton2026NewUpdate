@@ -155,10 +155,10 @@ Website: www.cnsbadminton.lk`;
 
     useEffect(() => {
         // Subscribe to Permanent Bookings too
-        const unsubPerm = subscribeToPermanentBookings((data) => {
-            setPermanentBookings(data);
-        });
-        return () => unsubPerm();
+        // const unsubPerm = subscribeToPermanentBookings((data) => {
+        //     setPermanentBookings(data);
+        // });
+        // return () => unsubPerm();
     }, []);
 
     // Manual Form Update
@@ -813,39 +813,9 @@ Website: www.cnsbadminton.lk`;
                     )}
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-                    {permanentBookings.map(pb => (
-                        <div key={pb.id || Math.random()} className="glass-panel" style={{ padding: '1.5rem', border: '1px solid #ff69b4', background: 'rgba(255, 105, 180, 0.05)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                                <span style={{
-                                    background: '#ff69b4', color: 'black',
-                                    padding: '0.2rem 0.6rem', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.8rem',
-                                    textTransform: 'uppercase'
-                                }}>
-                                    {pb.dayOfWeek}s
-                                </span>
-                                <button
-                                    onClick={() => handleDeletePermanent(pb.id)}
-                                    style={{ background: 'none', border: 'none', color: '#ff4444', cursor: 'pointer' }}
-                                >
-                                    <Trash2 size={20} />
-                                </button>
-                            </div>
-
-                            <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: 'white' }}>{pb.customerName || 'Unnamed'}</h3>
-                            <div style={{ fontSize: '1.1rem', color: 'var(--brand-teal)', fontWeight: 'bold' }}>
-                                {pb.startTime} ({pb.duration} mins)
-                            </div>
-                            <div style={{ color: '#aaa', marginTop: '0.5rem' }}>
-                                Court {pb.courts?.join(', ')}
-                            </div>
-                        </div>
-                    ))}
-                    {permanentBookings.length === 0 && (
-                        <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: '#666' }}>
-                            No Permanent Bookings Found.
-                        </div>
-                    )}
+                <div style={{ textAlign: 'center', padding: '3rem', color: '#aaa', border: '1px dashed #444', borderRadius: '12px' }}>
+                    <h3>Maintenance Mode</h3>
+                    <p>Recurring Bookings view is temporarily disabled for debugging.</p>
                 </div>
             )}
         </div>
