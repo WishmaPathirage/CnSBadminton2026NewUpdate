@@ -21,7 +21,7 @@ const AdminPanel = () => {
         duration: '60',
         court: '1',
         name: '',
-        phone: ''
+        name: ''
     });
     const [manualLoading, setManualLoading] = useState(false);
 
@@ -209,8 +209,7 @@ Website: www.cnsbadminton.lk`;
                 startTime: '08:00',
                 duration: '60',
                 court: '1',
-                name: '',
-                phone: ''
+                name: ''
             });
 
         } catch (err) {
@@ -357,16 +356,7 @@ Website: www.cnsbadminton.lk`;
                                     />
                                 </div>
 
-                                <div>
-                                    <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Phone Number</label>
-                                    <input
-                                        type="tel"
-                                        className="glass-input"
-                                        placeholder="07xxxxxxxx (Optional)"
-                                        value={manualForm.phone}
-                                        onChange={e => setManualForm({ ...manualForm, phone: e.target.value })}
-                                    />
-                                </div>
+
 
                                 <button
                                     type="submit"
