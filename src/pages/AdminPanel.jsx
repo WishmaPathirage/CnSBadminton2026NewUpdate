@@ -130,6 +130,15 @@ const AdminPanel = () => {
         }
     };
 
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/login');
+        } catch (error) {
+            console.error("Failed to log out", error);
+        }
+    };
+
     const [permanentBookings, setPermanentBookings] = useState([]);
     const [viewMode, setViewMode] = useState('bookings'); // 'bookings' or 'permanent'
 
