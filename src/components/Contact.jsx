@@ -27,7 +27,43 @@ const Contact = () => {
                             boxShadow: '0 0 30px rgba(46, 204, 113, 0.1), inset 0 0 20px rgba(46, 204, 113, 0.05)'
                         }}
                     >
-                        <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>Standard Rate</h3>
+                        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                            <motion.div
+                                initial={{ y: -100, opacity: 0, rotate: -45 }}
+                                whileInView={{ y: 0, opacity: 1, rotate: 0 }}
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 300,
+                                    damping: 15,
+                                    delay: 0.2
+                                }}
+                                style={{
+                                    fontSize: '3rem',
+                                    filter: 'drop-shadow(0 0 10px rgba(46, 204, 113, 0.5))',
+                                    zIndex: 2
+                                }}
+                            >
+                                🏸
+                            </motion.div>
+                            <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                whileInView={{ scale: [0, 1.5, 0], opacity: [0, 1, 0] }}
+                                transition={{ duration: 0.4, delay: 0.4 }}
+                                style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    width: '50px',
+                                    height: '50px',
+                                    borderRadius: '50%',
+                                    background: 'radial-gradient(circle, rgba(46,204,113,0.8) 0%, transparent 70%)',
+                                    zIndex: 1
+                                }}
+                            />
+                        </div>
+
+                        <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>Standard Rate</h3>
 
                         <div style={{
                             fontSize: '5rem',
