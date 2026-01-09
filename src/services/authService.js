@@ -54,7 +54,7 @@ export const login = async (email, password) => {
                 name: userCredential.user.displayName || 'Admin User',
                 email: userCredential.user.email,
                 phone: '',
-                role: userCredential.user.email === 'cnsb233@gmail.com' ? 'admin' : 'user',
+                role: userCredential.user.email.toLowerCase() === 'cnsb233@gmail.com' ? 'admin' : 'user',
                 createdAt: new Date().toISOString()
             };
             await setDoc(userDocRef, userData);
@@ -78,7 +78,7 @@ export const register = async (userData) => {
             name: userData.name,
             email: userData.email,
             phone: userData.phone,
-            role: userData.email === 'cnsb233@gmail.com' ? 'admin' : 'user',
+            role: userData.email.toLowerCase() === 'cnsb233@gmail.com' ? 'admin' : 'user',
             createdAt: new Date().toISOString()
         };
 

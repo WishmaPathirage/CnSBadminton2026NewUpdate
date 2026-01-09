@@ -53,14 +53,21 @@ const Login = () => {
         setIsLoading(true);
 
         try {
+            console.log("Attempting login for:", email);
             const result = await login(email, password);
+            console.log("Login result:", result);
+
             if (result.success) {
+                console.log("Login successful. Role:", result.user.role);
                 if (result.user.role === 'admin') {
+                    console.log("Navigating to /admin");
                     navigate('/admin');
                 } else {
+                    console.log("Navigating to /");
                     navigate('/');
                 }
             } else {
+                console.log("Login failed:", result.message);
                 const msg = result.code ? getFriendlyErrorMessage(result.code) : result.message;
                 setError(msg);
             }
