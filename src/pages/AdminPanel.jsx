@@ -129,72 +129,47 @@ const AdminPanel = () => {
                 return;
             }
 
-            if (bookingType === 'permanent') {
-                // Determine Day of Week from the selected date
-                const dayOfWeek = new Date(manualForm.date).toLocaleDateString('en-US', { weekday: 'long' });
+            // Strict Overlap Check
+            const timeToMin = (t) => {
+                const [h, m] = t.split(':').map(Number);
+                return h * 60 + m;
+            };
 
-                await createPermanentBooking({
-                    dayOfWeek: dayOfWeek,
-                    startTime: manualForm.startTime,
-                    duration: parseInt(manualForm.duration),
-                    courts: [parseInt(manualForm.court)],
-                    customerName: manualForm.name,
-                    type: 'permanent'
-                });
-                alert(`Permanent Booking Created for every ${dayOfWeek}!`);
-            } else {
-                // ... Existing One-Time Logic ...
-                // Strict Overlap Check (Include Permanent)
-                const timeToMin = (t) => {
-                    const [h, m] = t.split(':').map(Number);
-                    return h * 60 + m;
-                };
+            const newStart = timeToMin(manualForm.startTime);
+            const newEnd = newStart + parseInt(manualForm.duration);
+            const selectedDate = manualForm.date;
+            const selectedCourt = parseInt(manualForm.court);
 
-                const newStart = timeToMin(manualForm.startTime);
-                const newEnd = newStart + parseInt(manualForm.duration);
-                const selectedDate = manualForm.date;
-                const selectedCourt = parseInt(manualForm.court);
+            // Check Regular Conflicts
+            const hasConflict = bookings.some(b => {
+                if (b.date !== selectedDate || b.status === 'rejected') return false;
+                if (!b.courts.includes(selectedCourt)) return false;
+                const existStart = timeToMin(b.startTime);
+                const existEnd = existStart + parseInt(b.duration);
+                return (newStart < existEnd && existStart < newEnd);
+            });
 
-                // Check Regular Conflicts
-                const hasConflict = bookings.some(b => {
-                    if (b.date !== selectedDate || b.status === 'rejected') return false;
-                    if (!b.courts.includes(selectedCourt)) return false;
-                    const existStart = timeToMin(b.startTime);
-                    const existEnd = existStart + parseInt(b.duration);
-                    return (newStart < existEnd && existStart < newEnd);
-                });
-
-                // Check Permanent Conflicts for this specific day
-                const dayName = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
-                const hasPermConflict = permanentBookings.some(pb => {
-                    if (pb.dayOfWeek !== dayName) return false;
-                    if (!pb.courts.includes(selectedCourt)) return false;
-                    const pStart = timeToMin(pb.startTime);
-                    const pEnd = pStart + parseInt(pb.duration);
-                    return (newStart < pEnd && pStart < newEnd);
-                });
-
-                if (hasConflict || hasPermConflict) {
-                    alert('⚠️ This slot conflicts with an existing (or permanent) booking!');
-                    setManualLoading(false);
-                    return;
-                }
-
-                await createBooking({
-                    date: manualForm.date,
-                    startTime: manualForm.startTime,
-                    duration: parseInt(manualForm.duration),
-                    courts: [selectedCourt],
-                    userName: manualForm.name,
-                    userPhone: 'N/A',
-                    userId: 'admin-manual',
-                    status: 'confirmed'
-                });
-                alert('Booking successfully added!');
+            if (hasConflict) {
+                alert('⚠️ This slot conflicts with an existing booking!');
+                setManualLoading(false);
+                return;
             }
 
+            // Create Standard Booking
+            await createBooking({
+                date: manualForm.date,
+                startTime: manualForm.startTime,
+                duration: parseInt(manualForm.duration),
+                courts: [selectedCourt],
+                userName: manualForm.name,
+                userPhone: 'N/A', // No phone in manual form
+                userId: 'admin-manual',
+                status: 'confirmed'
+            });
+            alert('Booking successfully added!');
+
             setShowManualModal(false);
-            // Reset Form...
+            // Reset Form
             setManualForm({
                 date: new Date().toISOString().split('T')[0],
                 startTime: '08:00',
