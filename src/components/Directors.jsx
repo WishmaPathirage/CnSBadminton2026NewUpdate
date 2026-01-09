@@ -27,20 +27,26 @@ const Directors = () => {
                         initial={{ opacity: 0, x: -50 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
+                        whileHover={{ y: -10 }}
                         className="glass-panel"
                         style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
                     >
-                        <div style={{
-                            width: '180px',
-                            height: '180px',
-                            borderRadius: '50%',
-                            marginBottom: '1.5rem',
-                            overflow: 'hidden',
-                            border: '3px solid var(--primary-green)',
-                            boxShadow: '0 0 20px rgba(46, 204, 113, 0.2)'
-                        }}>
+                        <motion.div
+                            whileHover={{ scale: 1.1, borderColor: '#2ecc71', boxShadow: '0 0 30px rgba(46, 204, 113, 0.6)' }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                            style={{
+                                width: '180px',
+                                height: '180px',
+                                borderRadius: '50%',
+                                marginBottom: '1.5rem',
+                                overflow: 'hidden',
+                                border: '3px solid var(--primary-green)',
+                                boxShadow: '0 0 20px rgba(46, 204, 113, 0.2)',
+                                cursor: 'pointer'
+                            }}
+                        >
                             <img src={manoharaImg} alt="M K A Manohara" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
+                        </motion.div>
                         <h3 style={{ fontSize: '1.5rem', color: 'white', marginBottom: '0.5rem' }}>M K A Manohara</h3>
                         <span style={{ color: 'var(--primary-green)', fontSize: '0.9rem', marginBottom: '1.5rem', fontWeight: 'bold' }}>Director</span>
                         <p style={{ color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', fontStyle: 'italic' }}>
@@ -53,20 +59,26 @@ const Directors = () => {
                         initial={{ opacity: 0, x: 50 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.4 }}
+                        whileHover={{ y: -10 }}
                         className="glass-panel"
                         style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
                     >
-                        <div style={{
-                            width: '180px',
-                            height: '180px',
-                            borderRadius: '50%',
-                            marginBottom: '1.5rem',
-                            overflow: 'hidden',
-                            border: '3px solid var(--primary-green)',
-                            boxShadow: '0 0 20px rgba(46, 204, 113, 0.2)'
-                        }}>
+                        <motion.div
+                            whileHover={{ scale: 1.1, borderColor: '#2ecc71', boxShadow: '0 0 30px rgba(46, 204, 113, 0.6)' }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                            style={{
+                                width: '180px',
+                                height: '180px',
+                                borderRadius: '50%',
+                                marginBottom: '1.5rem',
+                                overflow: 'hidden',
+                                border: '3px solid var(--primary-green)',
+                                boxShadow: '0 0 20px rgba(46, 204, 113, 0.2)',
+                                cursor: 'pointer'
+                            }}
+                        >
                             <img src={jayaruwanImg} alt="D P I Jayaruwan" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
+                        </motion.div>
                         <h3 style={{ fontSize: '1.5rem', color: 'white', marginBottom: '0.5rem' }}>D P I Jayaruwan</h3>
                         <span style={{ color: 'var(--primary-green)', fontSize: '0.9rem', marginBottom: '1.5rem', fontWeight: 'bold' }}>Director</span>
                         <p style={{ color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', fontStyle: 'italic' }}>
