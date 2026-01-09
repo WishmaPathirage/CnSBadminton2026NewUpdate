@@ -170,6 +170,7 @@ const LandingPage = () => {
       <div id="memberships"><Memberships /></div>
       <div id="services"><Services /></div>
       <div id="events"><Events /></div>
+      <Directors />
       <DevelopmentProgress />
       <div id="reviews"><Reviews /></div>
       <div id="contact"><Contact /></div>
