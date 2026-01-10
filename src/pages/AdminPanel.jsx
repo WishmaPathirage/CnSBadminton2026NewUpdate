@@ -132,18 +132,16 @@ const AdminPanel = () => {
 
         // 3. Email Logic (Background)
         if (newStatus === 'confirmed' && booking) {
-            // DEBUG: Show exactly what data we have
-            alert(`🔍 DEBUG: Checking Email Data...\n\nUser: ${booking.userName}\nEmail Field: ${booking.userEmail}\n\n(Full Data: ${JSON.stringify(booking)})`);
 
             if (booking.userEmail) {
+                // Corrected keys based on your screenshot
                 const emailParams = {
-                    to_name: booking.userName,
-                    to_email: booking.userEmail,
-                    date: booking.date,
-                    time: booking.startTime,
-                    duration: booking.duration + ' mins',
-                    court: booking.courts.join(', '),
-                    ref_id: booking.id,
+                    to_email: booking.userEmail,       // Matches {{to_email}}
+                    user_name: booking.userName,       // Matches {{user_name}}
+                    booking_date: booking.date,        // Matches {{booking_date}}
+                    booking_time: booking.startTime,   // Matches {{booking_time}}
+                    courts: booking.courts.join(', '), // Matches {{courts}}
+                    user_phone: booking.userPhone || 'N/A', // Matches {{user_phone}}
                     reply_to: 'cnsb233@gmail.com'
                 };
 
