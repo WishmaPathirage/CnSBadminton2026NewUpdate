@@ -128,11 +128,12 @@ const AdminPanel = () => {
                     'service_i25io04',
                     'template_x9qs76',
                     emailParams
-                ).then(() => {
-                    console.log('Email sent successfully!');
+                ).then((response) => {
+                    console.log('SUCCESS!', response.status, response.text);
+                    alert(`✅ Email Sent Successfully to ${booking.userEmail}!`);
                 }).catch((err) => {
-                    console.error('Failed to send email:', err);
-                    alert('Note: Booking confirmed, but Email failed to send.');
+                    console.error('FAILED...', err);
+                    alert(`❌ Email Failed: ${JSON.stringify(err)}`);
                 });
             }
 
