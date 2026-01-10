@@ -149,8 +149,16 @@ const AdminPanel = () => {
                     user_name: booking.userName,
                     booking_date: booking.date,
                     booking_time: booking.startTime,
-                    end_time: endTime,                 // New: {{end_time}}
-                    duration: booking.duration,        // New: {{duration}}
+
+                    // Sending multiple variations 
+                    end_time: endTime,
+                    endTime: endTime,
+                    EndTime: endTime,
+
+                    duration: booking.duration,
+                    Duration: booking.duration,
+                    duration_mins: booking.duration,
+
                     courts: booking.courts.join(', '),
                     user_phone: booking.userPhone || 'N/A',
                     reply_to: 'cnsb233@gmail.com'
