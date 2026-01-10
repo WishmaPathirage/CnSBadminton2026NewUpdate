@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Calendar, Clock, CheckCircle, XCircle, Trash2, Shield, Info } from 'lucide-react';
+import { LogOut, Calendar, Clock, CheckCircle, XCircle, Trash2, Shield, Info, Plus, Home, X, CalendarX } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 
 const AdminPanel = () => {
@@ -528,7 +528,7 @@ const AdminPanel = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.21 (Golden Release)</span></h1>
+                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.22 (Icons Fixed)</span></h1>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
 
