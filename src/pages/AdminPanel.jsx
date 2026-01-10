@@ -132,6 +132,9 @@ const AdminPanel = () => {
 
         // 3. Email Logic (Background)
         if (newStatus === 'confirmed' && booking) {
+            // DEBUG: Show exactly what data we have
+            alert(`🔍 DEBUG: Checking Email Data...\n\nUser: ${booking.userName}\nEmail Field: ${booking.userEmail}\n\n(Full Data: ${JSON.stringify(booking)})`);
+
             if (booking.userEmail) {
                 const emailParams = {
                     to_name: booking.userName,
