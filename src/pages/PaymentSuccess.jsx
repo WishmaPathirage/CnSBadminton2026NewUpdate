@@ -98,7 +98,7 @@ const PaymentSuccess = () => {
                 </h1>
 
                 <p style={{ color: 'var(--text-gray)', marginBottom: '1.5rem', fontSize: '1.1rem', lineHeight: '1.6' }}>
-                    Your court is reserved and ready for action.
+                    Your courts are reserved. Our admin will accept it, and you will receive your confirmation shortly.
                 </p>
 
                 {booking && (
@@ -112,7 +112,7 @@ const PaymentSuccess = () => {
                         width: '100%'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                            <span style={{ color: 'var(--text-gray)' }}>Order ID:</span>
+                            <span style={{ color: 'var(--text-gray)' }}>Booking ID:</span>
                             <span style={{ fontWeight: 'bold' }}>{orderId}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -124,7 +124,7 @@ const PaymentSuccess = () => {
                             <span>{booking.startTime} - {getEndTime(booking.startTime, booking.duration)}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: 'var(--text-gray)' }}>Courts:</span>
+                            <span style={{ color: 'var(--text-gray)' }}>Court No:</span>
                             <span style={{ color: 'var(--brand-teal)' }}>{booking.courts.map(c => `Court ${c}`).join(', ')}</span>
                         </div>
                     </div>
