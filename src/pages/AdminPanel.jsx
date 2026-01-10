@@ -167,7 +167,7 @@ const AdminPanel = () => {
                     PUBLIC_KEY
                 ).then((response) => {
                     console.log('SUCCESS!', response.status, response.text);
-                    alert(`✅ Email Sent Successfully to ${booking.userEmail}!`);
+                    alert(`✅ Email Sent!\n\nSent Data:\nEnd Time: ${endTime}\nDuration: ${booking.duration}\n\nPlease check if these are filled in the email now.`);
                 }).catch((err) => {
                     console.error('FAILED...', err);
                     alert(`❌ Email Failed!\n\nUsed Service: ${SERVICE_ID}\nUsed Template: ${TEMPLATE_ID}\n\nError: ${JSON.stringify(err)}`);
@@ -542,7 +542,7 @@ const AdminPanel = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.26 (Full Email Data)</span></h1>
+                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.27 (Data Shotgun)</span></h1>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
 
