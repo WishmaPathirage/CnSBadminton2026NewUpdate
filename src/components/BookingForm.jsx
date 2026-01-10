@@ -214,7 +214,7 @@ const BookingForm = () => {
         // In a real app, you'd create an Order first, get an Order ID, then payment.
 
         // We'll generate a random Order ID for this demo
-        const orderId = `ORD-${Date.now()}`;
+        const orderId = `CNS-${Date.now()}`;
 
         try {
             // Save booking details to Firestore (optional step before payment)
