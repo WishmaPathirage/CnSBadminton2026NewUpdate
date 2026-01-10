@@ -135,6 +135,9 @@ const AdminPanel = () => {
                     console.error('FAILED...', err);
                     alert(`❌ Email Failed: ${JSON.stringify(err)}`);
                 });
+            } else {
+                // Debugging: Alert if no email is attached
+                alert('⚠️ Status Updated to Confirmed, but NO EMAIL was found for this booking. (Did you add an email?)');
             }
 
             // 2. Auto-open WhatsApp to notify user (Existing Logic)
@@ -262,6 +265,7 @@ const AdminPanel = () => {
                     duration: parseInt(manualForm.duration),
                     courts: [selectedCourt],
                     userName: manualForm.name,
+                    userEmail: manualForm.email, // Pass email
                     userPhone: 'N/A', // No phone in manual form
                     userId: 'admin-manual',
                     status: 'confirmed'
@@ -422,6 +426,16 @@ const AdminPanel = () => {
                                         value={manualForm.name}
                                         onChange={e => setManualForm({ ...manualForm, name: e.target.value })}
                                         required
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Email (Optional)</label>
+                                    <input
+                                        type="email"
+                                        className="glass-input"
+                                        placeholder="Enter email for notifications"
+                                        value={manualForm.email || ''}
+                                        onChange={e => setManualForm({ ...manualForm, email: e.target.value })}
                                     />
                                 </div>
 
