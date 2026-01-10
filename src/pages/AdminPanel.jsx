@@ -111,12 +111,30 @@ const AdminPanel = () => {
         await updateBookingStatus(id, newStatus);
 
         if (newStatus === 'confirmed' && booking) {
-            // Disabled EmailJS for now to fix crash
-            /*
+            // 1. Send Email Notification
             if (booking.userEmail) {
-                // ... logic ...
+                const emailParams = {
+                    to_name: booking.userName,
+                    to_email: booking.userEmail,
+                    date: booking.date,
+                    time: booking.startTime,
+                    duration: booking.duration + ' mins',
+                    court: booking.courts.join(', '),
+                    ref_id: booking.id,
+                    reply_to: 'cnsb233@gmail.com'
+                };
+
+                emailjs.send(
+                    'service_i25io04',
+                    'template_x9qs76',
+                    emailParams
+                ).then(() => {
+                    console.log('Email sent successfully!');
+                }).catch((err) => {
+                    console.error('Failed to send email:', err);
+                    alert('Note: Booking confirmed, but Email failed to send.');
+                });
             }
-            */
 
             // 2. Auto-open WhatsApp to notify user (Existing Logic)
             const message = `Booking Confirmation - C & S Badminton Complex (PVT) Ltd\n\nPlayer Name: ${booking.userName}\nDate: ${booking.date}\nTime Slot: ${booking.startTime}\nDuration: ${booking.duration} mins\nCourt No: ${booking.courts.join(', ')}\nOther: Ref #${booking.id}\n\nPlease arrive and depart on time. Smoking is prohibited. For cancellations, inform us at least 3 hours in advance. Your e-invoice will follow shortly.\n\nThank you for your cooperation!\n\nBest Regards,\nC & S Badminton Complex (PVT) Ltd\nPhone: +94 777 98 32 64\nEmail: cnsb233@gmail.com\nWebsite: www.cnsbadminton.lk`;
