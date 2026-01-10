@@ -137,13 +137,22 @@ const AdminPanel = () => {
 
             if (booking.userEmail) {
                 // Corrected keys based on your screenshot
+                // Calculate End Time
+                const [hours, minutes] = booking.startTime.split(':').map(Number);
+                const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
+                const endHour = Math.floor(totalMinutes / 60);
+                const endMinute = totalMinutes % 60;
+                const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+
                 const emailParams = {
-                    to_email: booking.userEmail,       // Matches {{to_email}}
-                    user_name: booking.userName,       // Matches {{user_name}}
-                    booking_date: booking.date,        // Matches {{booking_date}}
-                    booking_time: booking.startTime,   // Matches {{booking_time}}
-                    courts: booking.courts.join(', '), // Matches {{courts}}
-                    user_phone: booking.userPhone || 'N/A', // Matches {{user_phone}}
+                    to_email: booking.userEmail,
+                    user_name: booking.userName,
+                    booking_date: booking.date,
+                    booking_time: booking.startTime,
+                    end_time: endTime,                 // New: {{end_time}}
+                    duration: booking.duration,        // New: {{duration}}
+                    courts: booking.courts.join(', '),
+                    user_phone: booking.userPhone || 'N/A',
                     reply_to: 'cnsb233@gmail.com'
                 };
 
@@ -533,7 +542,7 @@ const AdminPanel = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.25 (ID Debug)</span></h1>
+                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.26 (Full Email Data)</span></h1>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
 
