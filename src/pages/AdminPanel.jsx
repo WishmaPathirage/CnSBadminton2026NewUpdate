@@ -108,10 +108,30 @@ const AdminPanel = () => {
 
     const handleStatusChange = async (id, newStatus) => {
         const booking = bookings.find(b => b.id === id);
-        await updateBookingStatus(id, newStatus);
 
+        // 1. WhatsApp Logic (Trigger immediately to avoid Popup Blockers)
         if (newStatus === 'confirmed' && booking) {
-            // 1. Send Email Notification
+            const message = `Booking Confirmation - C & S Badminton Complex (PVT) Ltd\n\nPlayer Name: ${booking.userName}\nDate: ${booking.date}\nTime Slot: ${booking.startTime}\nDuration: ${booking.duration} mins\nCourt No: ${booking.courts.join(', ')}\nOther: Ref #${booking.id}\n\nPlease arrive and depart on time. Smoking is prohibited. For cancellations, inform us at least 3 hours in advance. Your e-invoice will follow shortly.\n\nThank you for your cooperation!\n\nBest Regards,\nC & S Badminton Complex (PVT) Ltd\nPhone: +94 777 98 32 64\nEmail: cnsb233@gmail.com\nWebsite: www.cnsbadminton.lk`;
+
+            let phone = booking.userPhone || '';
+            phone = phone.replace(/\D/g, '');
+            if (phone.startsWith('0')) phone = '94' + phone.substring(1);
+
+            // Open WhatsApp immediately
+            const waWindow = window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+            if (!waWindow) alert("⚠️ WhatsApp Popup was blocked! Please allow popups for this site.");
+        }
+
+        // 2. Database Update
+        try {
+            await updateBookingStatus(id, newStatus);
+        } catch (err) {
+            alert("Error updating database: " + err.message);
+            return; // Stop if DB fails
+        }
+
+        // 3. Email Logic (Background)
+        if (newStatus === 'confirmed' && booking) {
             if (booking.userEmail) {
                 const emailParams = {
                     to_name: booking.userName,
@@ -136,19 +156,8 @@ const AdminPanel = () => {
                     alert(`❌ Email Failed: ${JSON.stringify(err)}`);
                 });
             } else {
-                // Debugging: Alert if no email is attached
-                alert('⚠️ Status Updated to Confirmed, but NO EMAIL was found for this booking. (Did you add an email?)');
+                alert('⚠️ Status Confirmed. WhatsApp opened (if allowed). \n❌ NO EMAIL FOUND for this user.');
             }
-
-            // 2. Auto-open WhatsApp to notify user (Existing Logic)
-            const message = `Booking Confirmation - C & S Badminton Complex (PVT) Ltd\n\nPlayer Name: ${booking.userName}\nDate: ${booking.date}\nTime Slot: ${booking.startTime}\nDuration: ${booking.duration} mins\nCourt No: ${booking.courts.join(', ')}\nOther: Ref #${booking.id}\n\nPlease arrive and depart on time. Smoking is prohibited. For cancellations, inform us at least 3 hours in advance. Your e-invoice will follow shortly.\n\nThank you for your cooperation!\n\nBest Regards,\nC & S Badminton Complex (PVT) Ltd\nPhone: +94 777 98 32 64\nEmail: cnsb233@gmail.com\nWebsite: www.cnsbadminton.lk`;
-
-            // Format user phone: 077... -> 9477...
-            let phone = booking.userPhone || '';
-            phone = phone.replace(/\D/g, ''); // Remove non-digits
-            if (phone.startsWith('0')) phone = '94' + phone.substring(1);
-
-            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
         }
     };
 
@@ -265,7 +274,6 @@ const AdminPanel = () => {
                     duration: parseInt(manualForm.duration),
                     courts: [selectedCourt],
                     userName: manualForm.name,
-                    userEmail: manualForm.email, // Pass email
                     userPhone: 'N/A', // No phone in manual form
                     userId: 'admin-manual',
                     status: 'confirmed'
@@ -426,16 +434,6 @@ const AdminPanel = () => {
                                         value={manualForm.name}
                                         onChange={e => setManualForm({ ...manualForm, name: e.target.value })}
                                         required
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Email (Optional)</label>
-                                    <input
-                                        type="email"
-                                        className="glass-input"
-                                        placeholder="Enter email for notifications"
-                                        value={manualForm.email || ''}
-                                        onChange={e => setManualForm({ ...manualForm, email: e.target.value })}
                                     />
                                 </div>
 
