@@ -40,7 +40,7 @@ const Hero = () => {
                     transition={{ duration: 0.8 }}
                 >
                     <h2 className="text-gradient" style={{
-                        fontSize: '1.2rem',
+                        fontSize: 'clamp(0.9rem, 3vw, 1.2rem)',
                         fontWeight: '700',
                         textTransform: 'uppercase',
                         letterSpacing: '2px',
@@ -50,7 +50,7 @@ const Hero = () => {
                         Welcome to C & S Badminton Complex (PVT) Ltd, Galle
                     </h2>
                     <h1 style={{
-                        fontSize: 'clamp(3rem, 5vw, 5rem)',
+                        fontSize: 'clamp(2.5rem, 6vw, 5rem)',
                         marginBottom: '1.5rem',
                         lineHeight: 1.1,
                         color: 'white'
