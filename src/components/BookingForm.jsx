@@ -9,12 +9,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
 
 const BookingForm = () => {
-    // Helper for Local Date (YYYY-MM-DD)
+    // Helper for Local Date (YYYY-MM-DD) - Forced to Sri Lanka Time (UTC+5:30)
     const getLocalDate = () => {
         const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const slTime = new Date(utc + (3600000 * 5.5)); // Add 5.5 hours for SL
+
+        const year = slTime.getFullYear();
+        const month = String(slTime.getMonth() + 1).padStart(2, '0');
+        const day = String(slTime.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     };
 

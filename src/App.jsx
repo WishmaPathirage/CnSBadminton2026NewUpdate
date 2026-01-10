@@ -138,7 +138,7 @@ const LandingPage = () => {
               <p style={{ fontSize: '1.2rem', color: '#eee', lineHeight: '1.6' }}>
                 Wishing you a smash-hit year filled with health, happiness, and great badminton! 🏸✨
               </p>
-              <p style={{ marginTop: '1rem', fontSize: '0.8rem', opacity: 0.3 }}>v1.32 (Local Date Fix)</p>
+              <p style={{ marginTop: '1rem', fontSize: '0.8rem', opacity: 0.3 }}>v1.33 (SL Timezone)</p>
 
               <p style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)' }}>
                 - C & S Badminton Complex Team
