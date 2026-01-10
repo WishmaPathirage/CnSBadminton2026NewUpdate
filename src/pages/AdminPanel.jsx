@@ -147,17 +147,21 @@ const AdminPanel = () => {
                     reply_to: 'cnsb233@gmail.com'
                 };
 
+                const SERVICE_ID = 'service_i25io04';
+                const TEMPLATE_ID = 'template_x9qs76e';
+                const PUBLIC_KEY = 'cmyBcHcHxEP2ggwV3';
+
                 emailjs.send(
-                    'service_i25io04',
-                    'template_x9qs76e',
+                    SERVICE_ID,
+                    TEMPLATE_ID,
                     emailParams,
-                    'cmyBcHcHxEP2ggwV3'
+                    PUBLIC_KEY
                 ).then((response) => {
                     console.log('SUCCESS!', response.status, response.text);
                     alert(`✅ Email Sent Successfully to ${booking.userEmail}!`);
                 }).catch((err) => {
                     console.error('FAILED...', err);
-                    alert(`❌ Email Failed: ${JSON.stringify(err)}`);
+                    alert(`❌ Email Failed!\n\nUsed Service: ${SERVICE_ID}\nUsed Template: ${TEMPLATE_ID}\n\nError: ${JSON.stringify(err)}`);
                 });
             } else {
                 alert(`⚠️ Email Skipped.\n\nReason: No email address found for this user.\n\nBooking ID: ${booking.id}\nUser Name: ${booking.userName}\nStatus: Confirmed`);
@@ -529,7 +533,7 @@ const AdminPanel = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.24 (Template Fixed)</span></h1>
+                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.25 (ID Debug)</span></h1>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
 
