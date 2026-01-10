@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { subscribeToBookings, updateBookingStatus, deleteBooking, createBooking, subscribeToPermanentBookings, createPermanentBooking, deletePermanentBooking } from '../services/bookingService';
-import { useAuth } from '../context/AuthContext';
-import { logout } from '../services/authService';
+import { db, logout } from '../firebaseConfig';
+import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Trash2, CalendarX, Plus, X, Home } from 'lucide-react';
+import { LogOut, Calendar, Clock, CheckCircle, XCircle, Trash2, Shield, Info } from 'lucide-react';
 // import emailjs from '@emailjs/browser'; // Commenting out to isolate
 
 const AdminPanel = () => {
