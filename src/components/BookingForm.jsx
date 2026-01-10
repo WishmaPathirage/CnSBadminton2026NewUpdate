@@ -9,7 +9,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
 
 const BookingForm = () => {
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    // Helper for Local Date (YYYY-MM-DD)
+    const getLocalDate = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const [date, setDate] = useState(getLocalDate());
     const [duration, setDuration] = useState(30); // Default 30 minutes
     const [selectedTime, setSelectedTime] = useState(null);
     const [selectedCourts, setSelectedCourts] = useState([]);
@@ -120,7 +129,7 @@ const BookingForm = () => {
     // Filter times based on current time if date is today
     const getFilteredTimes = () => {
         const times = generateTimeSlots();
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLocalDate();
 
         if (date === today) {
             const now = new Date();
@@ -340,7 +349,7 @@ const BookingForm = () => {
                                         <Calendar size={20} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-gray)' }} />
                                         <input
                                             type="date"
-                                            min={new Date().toISOString().split('T')[0]}
+                                            min={getLocalDate()}
                                             value={date}
                                             onChange={(e) => setDate(e.target.value)}
                                             className="glass-input"
