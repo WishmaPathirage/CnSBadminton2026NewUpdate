@@ -6,8 +6,9 @@ import { useAuth } from '../context/AuthContext';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Calendar, Clock, CheckCircle, XCircle, Trash2, Shield, Info, Plus, Home, X, CalendarX } from 'lucide-react';
+import { LogOut, Calendar, Clock, CheckCircle, XCircle, Trash2, Shield, Info, Plus, Home, X, CalendarX, Download } from 'lucide-react';
 import emailjs from '@emailjs/browser';
+import * as XLSX from 'xlsx';
 
 const AdminPanel = () => {
     const [bookings, setBookings] = useState([]);
@@ -338,6 +339,43 @@ const AdminPanel = () => {
         return null;
     }
 
+    const handleExportExcel = () => {
+        if (bookings.length === 0) {
+            alert("No data to export!");
+            return;
+        }
+
+        const dataToExport = bookings.map(b => {
+            // Calculate End Time for Export
+            const [hours, minutes] = b.startTime.split(':').map(Number);
+            const totalMinutes = hours * 60 + minutes + parseInt(b.duration);
+            const endHour = Math.floor(totalMinutes / 60);
+            const endMinute = totalMinutes % 60;
+            const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+
+            return {
+                "Booking ID": b.id,
+                "Order ID": b.orderId || 'N/A',
+                "Date": b.date,
+                "Start Time": b.startTime,
+                "End Time": endTime,
+                "Duration (mins)": b.duration,
+                "Courts": b.courts.join(', '),
+                "Customer Name": b.userName,
+                "Phone": b.userPhone || 'N/A',
+                "Email": b.userEmail || 'N/A',
+                "Amount": b.amount || 'N/A',
+                "Status": b.status,
+                "Created At": b.createdAt || 'N/A'
+            };
+        });
+
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "All Bookings");
+        XLSX.writeFile(workbook, `CNS_Bookings_Full_History_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
     return (
         <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', paddingTop: '100px', position: 'relative' }}>
             {/* ... Modal ... */}
@@ -550,7 +588,7 @@ const AdminPanel = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.27 (Data Shotgun)</span></h1>
+                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.30 (CNS Prefix)</span></h1>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
 
@@ -589,6 +627,25 @@ const AdminPanel = () => {
                     </div>
 
                     <div style={{ display: 'flex', gap: '1rem' }}>
+
+                        <button
+                            onClick={handleExportExcel}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                padding: '0.75rem 1.5rem',
+                                backgroundColor: '#27ae60', // Excel Green
+                                border: 'none',
+                                color: 'white',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                boxShadow: '0 4px 15px rgba(39, 174, 96, 0.4)'
+                            }}
+                        >
+                            <Download size={18} /> Export History
+                        </button>
 
                         <button
                             onClick={() => setShowManualModal(true)}
@@ -671,13 +728,15 @@ const AdminPanel = () => {
             {/* Content Switch */}
             {viewMode === 'bookings' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
-                    {/* ... Existing Bookings List ... */}
-                    {Object.keys(bookings.reduce((acc, b) => ({ ...acc, [b.date]: true }), {})).sort((a, b) => {
+                    {/* Only show Today's Bookings */}
+                    {Object.keys(bookings.reduce((acc, b) => {
+                        // FILTER: ONLY INCLUDE TODAY
                         const today = new Date().toISOString().split('T')[0];
-                        if (a === today) return -1;
-                        if (b === today) return 1;
-                        return a.localeCompare(b);
-                    }).map(date => {
+                        if (b.date === today) {
+                            return { ...acc, [b.date]: true };
+                        }
+                        return acc;
+                    }, {})).map(date => {
                         // Filter bookings for this date
                         const dayBookings = bookings.filter(b => b.date === date);
 
