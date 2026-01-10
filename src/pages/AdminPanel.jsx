@@ -616,6 +616,30 @@ const AdminPanel = () => {
                         >
                             <LogOut size={18} /> Logout
                         </button>
+                        <button
+                            onClick={() => {
+                                const latest = [...bookings].sort((a, b) => b.createdAt?.localeCompare(a.createdAt))[0]; // Get newest
+                                if (latest) {
+                                    alert(`🕵️ LATEST BOOKING DATA:\n\nID: ${latest.id}\nCreated: ${latest.createdAt}\nUser: ${latest.userName}\nEmail: ${latest.userEmail}\n\nRAW JSON:\n${JSON.stringify(latest, null, 2)}`);
+                                } else {
+                                    alert("No bookings found!");
+                                }
+                            }}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                padding: '0.75rem 1.5rem',
+                                backgroundColor: 'rgba(255, 215, 0, 0.1)', // Gold tint
+                                border: '1px solid gold',
+                                color: 'gold',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            <Info size={18} /> Debug Data
+                        </button>
                     </div>
                 </div>
             </div>
