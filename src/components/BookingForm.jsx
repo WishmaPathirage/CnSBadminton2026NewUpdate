@@ -400,7 +400,7 @@ const BookingForm = () => {
                                     </div>
 
                                     {/* Legend */}
-                                    <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
+                                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '1.5rem', fontSize: '0.85rem', flexWrap: 'wrap' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(46, 204, 113, 0.2)', border: '1px solid #2ecc71' }}></div>
                                             <span style={{ color: '#aaa' }}>Available</span>
@@ -423,6 +423,7 @@ const BookingForm = () => {
                                         maxHeight: '450px',
                                         overflowY: 'auto',
                                         paddingRight: '10px',
+                                        paddingLeft: '1rem', // Match Header Padding
                                         paddingBottom: '10px'
                                     }}>
                                         {allTimes.map((time) => (
