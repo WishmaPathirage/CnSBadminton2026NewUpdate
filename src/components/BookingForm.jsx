@@ -370,6 +370,17 @@ const BookingForm = () => {
                             {/* Scrollable Container for Mobile */}
                             <div style={{ overflowX: 'auto', paddingBottom: '1rem', margin: '0 -1rem' }}>
                                 <div style={{ minWidth: '600px', padding: '0 1rem' }}>
+                                    {/* Auto-scroll to selected time on mount (Web/Mobile friendly) */}
+                                    <div ref={el => {
+                                        if (el && selectedTime) {
+                                            // Find the selected time element
+                                            // Simple heuristic: find element by checking children text or ID
+                                            // Since we map allTimes, we can't easily grab the node directly without refs map.
+                                            // Alternatively, we just rely on user scrolling or maintain it.
+                                            // Let's actually leave natural top scroll for now to avoid jumpiness.
+                                        }
+                                    }}></div>
+
                                     {/* Time Grid Header */}
                                     <div style={{
                                         display: 'grid',

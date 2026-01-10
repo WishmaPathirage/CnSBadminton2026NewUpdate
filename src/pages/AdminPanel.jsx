@@ -215,7 +215,23 @@ const AdminPanel = () => {
                 });
 
                 if (hasConflict) {
-                    alert('⚠️ This slot conflicts with an existing booking!');
+                    alert('⚠️ This slot conflicts with an existing ONE-TIME booking!');
+                    setManualLoading(false);
+                    return;
+                }
+
+                // Check Permanent Conflicts (New Validation)
+                const dayOfWeek = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
+                const hasPermConflict = permanentBookings.some(b => {
+                    if (b.dayOfWeek !== dayOfWeek) return false;
+                    if (!b.courts.includes(selectedCourt)) return false;
+                    const existStart = timeToMin(b.startTime);
+                    const existEnd = existStart + parseInt(b.duration);
+                    return (newStart < existEnd && existStart < newEnd);
+                });
+
+                if (hasPermConflict) {
+                    alert('⚠️ This slot conflicts with an existing PERMANENT booking!');
                     setManualLoading(false);
                     return;
                 }
