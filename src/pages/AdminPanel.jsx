@@ -156,7 +156,7 @@ const AdminPanel = () => {
                     alert(`❌ Email Failed: ${JSON.stringify(err)}`);
                 });
             } else {
-                alert('⚠️ Status Confirmed. WhatsApp opened (if allowed). \n❌ NO EMAIL FOUND for this user.');
+                alert(`⚠️ Email Skipped.\n\nReason: No email address found for this user.\n\nBooking ID: ${booking.id}\nUser Name: ${booking.userName}\nStatus: Confirmed`);
             }
         }
     };
