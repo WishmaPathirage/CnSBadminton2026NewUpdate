@@ -5,7 +5,7 @@ import { getFirestore } from "firebase/firestore";
 // Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBrYJjbxpy4CrbB93DAuROit-efKd1P7oc",
-    authDomain: "cnsbadminton2026update.firebaseapp.com",
+    authDomain: "cnsbadminton.lk",
     projectId: "cnsbadminton2026update",
     storageBucket: "cnsbadminton2026update.firebasestorage.app",
     messagingSenderId: "499336471820",
