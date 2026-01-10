@@ -586,140 +586,177 @@ const AdminPanel = () => {
                 </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                    <h1 style={{ color: 'var(--primary-green)' }}>Admin Dashboard <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa' }}>v1.30 (CNS Prefix)</span></h1>
+            {/* Dashboard Header & Toolbar */}
+            <div style={{ marginBottom: '2.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h1 style={{ color: 'var(--primary-green)', margin: 0, fontSize: '2.2rem' }}>
+                        Admin Dashboard
+                        <span style={{ fontSize: '0.9rem', opacity: 0.5, color: '#aaa', marginLeft: '1rem', fontWeight: 'normal' }}>v1.34 (UI Polish)</span>
+                    </h1>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
 
-                    {/* View Toggle */}
-                    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', padding: '4px', gap: '4px' }}>
+                {/* Glass Toolbar */}
+                <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '1rem',
+                    alignItems: 'center',
+                    background: 'rgba(255,255,255,0.03)',
+                    padding: '1rem',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    backdropFilter: 'blur(10px)'
+                }}>
+                    {/* Group 1: View Modes */}
+                    <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '10px' }}>
                         <button
                             onClick={() => setViewMode('bookings')}
                             style={{
                                 padding: '0.6rem 1.2rem',
-                                borderRadius: '6px',
+                                borderRadius: '8px',
                                 border: 'none',
                                 background: viewMode === 'bookings' ? 'var(--brand-teal)' : 'transparent',
-                                color: viewMode === 'bookings' ? '#000' : '#aaa',
+                                color: viewMode === 'bookings' ? '#000' : '#888',
                                 fontWeight: 'bold',
                                 cursor: 'pointer',
-                                transition: 'all 0.3s'
+                                transition: 'all 0.2s',
+                                fontSize: '0.9rem'
                             }}
                         >
-                            Daily
+                            <Calendar size={16} style={{ display: 'inline', marginRight: '6px', header: 'none' }} />
+                            Daily View
                         </button>
                         <button
                             onClick={() => setViewMode('permanent')}
                             style={{
                                 padding: '0.6rem 1.2rem',
-                                borderRadius: '6px',
+                                borderRadius: '8px',
                                 border: 'none',
                                 background: viewMode === 'permanent' ? 'var(--brand-pink)' : 'transparent',
-                                color: viewMode === 'permanent' ? '#fff' : '#aaa',
+                                color: viewMode === 'permanent' ? '#fff' : '#888',
                                 fontWeight: 'bold',
                                 cursor: 'pointer',
-                                transition: 'all 0.3s'
+                                transition: 'all 0.2s',
+                                fontSize: '0.9rem'
                             }}
                         >
+                            <Clock size={16} style={{ display: 'inline', marginRight: '6px' }} />
                             Recurring
                         </button>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem' }}>
+                    {/* Divider */}
+                    <div style={{ width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)', margin: '0 0.5rem' }}></div>
 
+                    {/* Group 2: Actions */}
+                    <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
                         <button
                             onClick={handleExportExcel}
                             style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                padding: '0.75rem 1.5rem',
-                                backgroundColor: '#27ae60', // Excel Green
-                                border: 'none',
-                                color: 'white',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontWeight: 'bold',
-                                boxShadow: '0 4px 15px rgba(39, 174, 96, 0.4)'
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                padding: '0.7rem 1.2rem',
+                                background: 'rgba(39, 174, 96, 0.15)',
+                                color: '#2ecc71',
+                                border: '1px solid rgba(39, 174, 96, 0.3)',
+                                borderRadius: '10px',
+                                cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem',
+                                transition: 'all 0.2s'
                             }}
+                            onMouseOver={(e) => e.target.style.background = 'rgba(39, 174, 96, 0.25)'}
+                            onMouseOut={(e) => e.target.style.background = 'rgba(39, 174, 96, 0.15)'}
                         >
                             <Download size={18} /> Export History
                         </button>
 
                         <button
                             onClick={() => setShowManualModal(true)}
-                            className="btn-gradient"
                             style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                padding: '0.75rem 1.5rem',
-                                borderRadius: '8px',
-                                fontWeight: 'bold',
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                padding: '0.7rem 1.2rem',
+                                background: 'rgba(120, 220, 202, 0.15)',
+                                color: 'var(--brand-teal)',
+                                border: '1px solid rgba(120, 220, 202, 0.3)',
+                                borderRadius: '10px',
+                                cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseOver={(e) => {
+                                e.target.style.background = 'rgba(120, 220, 202, 0.25)';
+                                e.target.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseOut={(e) => {
+                                e.target.style.background = 'rgba(120, 220, 202, 0.15)';
+                                e.target.style.transform = 'translateY(0)';
                             }}
                         >
-                            <Plus size={20} /> New Booking
+                            <Plus size={18} /> New Booking
                         </button>
-                        <button
-                            onClick={() => navigate('/')}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                padding: '0.75rem 1.5rem',
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                color: 'white',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontWeight: 'bold',
-                                transition: 'all 0.3s'
-                            }}
-                        >
-                            <Home size={18} /> Back to Site
-                        </button>
-                        <button
-                            onClick={handleLogout}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                padding: '0.75rem 1.5rem',
-                                backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                                border: '1px solid #e74c3c',
-                                color: '#e74c3c',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontWeight: 'bold',
-                                transition: 'all 0.3s'
-                            }}
-                        >
-                            <LogOut size={18} /> Logout
-                        </button>
+                    </div>
+
+                    {/* Spacer to push Group 3 to right */}
+                    <div style={{ flex: 1 }}></div>
+
+                    {/* Group 3: System */}
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+
                         <button
                             onClick={() => {
-                                const latest = [...bookings].sort((a, b) => b.createdAt?.localeCompare(a.createdAt))[0]; // Get newest
+                                const latest = [...bookings].sort((a, b) => b.createdAt?.localeCompare(a.createdAt))[0];
                                 if (latest) {
                                     alert(`🕵️ LATEST BOOKING DATA:\n\nID: ${latest.id}\nCreated: ${latest.createdAt}\nUser: ${latest.userName}\nEmail: ${latest.userEmail}\n\nRAW JSON:\n${JSON.stringify(latest, null, 2)}`);
                                 } else {
                                     alert("No bookings found!");
                                 }
                             }}
+                            title="Debug Data"
                             style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                padding: '0.75rem 1.5rem',
-                                backgroundColor: 'rgba(255, 215, 0, 0.1)', // Gold tint
-                                border: '1px solid gold',
+                                padding: '0.7rem',
+                                background: 'transparent',
+                                border: '1px solid rgba(255, 215, 0, 0.3)',
                                 color: 'gold',
-                                borderRadius: '8px',
+                                borderRadius: '10px',
                                 cursor: 'pointer',
-                                fontWeight: 'bold'
+                                transition: 'all 0.2s'
                             }}
                         >
-                            <Info size={18} /> Debug Data
+                            <Info size={20} />
+                        </button>
+
+                        <button
+                            onClick={() => navigate('/')}
+                            title="Back to Site"
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                padding: '0.7rem 1.2rem',
+                                background: 'transparent',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                color: '#aaa',
+                                borderRadius: '10px',
+                                cursor: 'pointer', fontWeight: '500', fontSize: '0.9rem',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseOver={(e) => { e.target.style.borderColor = '#fff'; e.target.style.color = '#fff'; }}
+                            onMouseOut={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.2)'; e.target.style.color = '#aaa'; }}
+                        >
+                            <Home size={18} /> Site
+                        </button>
+
+                        <button
+                            onClick={handleLogout}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                padding: '0.7rem 1.2rem',
+                                background: 'rgba(231, 76, 60, 0.1)',
+                                border: '1px solid rgba(231, 76, 60, 0.3)',
+                                color: '#e74c3c',
+                                borderRadius: '10px',
+                                cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseOver={(e) => e.target.style.background = 'rgba(231, 76, 60, 0.2)'}
+                            onMouseOut={(e) => e.target.style.background = 'rgba(231, 76, 60, 0.1)'}
+                        >
+                            <LogOut size={18} /> Logout
                         </button>
                     </div>
                 </div>
