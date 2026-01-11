@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { updateDoc, doc } from 'firebase/firestore';
-import { getAvailability, createBooking } from '../services/bookingService';
+import { getAvailability, createBooking, checkUserBlacklist } from '../services/bookingService';
 import { getAuth } from 'firebase/auth'; // Import getAuth
 import { motion } from 'framer-motion';
 import { Calendar, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
@@ -189,6 +189,15 @@ const BookingForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // 0. CHECK BLACKLIST
+        if (currentUser) {
+            const isBlacklisted = await checkUserBlacklist(currentUser.uid);
+            if (isBlacklisted) {
+                alert("🚫 ACCOUNT RESTRICTED\n\nYour account has been flagged due to multiple no-shows. You are temporarily restricted from making new bookings.\n\nPlease contact the administration at 077 123 4567 to resolve this issue.");
+                return;
+            }
+        }
 
         // 1. Strict Email Validation
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;

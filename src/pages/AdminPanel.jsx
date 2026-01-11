@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Calendar, Clock, CheckCircle, XCircle, Trash2, Shield, Info, Plus, Home, X, CalendarX, Download } from 'lucide-react';
+import { Trash2, Calendar, Clock, LogOut, Download, Copy, Plus, X, UserX, ShieldAlert, CalendarX } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import * as XLSX from 'xlsx';
 
@@ -938,9 +938,18 @@ const AdminPanel = () => {
                                                                                 textTransform: 'uppercase',
                                                                                 padding: '0.25rem 0.75rem',
                                                                                 borderRadius: '20px',
-                                                                                background: booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.2)' : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.2)' : 'rgba(241, 196, 15, 0.2)'),
-                                                                                color: booking.status === 'confirmed' ? '#2ecc71' : (booking.status === 'rejected' ? '#e74c3c' : '#f1c40f'),
-                                                                                border: `1px solid ${booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.3)' : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.3)' : 'rgba(241, 196, 15, 0.3)')}`,
+                                                                                background: booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.2)'
+                                                                                    : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.2)'
+                                                                                        : (booking.status === 'no-show' ? 'rgba(150, 150, 150, 0.2)'
+                                                                                            : 'rgba(241, 196, 15, 0.2)')),
+                                                                                color: booking.status === 'confirmed' ? '#2ecc71'
+                                                                                    : (booking.status === 'rejected' ? '#e74c3c'
+                                                                                        : (booking.status === 'no-show' ? '#aaaaaa'
+                                                                                            : '#f1c40f')),
+                                                                                border: `1px solid ${booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.3)'
+                                                                                    : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.3)'
+                                                                                        : (booking.status === 'no-show' ? 'rgba(150, 150, 150, 0.3)'
+                                                                                            : 'rgba(241, 196, 15, 0.3)'))}`,
                                                                                 letterSpacing: '0.5px'
                                                                             }}>
                                                                                 {booking.status}
@@ -1003,23 +1012,68 @@ const AdminPanel = () => {
                                                                                     </button>
                                                                                 </>
                                                                             )}
-                                                                            <button
-                                                                                onClick={(e) => handleDeleteClick(e, booking.id)}
-                                                                                disabled={deletingId === booking.id}
-                                                                                title="Delete Booking"
-                                                                                style={{
-                                                                                    padding: '0.6rem',
-                                                                                    background: 'rgba(231, 76, 60, 0.1)',
-                                                                                    border: '1px solid rgba(231, 76, 60, 0.2)',
-                                                                                    borderRadius: '8px',
-                                                                                    cursor: 'pointer',
-                                                                                    color: '#e74c3c',
-                                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                    minWidth: '40px'
-                                                                                }}
-                                                                            >
-                                                                                <Trash2 size={18} />
-                                                                            </button>
+                                                                            {booking.status === 'confirmed' && (
+                                                                                <button
+                                                                                    onClick={() => handleStatusChange(booking.id, 'no-show')}
+                                                                                    title="Mark as No-Show"
+                                                                                    style={{
+                                                                                        padding: '0.6rem',
+                                                                                        background: 'rgba(100, 100, 100, 0.2)',
+                                                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                                        borderRadius: '8px',
+                                                                                        cursor: 'pointer',
+                                                                                        color: '#ccc',
+                                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                        flex: 1
+                                                                                    }}
+                                                                                >
+                                                                                    <UserX size={16} style={{ marginRight: '6px' }} /> No Show
+                                                                                </button>
+                                                                            )}
+
+                                                                            {/* Ban & Delete */}
+                                                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                                                <button
+                                                                                    onClick={async () => {
+                                                                                        if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
+                                                                                            const { banUser } = await import('../services/authService');
+                                                                                            const result = await banUser(booking.userId); // Ensure booking has userId
+                                                                                            if (result.success) alert('User has been banned.');
+                                                                                            else alert('Failed to ban: ' + result.message);
+                                                                                        }
+                                                                                    }}
+                                                                                    title="Ban User"
+                                                                                    style={{
+                                                                                        padding: '0.6rem',
+                                                                                        background: 'rgba(0, 0, 0, 0.3)',
+                                                                                        border: '1px solid rgba(255, 0, 0, 0.3)',
+                                                                                        borderRadius: '8px',
+                                                                                        cursor: 'pointer',
+                                                                                        color: '#ff4444',
+                                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                        minWidth: '40px'
+                                                                                    }}
+                                                                                >
+                                                                                    <ShieldAlert size={18} />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={(e) => handleDeleteClick(e, booking.id)}
+                                                                                    disabled={deletingId === booking.id}
+                                                                                    title="Delete Booking"
+                                                                                    style={{
+                                                                                        padding: '0.6rem',
+                                                                                        background: 'rgba(231, 76, 60, 0.1)',
+                                                                                        border: '1px solid rgba(231, 76, 60, 0.2)',
+                                                                                        borderRadius: '8px',
+                                                                                        cursor: 'pointer',
+                                                                                        color: '#e74c3c',
+                                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                        minWidth: '40px'
+                                                                                    }}
+                                                                                >
+                                                                                    <Trash2 size={18} />
+                                                                                </button>
+                                                                            </div>
                                                                         </div>
                                                                     </motion.div>
                                                                 );

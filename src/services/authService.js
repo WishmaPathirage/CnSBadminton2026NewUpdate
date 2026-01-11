@@ -117,3 +117,14 @@ export const getCurrentUser = () => {
 export const isAuthenticated = () => {
     return !!auth.currentUser;
 };
+
+export const banUser = async (uid) => {
+    try {
+        const userRef = doc(db, 'users', uid);
+        await setDoc(userRef, { isBlacklisted: true }, { merge: true });
+        return { success: true };
+    } catch (error) {
+        console.error("Error banning user:", error);
+        return { success: false, message: error.message };
+    }
+};

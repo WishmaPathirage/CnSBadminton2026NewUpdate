@@ -1,5 +1,5 @@
 import { db } from '../firebaseConfig';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, onSnapshot, getDoc } from 'firebase/firestore';
 
 const BOOKINGS_COL = 'bookings';
 
@@ -177,4 +177,21 @@ const sendWhatsAppNotification = (booking) => {
     //     template: { name: 'booking_confirmation', language: { code: 'en_US' } }
     //   })
     // });
+    //   })
+    // });
+};
+
+// Check if user is blacklisted
+export const checkUserBlacklist = async (uid) => {
+    try {
+        const userRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists() && userSnap.data().isBlacklisted) {
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error("Error checking blacklist:", error);
+        return false;
+    }
 };
