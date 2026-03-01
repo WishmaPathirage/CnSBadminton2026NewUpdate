@@ -16,6 +16,15 @@ const AdminPanel = () => {
     const navigate = useNavigate();
     const prevBookingsRef = useRef([]);
 
+    // Day-Wise Admin Date State
+    const [selectedAdminDate, setSelectedAdminDate] = useState(() => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    });
+
     // Manual Booking State
     const [showManualModal, setShowManualModal] = useState(false);
     const [manualForm, setManualForm] = useState({
@@ -799,26 +808,85 @@ const AdminPanel = () => {
                             </div>
                         )}
 
-                        {/* Iterate Days */}
-                        {Object.keys(bookings.reduce((acc, b) => {
-                            // FILTER: ONLY INCLUDE TODAY (Local Time)
-                            const now = new Date();
-                            const year = now.getFullYear();
-                            const month = String(now.getMonth() + 1).padStart(2, '0');
-                            const day = String(now.getDate()).padStart(2, '0');
-                            const today = `${year}-${month}-${day}`;
+                        {/* Date Picker Header */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            background: 'rgba(255,255,255,0.03)',
+                            padding: '1.5rem 2rem',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            backdropFilter: 'blur(10px)'
+                        }}>
+                            <div>
+                                <h2 style={{ margin: 0, color: 'white', fontSize: '1.4rem' }}>Day-Wise Schedule</h2>
+                                <p style={{ margin: '0.3rem 0 0 0', color: '#888', fontSize: '0.9rem' }}>Select a date to view both regular and recurring bookings.</p>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <label style={{ color: '#aaa', fontWeight: 'bold' }}>Select Date:</label>
+                                <input
+                                    type="date"
+                                    value={selectedAdminDate}
+                                    onChange={(e) => setSelectedAdminDate(e.target.value)}
+                                    style={{
+                                        padding: '0.8rem 1.2rem',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(120, 220, 202, 0.5)',
+                                        background: 'rgba(0,0,0,0.3)',
+                                        color: 'white',
+                                        fontFamily: 'inherit',
+                                        fontSize: '1rem',
+                                        cursor: 'pointer',
+                                        outline: 'none',
+                                    }}
+                                />
+                                <button
+                                    onClick={() => {
+                                        const now = new Date();
+                                        const year = now.getFullYear();
+                                        const month = String(now.getMonth() + 1).padStart(2, '0');
+                                        const day = String(now.getDate()).padStart(2, '0');
+                                        setSelectedAdminDate(`${year}-${month}-${day}`);
+                                    }}
+                                    style={{
+                                        padding: '0.8rem 1.2rem',
+                                        background: 'var(--brand-teal)',
+                                        color: '#000',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Today
+                                </button>
+                            </div>
+                        </div>
 
-                            if (b.date === today) {
-                                return { ...acc, [b.date]: true };
-                            }
-                            return acc;
-                        }, {})).map(date => {
-                            // Filter bookings for this date
-                            const dayBookings = bookings.filter(b => b.date === date);
+                        {/* Rendering the Selected Date's Bookings */}
+                        {(() => {
+                            // 1. Get Regular Bookings for Selected Date
+                            const selectedDateRegular = bookings.filter(b => b.date === selectedAdminDate);
+
+                            // 2. Get Permanent Bookings for Selected Date's Day of Week
+                            const selectedDayOfWeek = new Date(selectedAdminDate).toLocaleDateString('en-US', { weekday: 'long' });
+                            const selectedDatePermanent = permanentBookings
+                                .filter(b => b.dayOfWeek === selectedDayOfWeek)
+                                .map(b => ({
+                                    ...b,
+                                    date: selectedAdminDate,
+                                    status: 'permanent', // Unique status to identify them in daily view
+                                    userName: `[RECURRING] ${b.userName}`,
+                                    id: `perm-${b.id}-${selectedAdminDate}` // Fake ID just for React key mapping
+                                }));
+
+                            // 3. Merge them
+                            const mergedDayBookings = [...selectedDateRegular, ...selectedDatePermanent];
 
                             // Group by Court (1, 2, 3)
                             const courtBookings = { 1: [], 2: [], 3: [] };
-                            dayBookings.forEach(b => {
+                            mergedDayBookings.forEach(b => {
                                 b.courts.forEach(c => {
                                     if (courtBookings[c]) courtBookings[c].push(b);
                                 });
@@ -826,7 +894,7 @@ const AdminPanel = () => {
 
                             return (
                                 <motion.div
-                                    key={date}
+                                    key={selectedAdminDate}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="glass-panel"
@@ -843,10 +911,10 @@ const AdminPanel = () => {
                                                 fontSize: '1.2rem',
                                                 boxShadow: '0 4px 15px rgba(120, 220, 202, 0.3)'
                                             }}>
-                                                {date}
+                                                {selectedDayOfWeek}, {selectedAdminDate}
                                             </div>
                                             <div style={{ color: 'var(--text-gray)', fontSize: '1.1rem' }}>
-                                                {dayBookings.length} Bookings
+                                                {mergedDayBookings.length} Bookings ({selectedDateRegular.length} Regular, {selectedDatePermanent.length} Recurring)
                                             </div>
                                         </div>
                                     </div>
@@ -939,17 +1007,20 @@ const AdminPanel = () => {
                                                                                 padding: '0.25rem 0.75rem',
                                                                                 borderRadius: '20px',
                                                                                 background: booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.2)'
-                                                                                    : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.2)'
-                                                                                        : (booking.status === 'no-show' ? 'rgba(150, 150, 150, 0.2)'
-                                                                                            : 'rgba(241, 196, 15, 0.2)')),
+                                                                                    : (booking.status === 'permanent' ? 'rgba(255, 105, 180, 0.2)'
+                                                                                        : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.2)'
+                                                                                            : (booking.status === 'no-show' ? 'rgba(150, 150, 150, 0.2)'
+                                                                                                : 'rgba(241, 196, 15, 0.2)'))),
                                                                                 color: booking.status === 'confirmed' ? '#2ecc71'
-                                                                                    : (booking.status === 'rejected' ? '#e74c3c'
-                                                                                        : (booking.status === 'no-show' ? '#aaaaaa'
-                                                                                            : '#f1c40f')),
+                                                                                    : (booking.status === 'permanent' ? '#ff69b4'
+                                                                                        : (booking.status === 'rejected' ? '#e74c3c'
+                                                                                            : (booking.status === 'no-show' ? '#aaaaaa'
+                                                                                                : '#f1c40f'))),
                                                                                 border: `1px solid ${booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.3)'
-                                                                                    : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.3)'
-                                                                                        : (booking.status === 'no-show' ? 'rgba(150, 150, 150, 0.3)'
-                                                                                            : 'rgba(241, 196, 15, 0.3)'))}`,
+                                                                                    : (booking.status === 'permanent' ? 'rgba(255, 105, 180, 0.3)'
+                                                                                        : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.3)'
+                                                                                            : (booking.status === 'no-show' ? 'rgba(150, 150, 150, 0.3)'
+                                                                                                : 'rgba(241, 196, 15, 0.3)')))}`,
                                                                                 letterSpacing: '0.5px'
                                                                             }}>
                                                                                 {booking.status}
@@ -1032,48 +1103,50 @@ const AdminPanel = () => {
                                                                             )}
 
                                                                             {/* Ban & Delete */}
-                                                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                                                <button
-                                                                                    onClick={async () => {
-                                                                                        if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
-                                                                                            const { banUser } = await import('../services/authService');
-                                                                                            const result = await banUser(booking.userId); // Ensure booking has userId
-                                                                                            if (result.success) alert('User has been banned.');
-                                                                                            else alert('Failed to ban: ' + result.message);
-                                                                                        }
-                                                                                    }}
-                                                                                    title="Ban User"
-                                                                                    style={{
-                                                                                        padding: '0.6rem',
-                                                                                        background: 'rgba(0, 0, 0, 0.3)',
-                                                                                        border: '1px solid rgba(255, 0, 0, 0.3)',
-                                                                                        borderRadius: '8px',
-                                                                                        cursor: 'pointer',
-                                                                                        color: '#ff4444',
-                                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                        minWidth: '40px'
-                                                                                    }}
-                                                                                >
-                                                                                    <ShieldAlert size={18} />
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={(e) => handleDeleteClick(e, booking.id)}
-                                                                                    disabled={deletingId === booking.id}
-                                                                                    title="Delete Booking"
-                                                                                    style={{
-                                                                                        padding: '0.6rem',
-                                                                                        background: 'rgba(231, 76, 60, 0.1)',
-                                                                                        border: '1px solid rgba(231, 76, 60, 0.2)',
-                                                                                        borderRadius: '8px',
-                                                                                        cursor: 'pointer',
-                                                                                        color: '#e74c3c',
-                                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                        minWidth: '40px'
-                                                                                    }}
-                                                                                >
-                                                                                    <Trash2 size={18} />
-                                                                                </button>
-                                                                            </div>
+                                                                            {booking.status !== 'permanent' && (
+                                                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                                                    <button
+                                                                                        onClick={async () => {
+                                                                                            if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
+                                                                                                const { banUser } = await import('../services/authService');
+                                                                                                const result = await banUser(booking.userId); // Ensure booking has userId
+                                                                                                if (result.success) alert('User has been banned.');
+                                                                                                else alert('Failed to ban: ' + result.message);
+                                                                                            }
+                                                                                        }}
+                                                                                        title="Ban User"
+                                                                                        style={{
+                                                                                            padding: '0.6rem',
+                                                                                            background: 'rgba(0, 0, 0, 0.3)',
+                                                                                            border: '1px solid rgba(255, 0, 0, 0.3)',
+                                                                                            borderRadius: '8px',
+                                                                                            cursor: 'pointer',
+                                                                                            color: '#ff4444',
+                                                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                            minWidth: '40px'
+                                                                                        }}
+                                                                                    >
+                                                                                        <ShieldAlert size={18} />
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={(e) => handleDeleteClick(e, booking.id)}
+                                                                                        disabled={deletingId === booking.id}
+                                                                                        title="Delete Booking"
+                                                                                        style={{
+                                                                                            padding: '0.6rem',
+                                                                                            background: 'rgba(231, 76, 60, 0.1)',
+                                                                                            border: '1px solid rgba(231, 76, 60, 0.2)',
+                                                                                            borderRadius: '8px',
+                                                                                            cursor: 'pointer',
+                                                                                            color: '#e74c3c',
+                                                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                            minWidth: '40px'
+                                                                                        }}
+                                                                                    >
+                                                                                        <Trash2 size={18} />
+                                                                                    </button>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </motion.div>
                                                                 );
@@ -1085,7 +1158,7 @@ const AdminPanel = () => {
                                     </div>
                                 </motion.div>
                             );
-                        })}
+                        })()}
 
                         {bookings.length === 0 && (
                             <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)' }}>
