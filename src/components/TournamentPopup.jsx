@@ -45,14 +45,14 @@ const TournamentPopup = () => {
                         exit={{ scale: 0.8, y: 50 }}
                         onClick={e => e.stopPropagation()} // Prevent closing when clicking inside
                         style={{
-                            background: 'linear-gradient(145deg, rgba(20,20,20,0.9), rgba(40,40,40,0.95))',
-                            border: '1px solid rgba(255,165,0,0.3)',
-                            borderRadius: '24px',
+                            background: '#222222', // Darker background
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '12px',
                             padding: '3rem',
                             maxWidth: '550px',
                             width: '90%',
                             textAlign: 'center',
-                            boxShadow: '0 0 50px rgba(255, 165, 0, 0.2)',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
                             position: 'relative'
                         }}
                     >
@@ -79,51 +79,53 @@ const TournamentPopup = () => {
                         </button>
 
                         <motion.h2
-                            animate={{ scale: [1, 1.02, 1] }}
-                            transition={{ repeat: Infinity, duration: 3 }}
                             style={{
-                                fontSize: '2rem',
+                                fontSize: '2.5rem',
                                 marginBottom: '1.5rem',
-                                color: '#ffa500', // Orange for visual distinction
+                                color: '#FFA500', // Orange text
                                 fontWeight: '800',
                                 lineHeight: '1.2'
                             }}
                         >
-                            Upcoming Event Notice
+                            Event Notice
                         </motion.h2>
 
-                        <p style={{ fontSize: '1.1rem', color: '#eee', lineHeight: '1.6', marginBottom: '1.5rem' }}>
-                            We are excited to host the <strong>SPBA All Island Open Badminton Championships 2026</strong>!
+                        <p style={{ fontSize: '1.1rem', color: '#FFFFFF', lineHeight: '1.6', marginBottom: '2rem' }}>
+                            We are excited to host the <strong>SPBA All Island Open<br />Badminton Championships 2026</strong>!
                         </p>
 
                         <div style={{
-                            background: 'rgba(255, 165, 0, 0.1)',
-                            border: '1px solid rgba(255, 165, 0, 0.2)',
+                            background: '#332D24', // Brown-ish background from screenshot
+                            border: '1px solid #5A4A30',
                             borderRadius: '12px',
                             padding: '1.5rem',
                             marginBottom: '2rem',
                             textAlign: 'left'
                         }}>
-                            <h3 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ color: '#ffa500' }}>⚠️</span> Important Booking Info
+                            <h3 style={{ color: '#FFFFFF', fontSize: '1.2rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem', fontWeight: 'bold' }}>
+                                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>⚠️</span> Important Booking Info
                             </h3>
-                            <ul style={{ color: '#ccc', fontSize: '0.95rem', lineHeight: '1.8', margin: 0, paddingLeft: '1.5rem' }}>
+                            <ul style={{ color: '#E0E0E0', fontSize: '1rem', lineHeight: '2', margin: 0, paddingLeft: '1.8rem', marginBottom: '1.5rem' }}>
                                 <li><strong>Dates:</strong> March 1, 2, and 3, 2026</li>
                                 <li><strong>Affected Time:</strong> 8:00 AM to 8:00 PM</li>
                             </ul>
-                            <p style={{ color: '#aaa', fontSize: '0.9rem', marginTop: '1rem', fontStyle: 'italic', marginBottom: 0 }}>
-                                Courts will be unavailable for public booking during these hours. Bookings outside these hours remain open!
+                            <p style={{ color: '#A0A0A0', fontSize: '0.95rem', fontStyle: 'italic', marginBottom: 0, lineHeight: '1.5' }}>
+                                Courts will be unavailable for public booking during<br />these hours. Bookings outside these hours remain open!
                             </p>
                         </div>
 
                         <button
                             onClick={handleClose}
-                            className="btn-gradient"
                             style={{
-                                padding: '0.8rem 2.5rem',
+                                background: '#70D6C1', // Mint green button
+                                color: '#000000',
+                                padding: '0.8rem 3rem',
                                 borderRadius: '50px',
-                                fontSize: '1rem',
-                                fontWeight: 'bold'
+                                fontSize: '1.1rem',
+                                fontWeight: 'bold',
+                                border: 'none',
+                                cursor: 'pointer',
+                                boxShadow: '0 0 20px rgba(112, 214, 193, 0.4)'
                             }}
                         >
                             Understood
