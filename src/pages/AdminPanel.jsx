@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Calendar, Clock, LogOut, Download, Copy, Plus, X, UserX, ShieldAlert, CalendarX, Info } from 'lucide-react';
+import { Trash2, Calendar, Clock, LogOut, Download, Copy, Plus, X, UserX, ShieldAlert, CalendarX, Info, Home } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import * as XLSX from 'xlsx';
 
