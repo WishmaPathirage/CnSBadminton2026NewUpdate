@@ -18,6 +18,7 @@ import AdminPanel from './pages/AdminPanel';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentCancel from './pages/PaymentCancel';
 import DevelopmentProgress from './components/DevelopmentProgress';
+import TournamentPopup from './components/TournamentPopup';
 
 const LandingPage = () => {
   const [showGreeting, setShowGreeting] = React.useState(() => {
@@ -162,6 +163,7 @@ const LandingPage = () => {
         )}
       </AnimatePresence>
 
+      <TournamentPopup />
 
       <Navbar />
       <NotificationBar />

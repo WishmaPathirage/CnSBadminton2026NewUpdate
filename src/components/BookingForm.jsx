@@ -166,6 +166,18 @@ const BookingForm = () => {
         const proposedStart = timeToMinutes(time);
         const proposedEnd = proposedStart + duration;
 
+        // Tournament Restriction Logic
+        const tournamentDates = ['2026-03-01', '2026-03-02', '2026-03-03'];
+        if (tournamentDates.includes(date)) {
+            const tournamentStart = 480; // 08:00 AM
+            const tournamentEnd = 1200;  // 8:00 PM (20:00)
+
+            // If the PROPOSED slot overlaps with the tournament hours
+            if (proposedStart < tournamentEnd && proposedEnd > tournamentStart) {
+                return false; // Slot is NOT available
+            }
+        }
+
         return !slots.some(booking => {
             if (!booking.courts.includes(courtId)) return false;
 
@@ -431,8 +443,8 @@ const BookingForm = () => {
                                             <span style={{ color: '#aaa' }}>Booked</span>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(255, 105, 180, 0.2)', border: '1px solid #ff69b4' }}></div>
-                                            <span style={{ color: '#aaa' }}>Permanent (Recurring)</span>
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(255, 165, 0, 0.2)', border: '1px solid #ffa500' }}></div>
+                                            <span style={{ color: '#aaa' }}>Tournament</span>
                                         </div>
                                     </div>
 
@@ -473,6 +485,18 @@ const BookingForm = () => {
                                                         }
                                                     });
 
+                                                    // Tournament Logic
+                                                    const tournamentDates = ['2026-03-01', '2026-03-02', '2026-03-03'];
+                                                    let isTournament = false;
+                                                    if (tournamentDates.includes(date)) {
+                                                        const tournamentStart = 480; // 08:00 AM
+                                                        const tournamentEnd = 1200;  // 8:00 PM (20:00)
+                                                        if (Math.max(slotStart, tournamentStart) < Math.min(slotEnd, tournamentEnd)) {
+                                                            isTournament = true;
+                                                            isOccupied = true; // Force occupied behavior
+                                                        }
+                                                    }
+
                                                     // 2. Fits Duration Check
                                                     const fitsDuration = isSlotAvailable(time, courtId);
                                                     const isSelected = selectedTime === time && selectedCourts.includes(courtId);
@@ -497,6 +521,14 @@ const BookingForm = () => {
                                                             bgColor = 'rgba(255, 105, 180, 0.15)'; // Pink bg
                                                             borderColor = 'rgba(255, 105, 180, 0.4)'; // Pink border
                                                             textColor = '#ff69b4'; // HotPink text
+                                                        }
+
+                                                        // Orange Override for Tournament
+                                                        if (isTournament) {
+                                                            label = 'Tournament';
+                                                            bgColor = 'rgba(255, 165, 0, 0.15)'; // Orange background
+                                                            borderColor = 'rgba(255, 165, 0, 0.4)'; // Orange border
+                                                            textColor = '#ffa500'; // Orange text
                                                         }
                                                     }
 
