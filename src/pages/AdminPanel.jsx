@@ -34,8 +34,7 @@ const AdminPanel = () => {
         court: '1',
         name: ''
     });
-    const [manualLoading, setManualLoading] = useState(false);
-
+    const [deletingId, setDeletingId] = useState(null);
     const handleDeleteClick = async (e, id) => {
         e.stopPropagation();
         setDeletingId(id);
