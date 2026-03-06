@@ -765,7 +765,7 @@ const AdminPanel = () => {
                                     ...b,
                                     date: selectedAdminDate,
                                     status: 'permanent', // Unique status to identify them in daily view
-                                    userName: `[RECURRING] ${b.userName}`,
+                                    userName: b.userName, // Removed the [RECURRING] prefix
                                     id: `perm-${b.id}-${selectedAdminDate}` // Fake ID just for React key mapping
                                 }));
 
