@@ -161,7 +161,15 @@ const BookingForm = () => {
 
     const isSlotAvailable = (time, courtId) => {
         const timeToMinutes = (t) => {
-            const [h, m] = t.split(':').map(Number);
+            if (!t) return 0;
+            const str = String(t).toUpperCase().trim();
+            const isPM = str.includes('PM');
+            const isAM = str.includes('AM');
+            const clean = str.replace(/[A-Z\s]/g, '');
+            let [h, m] = clean.split(':').map(Number);
+            if (isNaN(m)) m = 0;
+            if (isPM && h < 12) h += 12;
+            if (isAM && h === 12) h = 0;
             return h * 60 + m;
         };
 
@@ -180,7 +188,7 @@ const BookingForm = () => {
         }
 
         return !slots.some(booking => {
-            if (!booking.courts.includes(courtId)) return false;
+            if (!booking.courts.some(c => Number(c) === Number(courtId))) return false;
 
             const bookingStart = timeToMinutes(booking.startTime);
             const bookingEnd = bookingStart + booking.duration;
@@ -472,7 +480,15 @@ const BookingForm = () => {
                                                 {[1, 2, 3].map(courtId => {
                                                     // 1. Strict Occupancy Check
                                                     const timeToMinutes = (t) => {
-                                                        const [h, m] = t.split(':').map(Number);
+                                                        if (!t) return 0;
+                                                        const str = String(t).toUpperCase().trim();
+                                                        const isPM = str.includes('PM');
+                                                        const isAM = str.includes('AM');
+                                                        const clean = str.replace(/[A-Z\s]/g, '');
+                                                        let [h, m] = clean.split(':').map(Number);
+                                                        if (isNaN(m)) m = 0;
+                                                        if (isPM && h < 12) h += 12;
+                                                        if (isAM && h === 12) h = 0;
                                                         return h * 60 + m;
                                                     };
                                                     const slotStart = timeToMinutes(time);
@@ -482,7 +498,7 @@ const BookingForm = () => {
                                                     let isPermanent = false;
 
                                                     slots.forEach(booking => {
-                                                        if (!booking.courts.includes(courtId)) return;
+                                                        if (!booking.courts.some(c => Number(c) === Number(courtId))) return;
                                                         const bookingStart = timeToMinutes(booking.startTime);
                                                         const bookingEnd = bookingStart + booking.duration;
 

@@ -247,7 +247,7 @@ const AdminPanel = () => {
 
                 // Check conflicts with other permanent bookings
                 const permConflict = permanentBookings.some(b => {
-                    if (b.dayOfWeek !== dayOfWeek) return false;
+                    if ((b.dayOfWeek || '').toLowerCase() !== dayOfWeek.toLowerCase()) return false;
                     if (!b.courts.includes(selectedCourt)) return false;
                     const existStart = timeToMin(b.startTime);
                     const existEnd = existStart + parseInt(b.duration);
@@ -289,7 +289,7 @@ const AdminPanel = () => {
                 // Check Permanent Conflicts (New Validation)
                 const dayOfWeek = new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
                 const hasPermConflict = permanentBookings.some(b => {
-                    if (b.dayOfWeek !== dayOfWeek) return false;
+                    if ((b.dayOfWeek || '').toLowerCase() !== dayOfWeek.toLowerCase()) return false;
                     if (!b.courts.includes(selectedCourt)) return false;
                     const existStart = timeToMin(b.startTime);
                     const existEnd = existStart + parseInt(b.duration);
@@ -816,7 +816,7 @@ const AdminPanel = () => {
                             // 2. Get Permanent Bookings for Selected Date's Day of Week
                             const selectedDayOfWeek = new Date(selectedAdminDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
                             const selectedDatePermanent = permanentBookings
-                                .filter(b => b.dayOfWeek === selectedDayOfWeek)
+                                .filter(b => (b.dayOfWeek || '').toLowerCase() === selectedDayOfWeek.toLowerCase())
                                 .map(b => ({
                                     ...b,
                                     date: selectedAdminDate,

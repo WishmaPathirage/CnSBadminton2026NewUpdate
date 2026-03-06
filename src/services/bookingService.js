@@ -100,22 +100,20 @@ export const getAvailability = async (date) => {
             }));
 
         // 2. Fetch Permanent Bookings for this Day of Week
-        const dayOfWeek = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
-        const permQ = query(
-            collection(db, 'permanent_bookings'),
-            where("dayOfWeek", "==", dayOfWeek)
-        );
-        const permSnapshot = await getDocs(permQ);
+        const dayOfWeek = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        const permSnapshot = await getDocs(collection(db, 'permanent_bookings'));
 
-        const permSlots = permSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                startTime: data.startTime,
-                duration: data.duration,
-                courts: data.courts,
-                type: 'permanent' // Special flag for UI
-            };
-        });
+        const permSlots = permSnapshot.docs
+            .map(doc => doc.data())
+            .filter(data => (data.dayOfWeek || '').toLowerCase() === dayOfWeek)
+            .map(data => {
+                return {
+                    startTime: data.startTime,
+                    duration: Number(data.duration),
+                    courts: (data.courts || []).map(Number),
+                    type: 'permanent' // Special flag for UI
+                };
+            });
 
         // Merge both
         return [...bookedSlots, ...permSlots];
