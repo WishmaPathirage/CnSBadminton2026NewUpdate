@@ -36,24 +36,11 @@ const AdminPanel = () => {
     });
     const [manualLoading, setManualLoading] = useState(false);
 
-    // Delete Confirmation State
-    const [deletingId, setDeletingId] = useState(null);
-    const [confirmModal, setConfirmModal] = useState({ isOpen: false, bookingId: null });
-
-    const handleDeleteClick = (e, id) => {
+    const handleDeleteClick = async (e, id) => {
         e.stopPropagation();
-        setConfirmModal({ isOpen: true, bookingId: id });
-    };
-
-    const confirmDelete = async () => {
-        if (!confirmModal.bookingId) return;
-
-        setDeletingId(confirmModal.bookingId); // Show loading spinner on button
-        setConfirmModal({ isOpen: false, bookingId: null }); // Close modal immediately
-
+        setDeletingId(id);
         try {
-            await deleteBooking(confirmModal.bookingId);
-            // State update happens via subscription
+            await deleteBooking(id);
         } catch (error) {
             console.error("Failed to delete:", error);
             alert("Failed to delete booking.");
@@ -206,7 +193,7 @@ const AdminPanel = () => {
     };
 
     const [permanentBookings, setPermanentBookings] = useState([]);
-    const [viewMode, setViewMode] = useState('combined'); // Permanently set to 'combined'
+    const [viewMode, setViewMode] = useState('daily'); // 'daily' or 'upcoming'
 
     useEffect(() => {
         // Subscribe to Permanent Bookings too
@@ -525,76 +512,6 @@ const AdminPanel = () => {
                 )}
             </AnimatePresence>
 
-            {/* Confirmation Modal */}
-            {confirmModal.isOpen && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1000,
-                    backdropFilter: 'blur(5px)'
-                }} onClick={() => setConfirmModal({ isOpen: false, bookingId: null })}>
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            background: '#1a1a1a',
-                            border: '1px solid #333',
-                            borderRadius: '16px',
-                            padding: '2rem',
-                            maxWidth: '400px',
-                            width: '90%',
-                            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-                            textAlign: 'center'
-                        }}
-                    >
-                        <div style={{ marginBottom: '1.5rem', color: '#e74c3c' }}>
-                            <Trash2 size={48} />
-                        </div>
-                        <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'white' }}>Delete Booking?</h3>
-                        <p style={{ color: '#aaa', marginBottom: '2rem' }}>
-                            Are you sure you want to delete this booking? This action cannot be undone.
-                        </p>
-                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                            <button
-                                onClick={() => setConfirmModal({ isOpen: false, bookingId: null })}
-                                style={{
-                                    padding: '0.8rem 1.5rem',
-                                    borderRadius: '8px',
-                                    border: '1px solid #333',
-                                    background: 'transparent',
-                                    color: 'white',
-                                    cursor: 'pointer',
-                                    fontWeight: '600'
-                                }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirmDelete}
-                                style={{
-                                    padding: '0.8rem 1.5rem',
-                                    borderRadius: '8px',
-                                    border: 'none',
-                                    background: '#e74c3c',
-                                    color: 'white',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                    boxShadow: '0 4px 15px rgba(231, 76, 60, 0.3)'
-                                }}
-                            >
-                                Yes, Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Dashboard Header & Toolbar */}
             <div style={{ marginBottom: '2.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -732,17 +649,44 @@ const AdminPanel = () => {
                 </div>
             </div>
 
+            {/* View Mode Toggle */}
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', background: 'rgba(255,255,255,0.03)', padding: '0.5rem', borderRadius: '12px', width: 'fit-content' }}>
+                <button
+                    onClick={() => setViewMode('daily')}
+                    style={{
+                        padding: '0.8rem 1.5rem',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: viewMode === 'daily' ? 'var(--brand-teal)' : 'transparent',
+                        color: viewMode === 'daily' ? '#000' : '#888',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    <Calendar size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Daily Schedule
+                </button>
+                <button
+                    onClick={() => setViewMode('upcoming')}
+                    style={{
+                        padding: '0.8rem 1.5rem',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: viewMode === 'upcoming' ? 'var(--brand-teal)' : 'transparent',
+                        color: viewMode === 'upcoming' ? '#000' : '#888',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    <Clock size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Upcoming Bookings
+                </button>
+            </div>
+
             {/* Content Switch */}
-            <div style={
-                viewMode === 'combined' ? {
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '2rem',
-                    alignItems: 'start'
-                } : {}
-            }>
+            <div>
                 {/* DAILY VIEW SECTION */}
-                {(viewMode === 'bookings' || viewMode === 'combined') && (
+                {viewMode === 'daily' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
                         {viewMode === 'combined' && (
                             <div style={{ padding: '1rem', background: 'rgba(120, 220, 202, 0.1)', borderRadius: '12px', marginBottom: '-2rem', border: '1px solid rgba(120, 220, 202, 0.2)' }}>
@@ -1112,84 +1056,157 @@ const AdminPanel = () => {
                     </div>
                 )}
 
-                {/* PERMANENT VIEW SECTION */}
-                {(viewMode === 'permanent' || viewMode === 'combined') && (
-                    <div style={{ minWidth: 0 }}>
-                        {viewMode === 'combined' && (
-                            <div style={{ padding: '1rem', background: 'rgba(255, 105, 180, 0.1)', borderRadius: '12px', marginBottom: '2rem', border: '1px solid rgba(255, 105, 180, 0.2)' }}>
-                                <h2 style={{ color: 'var(--brand-pink)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                                    <Clock size={20} /> Recurring Bookings
+                {/* UPCOMING VIEW SECTION */}
+                {viewMode === 'upcoming' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
+                        <div>
+                            <div style={{ padding: '1rem', background: 'rgba(120, 220, 202, 0.1)', borderRadius: '12px', marginBottom: '2rem', border: '1px solid rgba(120, 220, 202, 0.2)' }}>
+                                <h2 style={{ color: 'var(--brand-teal)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                                    <Clock size={20} /> Upcoming One-Time Bookings
                                 </h2>
                             </div>
-                        )}
-                        <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'combined' ? '1fr' : 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
-                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
-                                const dayBookings = permanentBookings.filter(b => b.dayOfWeek === day);
-                                if (dayBookings.length === 0) return null;
+
+                            {(() => {
+                                const todayStr = new Date().toISOString().split('T')[0];
+                                const upcomingBookings = bookings
+                                    .filter(b => b.date >= todayStr)
+                                    .sort((a, b) => {
+                                        if (a.date !== b.date) return a.date.localeCompare(b.date);
+                                        return a.startTime.localeCompare(b.startTime);
+                                    });
+
+                                if (upcomingBookings.length === 0) {
+                                    return (
+                                        <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.02)', borderRadius: '20px' }}>
+                                            <CalendarX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                                            <p>No upcoming bookings found.</p>
+                                        </div>
+                                    );
+                                }
 
                                 return (
-                                    <motion.div
-                                        key={day}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="glass-panel"
-                                        style={{ padding: '2rem', borderTop: '4px solid var(--brand-pink)' }}
-                                    >
-                                        <h3 style={{ marginBottom: '1.5rem', fontSize: '1.4rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            {day} <span style={{ fontSize: '0.9rem', opacity: 0.5, fontWeight: 'normal' }}>({dayBookings.length})</span>
-                                        </h3>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        {upcomingBookings.map(booking => {
+                                            const [hours, minutes] = booking.startTime.split(':').map(Number);
+                                            const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
+                                            const endH = Math.floor(totalMinutes / 60);
+                                            const endM = totalMinutes % 60;
+                                            const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                            {dayBookings.sort((a, b) => a.startTime.localeCompare(b.startTime)).map(booking => {
-                                                // Calculate end time properly
-                                                const [hours, minutes] = booking.startTime.split(':').map(Number);
-                                                const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
-                                                const endH = Math.floor(totalMinutes / 60);
-                                                const endM = totalMinutes % 60;
-                                                const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
-
-                                                return (
-                                                    <div key={booking.id} style={{
-                                                        background: 'rgba(255,255,255,0.03)',
-                                                        padding: '1rem',
-                                                        borderRadius: '12px',
-                                                        border: '1px solid rgba(255,255,255,0.05)',
-                                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                                                    }}>
-                                                        <div>
-                                                            <div style={{ color: 'var(--brand-pink)', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                                                {booking.startTime} - {endTime}
+                                            return (
+                                                <div key={booking.id} style={{
+                                                    background: 'rgba(255,255,255,0.03)',
+                                                    padding: '1.5rem',
+                                                    borderRadius: '12px',
+                                                    border: '1px solid rgba(255,255,255,0.05)',
+                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                    flexWrap: 'wrap', gap: '1rem'
+                                                }}>
+                                                    <div style={{ flex: '1 1 300px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                                                            <div style={{ color: 'var(--brand-teal)', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                                                {booking.date} | {booking.startTime} - {endTime}
                                                             </div>
-                                                            <div style={{ fontSize: '0.9rem', color: '#aaa', marginTop: '0.3rem' }}>
-                                                                {booking.userName} • Court {booking.courts.join(', ')}
-                                                            </div>
+                                                            <span style={{
+                                                                fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', padding: '0.2rem 0.6rem', borderRadius: '12px',
+                                                                background: booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.2)' : (booking.status === 'pending' ? 'rgba(241, 196, 15, 0.2)' : 'rgba(255,255,255,0.1)'),
+                                                                color: booking.status === 'confirmed' ? '#2ecc71' : (booking.status === 'pending' ? '#f1c40f' : '#ccc')
+                                                            }}>
+                                                                {booking.status}
+                                                            </span>
                                                         </div>
+                                                        <div style={{ fontSize: '1rem', color: '#fff', marginBottom: '0.3rem' }}>
+                                                            {booking.userName} • Court {booking.courts.join(', ')}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)' }}>
+                                                            Phone: {booking.userPhone} • Order: {booking.orderId || 'N/A'}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                        {booking.status === 'pending' && (
+                                                            <>
+                                                                <button onClick={() => handleStatusChange(booking.id, 'confirmed')} style={{ padding: '0.6rem 1rem', background: 'var(--brand-teal)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', color: '#000' }}>Accept</button>
+                                                                <button onClick={() => handleStatusChange(booking.id, 'rejected')} style={{ padding: '0.6rem 1rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', cursor: 'pointer', color: 'white' }}>Reject</button>
+                                                            </>
+                                                        )}
                                                         <button
-                                                            onClick={() => handleDeletePermanent(booking.id)}
-                                                            style={{
-                                                                padding: '0.5rem',
-                                                                background: 'rgba(231, 76, 60, 0.1)',
-                                                                color: '#e74c3c',
-                                                                border: 'none',
-                                                                borderRadius: '8px',
-                                                                cursor: 'pointer'
-                                                            }}
+                                                            onClick={(e) => handleDeleteClick(e, booking.id)}
+                                                            style={{ padding: '0.6rem 1rem', background: 'rgba(231, 76, 60, 0.1)', color: '#e74c3c', border: '1px solid rgba(231, 76, 60, 0.2)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                                         >
-                                                            <Trash2 size={16} />
+                                                            <Trash2 size={16} /> Delete
                                                         </button>
                                                     </div>
-                                                )
-                                            })}
-                                        </div>
-                                    </motion.div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 );
-                            })}
-                            {permanentBookings.length === 0 && (
-                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: '#666' }}>
-                                    <CalendarX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                                    <p>No recurring bookings found.</p>
-                                </div>
-                            )}
+                            })()}
+                        </div>
+
+                        <div>
+                            <div style={{ padding: '1rem', background: 'rgba(255, 105, 180, 0.1)', borderRadius: '12px', marginBottom: '2rem', border: '1px solid rgba(255, 105, 180, 0.2)' }}>
+                                <h2 style={{ color: 'var(--brand-pink)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                                    <Clock size={20} /> Manage Recurring Bookings (Templates)
+                                </h2>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
+                                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                                    const dayBookings = permanentBookings.filter(b => (b.dayOfWeek || '').toLowerCase() === day.toLowerCase());
+                                    if (dayBookings.length === 0) return null;
+
+                                    return (
+                                        <motion.div key={day} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-panel" style={{ padding: '2rem', borderTop: '4px solid var(--brand-pink)' }}>
+                                            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.4rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                {day} <span style={{ fontSize: '0.9rem', opacity: 0.5, fontWeight: 'normal' }}>({dayBookings.length})</span>
+                                            </h3>
+
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                                {dayBookings.sort((a, b) => a.startTime.localeCompare(b.startTime)).map(booking => {
+                                                    const [hours, minutes] = booking.startTime.split(':').map(Number);
+                                                    const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
+                                                    const endH = Math.floor(totalMinutes / 60);
+                                                    const endM = totalMinutes % 60;
+                                                    const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+                                                    return (
+                                                        <div key={booking.id} style={{
+                                                            background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)',
+                                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                                                        }}>
+                                                            <div>
+                                                                <div style={{ color: 'var(--brand-pink)', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                                                    {booking.startTime} - {endTime}
+                                                                </div>
+                                                                <div style={{ fontSize: '0.9rem', color: '#aaa', marginTop: '0.3rem' }}>
+                                                                    {booking.userName} • Court {booking.courts.join(', ')}
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                onClick={async () => {
+                                                                    if (window.confirm("Delete this PERMANENT template?")) {
+                                                                        await deletePermanentBooking(booking.id);
+                                                                    }
+                                                                }}
+                                                                style={{ padding: '0.5rem', background: 'rgba(231, 76, 60, 0.1)', color: '#e74c3c', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
+                                {permanentBookings.length === 0 && (
+                                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: '#666' }}>
+                                        <CalendarX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                                        <p>No recurring bookings found.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
