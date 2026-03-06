@@ -100,7 +100,7 @@ export const getAvailability = async (date) => {
             }));
 
         // 2. Fetch Permanent Bookings for this Day of Week
-        const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+        const dayOfWeek = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
         const permQ = query(
             collection(db, 'permanent_bookings'),
             where("dayOfWeek", "==", dayOfWeek)

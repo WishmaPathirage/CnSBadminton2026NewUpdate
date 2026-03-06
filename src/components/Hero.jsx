@@ -9,7 +9,7 @@ const Hero = () => {
             display: 'flex',
             alignItems: 'center',
             overflow: 'hidden',
-            marginTop: '-80px' // Pull up behind navbar
+            marginTop: '-115px' // Pull up behind navbar and notification bar
         }}>
             {/* Background with overlay */}
             <div style={{

@@ -206,7 +206,7 @@ const AdminPanel = () => {
     };
 
     const [permanentBookings, setPermanentBookings] = useState([]);
-    const [viewMode, setViewMode] = useState('bookings'); // 'bookings' or 'permanent'
+    const [viewMode, setViewMode] = useState('combined'); // Permanently set to 'combined'
 
     useEffect(() => {
         // Subscribe to Permanent Bookings too
@@ -243,7 +243,7 @@ const AdminPanel = () => {
 
             if (bookingType === 'permanent') {
                 // Permanent Booking Logic
-                const dayOfWeek = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
+                const dayOfWeek = new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
 
                 // Check conflicts with other permanent bookings
                 const permConflict = permanentBookings.some(b => {
@@ -287,7 +287,7 @@ const AdminPanel = () => {
                 }
 
                 // Check Permanent Conflicts (New Validation)
-                const dayOfWeek = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
+                const dayOfWeek = new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
                 const hasPermConflict = permanentBookings.some(b => {
                     if (b.dayOfWeek !== dayOfWeek) return false;
                     if (!b.courts.includes(selectedCourt)) return false;
@@ -616,63 +616,7 @@ const AdminPanel = () => {
                     border: '1px solid rgba(255,255,255,0.05)',
                     backdropFilter: 'blur(10px)'
                 }}>
-                    {/* Group 1: View Modes */}
-                    <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '10px' }}>
-                        <button
-                            onClick={() => setViewMode('bookings')}
-                            style={{
-                                padding: '0.6rem 1.2rem',
-                                borderRadius: '8px',
-                                border: 'none',
-                                background: viewMode === 'bookings' ? 'var(--brand-teal)' : 'transparent',
-                                color: viewMode === 'bookings' ? '#000' : '#888',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                fontSize: '0.9rem'
-                            }}
-                        >
-                            <Calendar size={16} style={{ display: 'inline', marginRight: '6px' }} />
-                            Daily
-                        </button>
-                        <button
-                            onClick={() => setViewMode('permanent')}
-                            style={{
-                                padding: '0.6rem 1.2rem',
-                                borderRadius: '8px',
-                                border: 'none',
-                                background: viewMode === 'permanent' ? 'var(--brand-pink)' : 'transparent',
-                                color: viewMode === 'permanent' ? '#fff' : '#888',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                fontSize: '0.9rem'
-                            }}
-                        >
-                            <Clock size={16} style={{ display: 'inline', marginRight: '6px' }} />
-                            Recurring
-                        </button>
-                        <button
-                            onClick={() => setViewMode('combined')}
-                            style={{
-                                padding: '0.6rem 1.2rem',
-                                borderRadius: '8px',
-                                border: 'none',
-                                background: viewMode === 'combined' ? 'linear-gradient(135deg, var(--brand-teal), var(--brand-pink))' : 'transparent',
-                                color: viewMode === 'combined' ? '#fff' : '#888',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                fontSize: '0.9rem'
-                            }}
-                        >
-                            <span style={{ marginRight: '6px' }}>⚡</span>
-                            Both
-                        </button>
-                    </div>
 
-                    {/* Divider */}
-                    <div style={{ width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)', margin: '0 0.5rem' }}></div>
 
                     {/* Group 2: Actions */}
                     <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
@@ -870,7 +814,7 @@ const AdminPanel = () => {
                             const selectedDateRegular = bookings.filter(b => b.date === selectedAdminDate);
 
                             // 2. Get Permanent Bookings for Selected Date's Day of Week
-                            const selectedDayOfWeek = new Date(selectedAdminDate).toLocaleDateString('en-US', { weekday: 'long' });
+                            const selectedDayOfWeek = new Date(selectedAdminDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
                             const selectedDatePermanent = permanentBookings
                                 .filter(b => b.dayOfWeek === selectedDayOfWeek)
                                 .map(b => ({
