@@ -1130,6 +1130,28 @@ const AdminPanel = () => {
                                                             </>
                                                         )}
                                                         <button
+                                                            onClick={async () => {
+                                                                if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
+                                                                    const { banUser } = await import('../services/authService');
+                                                                    const result = await banUser(booking.userId);
+                                                                    if (result.success) alert('User has been banned.');
+                                                                    else alert('Failed to ban: ' + result.message);
+                                                                }
+                                                            }}
+                                                            title="Ban User"
+                                                            style={{
+                                                                padding: '0.6rem 1rem',
+                                                                background: 'rgba(0, 0, 0, 0.3)',
+                                                                border: '1px solid rgba(255, 0, 0, 0.3)',
+                                                                borderRadius: '8px',
+                                                                cursor: 'pointer',
+                                                                color: '#ff4444',
+                                                                display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                                            }}
+                                                        >
+                                                            <ShieldAlert size={16} /> Block
+                                                        </button>
+                                                        <button
                                                             onClick={(e) => handleDeleteClick(e, booking.id)}
                                                             style={{ padding: '0.6rem 1rem', background: 'rgba(231, 76, 60, 0.1)', color: '#e74c3c', border: '1px solid rgba(231, 76, 60, 0.2)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                                         >
