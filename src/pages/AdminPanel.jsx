@@ -991,50 +991,58 @@ const AdminPanel = () => {
                                                                             )}
 
                                                                             {/* Ban & Delete */}
-                                                                            {booking.status !== 'permanent' && (
-                                                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                                                    <button
-                                                                                        onClick={async () => {
-                                                                                            if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
-                                                                                                const { banUser } = await import('../services/authService');
-                                                                                                const result = await banUser(booking.userId); // Ensure booking has userId
-                                                                                                if (result.success) alert('User has been banned.');
-                                                                                                else alert('Failed to ban: ' + result.message);
+                                                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                                                <button
+                                                                                    onClick={async () => {
+                                                                                        if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
+                                                                                            const { banUser } = await import('../services/authService');
+                                                                                            const result = await banUser(booking.userId); // Ensure booking has userId
+                                                                                            if (result.success) alert('User has been banned.');
+                                                                                            else alert('Failed to ban: ' + result.message);
+                                                                                        }
+                                                                                    }}
+                                                                                    title="Ban User"
+                                                                                    style={{
+                                                                                        padding: '0.6rem',
+                                                                                        background: 'rgba(0, 0, 0, 0.3)',
+                                                                                        border: '1px solid rgba(255, 0, 0, 0.3)',
+                                                                                        borderRadius: '8px',
+                                                                                        cursor: 'pointer',
+                                                                                        color: '#ff4444',
+                                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                        minWidth: '40px'
+                                                                                    }}
+                                                                                >
+                                                                                    <ShieldAlert size={18} />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={(e) => {
+                                                                                        if (booking.status === 'permanent') {
+                                                                                            if (window.confirm("Delete this PERMANENT template?")) {
+                                                                                                // The permanent ID looks like perm-XYZ-date. Extract the real ID:
+                                                                                                const realId = booking.id.split('-')[1];
+                                                                                                handleDeletePermanent(realId);
                                                                                             }
-                                                                                        }}
-                                                                                        title="Ban User"
-                                                                                        style={{
-                                                                                            padding: '0.6rem',
-                                                                                            background: 'rgba(0, 0, 0, 0.3)',
-                                                                                            border: '1px solid rgba(255, 0, 0, 0.3)',
-                                                                                            borderRadius: '8px',
-                                                                                            cursor: 'pointer',
-                                                                                            color: '#ff4444',
-                                                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                            minWidth: '40px'
-                                                                                        }}
-                                                                                    >
-                                                                                        <ShieldAlert size={18} />
-                                                                                    </button>
-                                                                                    <button
-                                                                                        onClick={(e) => handleDeleteClick(e, booking.id)}
-                                                                                        disabled={deletingId === booking.id}
-                                                                                        title="Delete Booking"
-                                                                                        style={{
-                                                                                            padding: '0.6rem',
-                                                                                            background: 'rgba(231, 76, 60, 0.1)',
-                                                                                            border: '1px solid rgba(231, 76, 60, 0.2)',
-                                                                                            borderRadius: '8px',
-                                                                                            cursor: 'pointer',
-                                                                                            color: '#e74c3c',
-                                                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                            minWidth: '40px'
-                                                                                        }}
-                                                                                    >
-                                                                                        <Trash2 size={18} />
-                                                                                    </button>
-                                                                                </div>
-                                                                            )}
+                                                                                        } else {
+                                                                                            handleDeleteClick(e, booking.id);
+                                                                                        }
+                                                                                    }}
+                                                                                    disabled={deletingId === booking.id}
+                                                                                    title="Delete Booking"
+                                                                                    style={{
+                                                                                        padding: '0.6rem',
+                                                                                        background: 'rgba(231, 76, 60, 0.1)',
+                                                                                        border: '1px solid rgba(231, 76, 60, 0.2)',
+                                                                                        borderRadius: '8px',
+                                                                                        cursor: 'pointer',
+                                                                                        color: '#e74c3c',
+                                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                        minWidth: '40px'
+                                                                                    }}
+                                                                                >
+                                                                                    <Trash2 size={18} />
+                                                                                </button>
+                                                                            </div>
                                                                         </div>
                                                                     </motion.div>
                                                                 );
