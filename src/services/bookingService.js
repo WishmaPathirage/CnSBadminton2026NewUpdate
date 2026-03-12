@@ -51,6 +51,17 @@ export const updateBookingStatus = async (id, status) => {
     }
 };
 
+export const updateBooking = async (id, updatedData) => {
+    try {
+        const bookingRef = doc(db, BOOKINGS_COL, id);
+        await updateDoc(bookingRef, updatedData);
+        return { id, ...updatedData };
+    } catch (error) {
+        console.error("Error updating booking full data:", error);
+        throw error;
+    }
+};
+
 export const deleteBooking = async (id) => {
     try {
         await deleteDoc(doc(db, BOOKINGS_COL, id));

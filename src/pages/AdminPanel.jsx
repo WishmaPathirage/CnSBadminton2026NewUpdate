@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { subscribeToBookings, updateBookingStatus, deleteBooking, createBooking, subscribeToPermanentBookings, createPermanentBooking, deletePermanentBooking } from '../services/bookingService';
+import { subscribeToBookings, updateBooking, updateBookingStatus, deleteBooking, createBooking, subscribeToPermanentBookings, createPermanentBooking, deletePermanentBooking } from '../services/bookingService';
 import { db } from '../firebaseConfig';
 import { logout } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Calendar, Clock, LogOut, Download, Copy, Plus, X, UserX, ShieldAlert, CalendarX, Info, Home } from 'lucide-react';
+import { Trash2, Calendar, Clock, LogOut, Download, Copy, Plus, X, UserX, ShieldAlert, CalendarX, Info, Home, Edit, Phone } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import * as XLSX from 'xlsx';
 
@@ -27,6 +27,7 @@ const AdminPanel = () => {
 
     // Manual Booking State
     const [showManualModal, setShowManualModal] = useState(false);
+    const [manualLoading, setManualLoading] = useState(false);
     const [manualForm, setManualForm] = useState({
         date: new Date().toISOString().split('T')[0],
         startTime: '08:00',
@@ -34,6 +35,10 @@ const AdminPanel = () => {
         court: '1',
         name: ''
     });
+    // Edit Booking State
+    const [editModal, setEditModal] = useState({ isOpen: false, booking: null });
+    const [editLoading, setEditLoading] = useState(false);
+
     const [deletingId, setDeletingId] = useState(null);
     const handleDeleteClick = async (e, id) => {
         e.stopPropagation();
@@ -204,6 +209,95 @@ const AdminPanel = () => {
 
     // Manual Form Update
     const [bookingType, setBookingType] = useState('one-time'); // 'one-time' or 'permanent'
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        setEditLoading(true);
+        try {
+            if (!editModal.booking.userName) {
+                alert("Name cannot be empty");
+                return;
+            }
+
+            const isPerm = editModal.booking.status === 'permanent';
+            const timeToMin = (t) => {
+                const [h, m] = t.split(':').map(Number);
+                return h * 60 + m;
+            };
+
+            const newStart = timeToMin(editModal.booking.startTime);
+            const newEnd = newStart + parseInt(editModal.booking.duration);
+            const selectedCourt = parseInt(editModal.booking.courts[0]);
+
+            if (isPerm) {
+                // Determine true ID and check perm conflicts
+                const realId = editModal.booking.id.split('-')[1] || editModal.booking.id;
+                const permConflict = permanentBookings.some(b => {
+                    if (b.id === realId) return false;
+                    if ((b.dayOfWeek || '').toLowerCase() !== (editModal.booking.dayOfWeek || '').toLowerCase()) return false;
+                    if (!b.courts.includes(selectedCourt)) return false;
+
+                    const existStart = timeToMin(b.startTime);
+                    const existEnd = existStart + parseInt(b.duration);
+                    return (newStart < existEnd && existStart < newEnd);
+                });
+
+                if (permConflict) {
+                    alert('⚠️ Conflict: This updated time overlaps with another PERMANENT booking!');
+                    return;
+                }
+
+                // Update permanent booking directly (requires an update function in service if not already there, 
+                // but since we just wrote updateBooking generic, we can use it on the perm collection if we had one.
+                // Assuming permanentBookings are in a 'permanentBookings' collection
+                const { doc, updateDoc } = await import('firebase/firestore');
+                const permRef = doc(db, 'permanentBookings', realId);
+                await updateDoc(permRef, {
+                    userName: editModal.booking.userName,
+                    userPhone: editModal.booking.userPhone,
+                    startTime: editModal.booking.startTime,
+                    duration: parseInt(editModal.booking.duration),
+                    courts: [selectedCourt],
+                    // don't change dayOfWeek from edit modal currently
+                });
+                alert('Permanent template updated!');
+
+            } else {
+                // Check One-Time Conflicts
+                const hasConflict = bookings.some(b => {
+                    if (b.id === editModal.booking.id) return false;
+                    if (b.date !== editModal.booking.date || b.status === 'rejected') return false;
+                    if (!b.courts.includes(selectedCourt)) return false;
+
+                    const existStart = timeToMin(b.startTime);
+                    const existEnd = existStart + parseInt(b.duration);
+                    return (newStart < existEnd && existStart < newEnd);
+                });
+
+                if (hasConflict) {
+                    alert('⚠️ Conflict: This updated time overlaps with another booking on this date!');
+                    return;
+                }
+
+                await updateBooking(editModal.booking.id, {
+                    userName: editModal.booking.userName,
+                    userPhone: editModal.booking.userPhone,
+                    startTime: editModal.booking.startTime,
+                    duration: parseInt(editModal.booking.duration),
+                    courts: [selectedCourt],
+                    date: editModal.booking.date
+                });
+                alert('Booking updated successfully!');
+            }
+
+            setEditModal({ isOpen: false, booking: null });
+        } catch (error) {
+            console.error("Error updating booking:", error);
+            alert("Failed to update booking. See console.");
+        } finally {
+            setEditLoading(false);
+        }
+    };
 
     const handleManualSubmit = async (e) => {
         e.preventDefault();
@@ -699,55 +793,33 @@ const AdminPanel = () => {
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'space-between',
-                            background: 'rgba(255,255,255,0.03)',
-                            padding: '1.5rem 2rem',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            backdropFilter: 'blur(10px)'
+                            justifyContent: 'flex-start',
+                            gap: '1.5rem',
+                            padding: '1rem 0',
+                            marginTop: '-1rem'
                         }}>
-                            <div>
-                                <h2 style={{ margin: 0, color: 'white', fontSize: '1.4rem' }}>Day-Wise Schedule</h2>
-                                <p style={{ margin: '0.3rem 0 0 0', color: '#888', fontSize: '0.9rem' }}>Select a date to view both regular and recurring bookings.</p>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <label style={{ color: '#aaa', fontWeight: 'bold' }}>Select Date:</label>
+                            <div style={{ position: 'relative' }}>
                                 <input
                                     type="date"
                                     value={selectedAdminDate}
                                     onChange={(e) => setSelectedAdminDate(e.target.value)}
                                     style={{
-                                        padding: '0.8rem 1.2rem',
-                                        borderRadius: '8px',
-                                        border: '1px solid rgba(120, 220, 202, 0.5)',
-                                        background: 'rgba(0,0,0,0.3)',
-                                        color: 'white',
-                                        fontFamily: 'inherit',
-                                        fontSize: '1rem',
-                                        cursor: 'pointer',
-                                        outline: 'none',
-                                    }}
-                                />
-                                <button
-                                    onClick={() => {
-                                        const now = new Date();
-                                        const year = now.getFullYear();
-                                        const month = String(now.getMonth() + 1).padStart(2, '0');
-                                        const day = String(now.getDate()).padStart(2, '0');
-                                        setSelectedAdminDate(`${year}-${month}-${day}`);
-                                    }}
-                                    style={{
-                                        padding: '0.8rem 1.2rem',
+                                        padding: '0.8rem 1.5rem',
+                                        borderRadius: '12px',
+                                        border: 'none',
                                         background: 'var(--brand-teal)',
                                         color: '#000',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        fontWeight: 'bold',
-                                        cursor: 'pointer'
+                                        fontFamily: 'inherit',
+                                        fontSize: '1.1rem',
+                                        fontWeight: '800',
+                                        cursor: 'pointer',
+                                        outline: 'none',
+                                        boxShadow: '0 4px 15px rgba(120, 220, 202, 0.4)',
                                     }}
-                                >
-                                    Today
-                                </button>
+                                />
+                            </div>
+                            <div style={{ color: '#888', fontSize: '1.2rem', fontWeight: '500' }}>
+                                {bookings.filter(b => b.date === selectedAdminDate).length + permanentBookings.filter(b => (b.dayOfWeek || '').toLowerCase() === new Date(selectedAdminDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()).length} Bookings
                             </div>
                         </div>
 
@@ -809,8 +881,8 @@ const AdminPanel = () => {
                                     <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'combined' ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
                                         {[1, 2, 3].map(courtId => (
                                             <div key={courtId} style={{
-                                                background: 'rgba(255,255,255,0.02)',
-                                                borderRadius: '20px',
+                                                background: '#1a1a1a',
+                                                borderRadius: '16px',
                                                 overflow: 'hidden',
                                                 border: '1px solid rgba(255,255,255,0.05)',
                                                 height: '100%',
@@ -819,18 +891,18 @@ const AdminPanel = () => {
                                             }}>
                                                 <div style={{
                                                     padding: '1.2rem',
-                                                    background: 'rgba(255,255,255,0.03)',
+                                                    background: 'rgba(255,255,255,0.02)',
                                                     borderBottom: '1px solid rgba(255,255,255,0.05)',
                                                     display: 'flex',
                                                     justifyContent: 'space-between',
                                                     alignItems: 'center'
                                                 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--brand-teal)', fontWeight: '700', fontSize: '1.1rem' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white', fontWeight: '700', fontSize: '1.2rem' }}>
                                                         🏸 Court {courtId}
                                                     </div>
                                                     <span style={{
                                                         fontSize: '0.85rem',
-                                                        padding: '0.2rem 0.8rem',
+                                                        padding: '0.3rem 0.8rem',
                                                         borderRadius: '20px',
                                                         background: 'rgba(255,255,255,0.1)',
                                                         color: 'rgba(255,255,255,0.6)'
@@ -839,7 +911,7 @@ const AdminPanel = () => {
                                                     </span>
                                                 </div>
 
-                                                <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                                                <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
                                                     {courtBookings[courtId].length === 0 ? (
                                                         <div style={{
                                                             flex: 1,
@@ -870,6 +942,16 @@ const AdminPanel = () => {
                                                                 if (phoneCode.startsWith('0')) phoneCode = '94' + phoneCode.substring(1);
                                                                 const whatsappLink = `https://wa.me/${phoneCode}`;
 
+                                                                // Status Colors
+                                                                let statusColor = '#3498db'; // default info
+                                                                if (booking.status === 'confirmed') statusColor = '#2ecc71';
+                                                                else if (booking.status === 'permanent') statusColor = '#ff69b4';
+                                                                else if (booking.status === 'pending') statusColor = '#f1c40f';
+                                                                else if (booking.status === 'rejected') statusColor = '#e74c3c';
+                                                                else if (booking.status === 'no-show') statusColor = '#aaaaaa';
+
+                                                                const statusText = booking.status === 'permanent' ? 'WEEKLY' : booking.status.toUpperCase();
+
                                                                 return (
                                                                     <motion.div
                                                                         key={`${booking.id}-${courtId}`}
@@ -877,171 +959,185 @@ const AdminPanel = () => {
                                                                         initial={{ opacity: 0 }}
                                                                         animate={{ opacity: 1 }}
                                                                         style={{
-                                                                            background: booking.status === 'pending' ? 'rgba(255, 180, 0, 0.08)' : 'rgba(255,255,255,0.03)',
-                                                                            border: booking.status === 'pending' ? '1px solid rgba(255, 180, 0, 0.3)' : '1px solid rgba(255,255,255,0.05)',
-                                                                            borderRadius: '16px',
+                                                                            background: '#222',
+                                                                            border: '1px solid rgba(255,255,255,0.05)',
+                                                                            borderLeft: `5px solid ${statusColor}`,
+                                                                            borderRadius: '12px',
                                                                             padding: '1.2rem',
                                                                             position: 'relative',
-                                                                            overflow: 'hidden'
+                                                                            overflow: 'hidden',
+                                                                            display: 'flex',
+                                                                            flexDirection: 'column',
+                                                                            gap: '0.8rem'
                                                                         }}
                                                                     >
                                                                         {/* Status Badge */}
                                                                         <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
                                                                             <span style={{
-                                                                                fontSize: '0.75rem',
-                                                                                fontWeight: 'bold',
-                                                                                textTransform: 'uppercase',
-                                                                                padding: '0.25rem 0.75rem',
-                                                                                borderRadius: '20px',
-                                                                                background: booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.2)'
-                                                                                    : (booking.status === 'permanent' ? 'rgba(255, 105, 180, 0.2)'
-                                                                                        : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.2)'
-                                                                                            : (booking.status === 'no-show' ? 'rgba(150, 150, 150, 0.2)'
-                                                                                                : 'rgba(241, 196, 15, 0.2)'))),
-                                                                                color: booking.status === 'confirmed' ? '#2ecc71'
-                                                                                    : (booking.status === 'permanent' ? '#ff69b4'
-                                                                                        : (booking.status === 'rejected' ? '#e74c3c'
-                                                                                            : (booking.status === 'no-show' ? '#aaaaaa'
-                                                                                                : '#f1c40f'))),
-                                                                                border: `1px solid ${booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.3)'
-                                                                                    : (booking.status === 'permanent' ? 'rgba(255, 105, 180, 0.3)'
-                                                                                        : (booking.status === 'rejected' ? 'rgba(231, 76, 60, 0.3)'
-                                                                                            : (booking.status === 'no-show' ? 'rgba(150, 150, 150, 0.3)'
-                                                                                                : 'rgba(241, 196, 15, 0.3)')))}`,
+                                                                                fontSize: '0.7rem',
+                                                                                fontWeight: '800',
+                                                                                padding: '0.3rem 0.6rem',
+                                                                                borderRadius: '6px',
+                                                                                background: statusColor,
+                                                                                color: '#000',
                                                                                 letterSpacing: '0.5px'
                                                                             }}>
-                                                                                {booking.status}
+                                                                                {statusText}
                                                                             </span>
                                                                         </div>
 
                                                                         {/* Time Range */}
-                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--brand-teal)' }}>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
                                                                             <div style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
                                                                                 {booking.startTime}
                                                                             </div>
-                                                                            <div style={{ opacity: 0.5, fontSize: '0.9rem', paddingTop: '4px' }}>➔</div>
-                                                                            <div style={{ fontWeight: '600', fontSize: '1.1rem', opacity: 0.8, paddingTop: '2px' }}>
+                                                                            <div style={{ opacity: 0.4, fontSize: '0.8rem' }}>→</div>
+                                                                            <div style={{ fontWeight: '500', fontSize: '1rem', opacity: 0.5 }}>
                                                                                 {endTime}
                                                                             </div>
                                                                         </div>
 
                                                                         {/* User Details */}
-                                                                        <div style={{ marginBottom: '1.2rem' }}>
-                                                                            <h4 style={{ color: 'white', fontSize: '1.1rem', marginBottom: '0.3rem' }}>{booking.userName}</h4>
+                                                                        <div>
+                                                                            <h4 style={{ color: 'white', fontSize: '1.1rem', margin: '0 0 0.3rem 0', fontWeight: '700' }}>{booking.userName}</h4>
                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                                                 <a
                                                                                     href={whatsappLink}
                                                                                     target="_blank"
                                                                                     rel="noreferrer"
                                                                                     style={{
-                                                                                        color: 'rgba(255,255,255,0.6)',
+                                                                                        color: booking.userPhone === 'N/A' || !booking.userPhone ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.5)',
                                                                                         fontSize: '0.9rem',
                                                                                         display: 'flex',
                                                                                         alignItems: 'center',
                                                                                         gap: '0.4rem',
                                                                                         textDecoration: 'none',
                                                                                         transition: 'color 0.2s',
-                                                                                        cursor: 'pointer'
+                                                                                        cursor: booking.userPhone === 'N/A' || !booking.userPhone ? 'default' : 'pointer'
                                                                                     }}
-                                                                                    onMouseOver={(e) => e.target.style.color = '#25D366'}
-                                                                                    onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.6)'}
+                                                                                    onMouseOver={(e) => { if (booking.userPhone !== 'N/A' && booking.userPhone) e.target.style.color = '#25D366' }}
+                                                                                    onMouseOut={(e) => { if (booking.userPhone !== 'N/A' && booking.userPhone) e.target.style.color = 'rgba(255,255,255,0.5)' }}
                                                                                 >
-                                                                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                                                                                    {booking.userPhone}
+                                                                                    <Phone size={14} style={{ opacity: 0.8 }} />
+                                                                                    {booking.userPhone || 'N/A'}
                                                                                 </a>
                                                                             </div>
                                                                         </div>
 
                                                                         {/* Actions */}
-                                                                        <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                        <div style={{ display: 'flex', gap: '0.8rem', paddingTop: '0.5rem' }}>
                                                                             {booking.status === 'pending' && (
                                                                                 <>
                                                                                     <button
                                                                                         onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                                                                                        style={{ flex: 1, padding: '0.6rem', background: 'var(--brand-teal)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem', color: '#000' }}
+                                                                                        title="Accept Booking"
+                                                                                        style={{ padding: '0.6rem', background: 'transparent', border: '1px solid #2ecc71', borderRadius: '8px', cursor: 'pointer', color: '#2ecc71', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}
                                                                                     >
-                                                                                        Accept
+                                                                                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                                                                     </button>
                                                                                     <button
                                                                                         onClick={() => handleStatusChange(booking.id, 'rejected')}
-                                                                                        style={{ flex: 1, padding: '0.6rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', cursor: 'pointer', color: 'white', fontSize: '0.9rem' }}
+                                                                                        title="Reject Booking"
+                                                                                        style={{ padding: '0.6rem', background: 'transparent', border: '1px solid #e74c3c', borderRadius: '8px', cursor: 'pointer', color: '#e74c3c', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}
                                                                                     >
-                                                                                        Reject
+                                                                                        <X size={18} />
                                                                                     </button>
                                                                                 </>
                                                                             )}
+
+                                                                            {/* Edit */}
+                                                                            <button
+                                                                                onClick={() => setEditModal({ isOpen: true, booking })}
+                                                                                title="Edit Booking"
+                                                                                style={{
+                                                                                    padding: '0.6rem',
+                                                                                    background: 'transparent',
+                                                                                    border: '1px solid #3498db',
+                                                                                    borderRadius: '8px',
+                                                                                    cursor: 'pointer',
+                                                                                    color: '#3498db',
+                                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                    width: '40px', height: '40px'
+                                                                                }}
+                                                                            >
+                                                                                <Edit size={16} />
+                                                                            </button>
+
+                                                                            {/* Pause/No-Show */}
                                                                             {booking.status === 'confirmed' && (
                                                                                 <button
                                                                                     onClick={() => handleStatusChange(booking.id, 'no-show')}
-                                                                                    title="Mark as No-Show"
+                                                                                    title="Mark as No-Show / Pause"
                                                                                     style={{
                                                                                         padding: '0.6rem',
-                                                                                        background: 'rgba(100, 100, 100, 0.2)',
-                                                                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                                        background: 'transparent',
+                                                                                        border: '1px solid #f1c40f',
                                                                                         borderRadius: '8px',
                                                                                         cursor: 'pointer',
-                                                                                        color: '#ccc',
+                                                                                        color: '#f1c40f',
                                                                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                        flex: 1
+                                                                                        width: '40px', height: '40px'
                                                                                     }}
                                                                                 >
-                                                                                    <UserX size={16} style={{ marginRight: '6px' }} /> No Show
+                                                                                    {/* custom pause icon */}
+                                                                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
                                                                                 </button>
                                                                             )}
 
-                                                                            {/* Ban & Delete */}
-                                                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                                                <button
-                                                                                    onClick={async () => {
-                                                                                        if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
-                                                                                            const { banUser } = await import('../services/authService');
-                                                                                            const result = await banUser(booking.userId); // Ensure booking has userId
-                                                                                            if (result.success) alert('User has been banned.');
-                                                                                            else alert('Failed to ban: ' + result.message);
+                                                                            {/* Delete */}
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    if (booking.status === 'permanent') {
+                                                                                        if (window.confirm("Delete this PERMANENT template?")) {
+                                                                                            const realId = booking.id.split('-')[1];
+                                                                                            handleDeletePermanent(realId);
                                                                                         }
-                                                                                    }}
-                                                                                    title="Ban User"
-                                                                                    style={{
-                                                                                        padding: '0.6rem',
-                                                                                        background: 'rgba(0, 0, 0, 0.3)',
-                                                                                        border: '1px solid rgba(255, 0, 0, 0.3)',
-                                                                                        borderRadius: '8px',
-                                                                                        cursor: 'pointer',
-                                                                                        color: '#ff4444',
-                                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                        minWidth: '40px'
-                                                                                    }}
-                                                                                >
-                                                                                    <ShieldAlert size={18} />
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={(e) => {
-                                                                                        if (booking.status === 'permanent') {
-                                                                                            if (window.confirm("Delete this PERMANENT template?")) {
-                                                                                                // The permanent ID looks like perm-XYZ-date. Extract the real ID:
-                                                                                                const realId = booking.id.split('-')[1];
-                                                                                                handleDeletePermanent(realId);
-                                                                                            }
-                                                                                        } else {
-                                                                                            handleDeleteClick(e, booking.id);
-                                                                                        }
-                                                                                    }}
-                                                                                    disabled={deletingId === booking.id}
-                                                                                    title="Delete Booking"
-                                                                                    style={{
-                                                                                        padding: '0.6rem',
-                                                                                        background: 'rgba(231, 76, 60, 0.1)',
-                                                                                        border: '1px solid rgba(231, 76, 60, 0.2)',
-                                                                                        borderRadius: '8px',
-                                                                                        cursor: 'pointer',
-                                                                                        color: '#e74c3c',
-                                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                        minWidth: '40px'
-                                                                                    }}
-                                                                                >
-                                                                                    <Trash2 size={18} />
-                                                                                </button>
-                                                                            </div>
+                                                                                    } else {
+                                                                                        handleDeleteClick(e, booking.id);
+                                                                                    }
+                                                                                }}
+                                                                                disabled={deletingId === booking.id}
+                                                                                title="Delete Booking"
+                                                                                style={{
+                                                                                    padding: '0.6rem',
+                                                                                    background: 'transparent',
+                                                                                    border: '1px solid #e74c3c',
+                                                                                    borderRadius: '8px',
+                                                                                    cursor: 'pointer',
+                                                                                    color: '#e74c3c',
+                                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                    width: '40px', height: '40px',
+                                                                                    opacity: deletingId === booking.id ? 0.5 : 1
+                                                                                }}
+                                                                            >
+                                                                                <Trash2 size={16} />
+                                                                            </button>
+
+                                                                            {/* Ban */}
+                                                                            <button
+                                                                                onClick={async () => {
+                                                                                    if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
+                                                                                        const { banUser } = await import('../services/authService');
+                                                                                        const result = await banUser(booking.userId);
+                                                                                        if (result.success) alert('User has been banned.');
+                                                                                        else alert('Failed to ban: ' + result.message);
+                                                                                    }
+                                                                                }}
+                                                                                title="Ban User"
+                                                                                style={{
+                                                                                    padding: '0.6rem',
+                                                                                    background: 'transparent',
+                                                                                    border: '1px solid #ff4444',
+                                                                                    borderRadius: '8px',
+                                                                                    cursor: 'pointer',
+                                                                                    color: '#ff4444',
+                                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                    width: '40px', height: '40px',
+                                                                                    marginLeft: 'auto' // push to the right
+                                                                                }}
+                                                                            >
+                                                                                <ShieldAlert size={16} />
+                                                                            </button>
                                                                         </div>
                                                                     </motion.div>
                                                                 );
@@ -1159,6 +1255,12 @@ const AdminPanel = () => {
                                                             <ShieldAlert size={16} /> Block
                                                         </button>
                                                         <button
+                                                            onClick={() => setEditModal({ isOpen: true, booking })}
+                                                            style={{ padding: '0.6rem 1rem', background: 'rgba(52, 152, 219, 0.1)', color: '#3498db', border: '1px solid rgba(52, 152, 219, 0.2)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                                        >
+                                                            <Edit size={16} /> Edit
+                                                        </button>
+                                                        <button
                                                             onClick={(e) => handleDeleteClick(e, booking.id)}
                                                             style={{ padding: '0.6rem 1rem', background: 'rgba(231, 76, 60, 0.1)', color: '#e74c3c', border: '1px solid rgba(231, 76, 60, 0.2)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                                         >
@@ -1240,6 +1342,143 @@ const AdminPanel = () => {
                     </div>
                 )}
             </div>
+
+            {/* EDIT BOOKING MODAL */}
+            <AnimatePresence>
+                {editModal.isOpen && editModal.booking && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(0,0,0,0.8)',
+                            backdropFilter: 'blur(5px)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            zIndex: 1000, padding: '1rem'
+                        }}
+                    >
+                        <motion.div
+                            initial={{ y: 50, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 50, opacity: 0 }}
+                            style={{
+                                background: 'rgba(30,30,30,0.95)',
+                                padding: '2rem',
+                                borderRadius: '20px',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                width: '100%', maxWidth: '500px',
+                                maxHeight: '90vh', overflowY: 'auto'
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                <h2 style={{ margin: 0, color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Edit size={24} color="var(--brand-teal)" /> Edit Booking
+                                </h2>
+                                <button onClick={() => setEditModal({ isOpen: false, booking: null })} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem' }}>
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>User Name</label>
+                                    <input
+                                        type="text"
+                                        value={editModal.booking.userName || ''}
+                                        onChange={(e) => setEditModal(prev => ({ ...prev, booking: { ...prev.booking, userName: e.target.value } }))}
+                                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Phone/Contact</label>
+                                    <input
+                                        type="text"
+                                        value={editModal.booking.userPhone || ''}
+                                        onChange={(e) => setEditModal(prev => ({ ...prev, booking: { ...prev.booking, userPhone: e.target.value } }))}
+                                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Date</label>
+                                        <input
+                                            type="date"
+                                            value={editModal.booking.date || editModal.booking.booking_date || ''}
+                                            onChange={(e) => setEditModal(prev => ({ ...prev, booking: { ...prev.booking, date: e.target.value } }))}
+                                            style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                                            disabled={editModal.booking.status === 'permanent'}
+                                        />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Court</label>
+                                        <select
+                                            value={editModal.booking.courts ? editModal.booking.courts[0] : '1'}
+                                            onChange={(e) => setEditModal(prev => ({ ...prev, booking: { ...prev.booking, courts: [parseInt(e.target.value)] } }))}
+                                            style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                                        >
+                                            <option value="1">Court 1</option>
+                                            <option value="2">Court 2</option>
+                                            <option value="3">Court 3</option>
+                                            <option value="4">Court 4</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Start Time</label>
+                                        <input
+                                            type="time"
+                                            value={editModal.booking.startTime || ''}
+                                            onChange={(e) => setEditModal(prev => ({ ...prev, booking: { ...prev.booking, startTime: e.target.value } }))}
+                                            style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                                            required
+                                        />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Duration (mins)</label>
+                                        <select
+                                            value={editModal.booking.duration || '60'}
+                                            onChange={(e) => setEditModal(prev => ({ ...prev, booking: { ...prev.booking, duration: e.target.value } }))}
+                                            style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                                        >
+                                            <option value="60">1 Hour</option>
+                                            <option value="120">2 Hours</option>
+                                            <option value="180">3 Hours</option>
+                                            <option value="240">4 Hours</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {editModal.booking.status === 'permanent' && (
+                                    <div style={{ padding: '0.8rem', background: 'rgba(255,105,180,0.1)', border: '1px solid rgba(255,105,180,0.2)', borderRadius: '8px', color: '#ff69b4', fontSize: '0.85rem' }}>
+                                        ⚠️ You are editing a <b>PERMANENT</b> template for <b>{editModal.booking.dayOfWeek}</b>. This will change all future occurrences dynamically.
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    disabled={editLoading}
+                                    style={{
+                                        marginTop: '1rem',
+                                        padding: '1rem',
+                                        background: 'var(--brand-teal)',
+                                        border: 'none',
+                                        borderRadius: '10px',
+                                        color: '#000',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        fontSize: '1rem'
+                                    }}
+                                >
+                                    {editLoading ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 
