@@ -794,31 +794,51 @@ const AdminPanel = () => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'flex-start',
-                            gap: '1.5rem',
+                            gap: '2rem',
                             padding: '1rem 0',
                             marginTop: '-1rem'
                         }}>
-                            <div style={{ position: 'relative' }}>
+                            <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px' }}>
+                                {/* Visible Styled Button */}
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '1rem',
+                                    padding: '0.8rem 1.5rem',
+                                    background: 'var(--brand-teal)',
+                                    color: '#000',
+                                    fontFamily: 'inherit',
+                                    fontSize: '1.25rem',
+                                    fontWeight: '900',
+                                    boxShadow: '0 4px 15px rgba(120, 220, 202, 0.2)',
+                                    cursor: 'pointer'
+                                }}>
+                                    <span>{selectedAdminDate}</span>
+                                    <Calendar size={22} strokeWidth={2.5} />
+                                </div>
+                                {/* Invisible Native Input overlay */}
                                 <input
                                     type="date"
                                     value={selectedAdminDate}
                                     onChange={(e) => setSelectedAdminDate(e.target.value)}
+                                    // Make sure calendar picker natively opens when wrapper is clicked
+                                    onClick={(e) => {
+                                        if (e.target.showPicker) {
+                                            try { e.target.showPicker(); } catch (err) { /* ignore */ }
+                                        }
+                                    }}
                                     style={{
-                                        padding: '0.8rem 1.5rem',
-                                        borderRadius: '12px',
-                                        border: 'none',
-                                        background: 'var(--brand-teal)',
-                                        color: '#000',
-                                        fontFamily: 'inherit',
-                                        fontSize: '1.1rem',
-                                        fontWeight: '800',
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        opacity: 0,
                                         cursor: 'pointer',
-                                        outline: 'none',
-                                        boxShadow: '0 4px 15px rgba(120, 220, 202, 0.4)',
                                     }}
                                 />
                             </div>
-                            <div style={{ color: '#888', fontSize: '1.2rem', fontWeight: '500' }}>
+                            <div style={{ color: '#888', fontSize: '1.3rem', fontWeight: '500' }}>
                                 {bookings.filter(b => b.date === selectedAdminDate).length + permanentBookings.filter(b => (b.dayOfWeek || '').toLowerCase() === new Date(selectedAdminDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()).length} Bookings
                             </div>
                         </div>
