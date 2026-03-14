@@ -1208,7 +1208,7 @@ const AdminPanel = () => {
 
                                 // 2. Generate instances of permanent bookings for these dates
                                 const permanentInstances = [];
-                                const permanentTemplates = bookings.filter(b => b.status === 'permanent');
+                                const permanentTemplates = permanentBookings || [];
 
                                 allDates.forEach(dateStr => {
                                     const dateObj = new Date(dateStr + 'T12:00:00');
@@ -1220,6 +1220,7 @@ const AdminPanel = () => {
                                                 ...template,
                                                 id: `inst-${template.id}-${dateStr}`, // unique ID for React keys
                                                 date: dateStr, // assign the generated date
+                                                status: 'confirmed', // Force green status for permanent bookings
                                                 isPermanentInstance: true // flag for UI logic
                                             });
                                         }
