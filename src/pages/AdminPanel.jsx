@@ -1234,44 +1234,176 @@ const AdminPanel = () => {
                                                             const endM = totalMinutes % 60;
                                                             const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 
+                                                            // Status Colors
+                                                            let statusColor = '#3498db'; // default info
+                                                            if (booking.status === 'confirmed') statusColor = '#2ecc71';
+                                                            else if (booking.status === 'pending') statusColor = '#f1c40f';
+                                                            else if (booking.status === 'rejected') statusColor = '#e74c3c';
+                                                            else if (booking.status === 'no-show') statusColor = '#aaaaaa';
+
+                                                            const statusText = booking.status.toUpperCase();
+
+                                                            // WhatsApp Link
+                                                            let phoneCode = booking.userPhone || '';
+                                                            phoneCode = phoneCode.replace(/\D/g, '');
+                                                            if (phoneCode.startsWith('0')) phoneCode = '94' + phoneCode.substring(1);
+                                                            const whatsappLink = `https://wa.me/${phoneCode}`;
+
                                                             return (
-                                                                <div key={booking.id} style={{
-                                                                    background: 'rgba(255,255,255,0.03)',
-                                                                    padding: '1.5rem',
-                                                                    borderRadius: '12px',
-                                                                    border: '1px solid rgba(255,255,255,0.05)',
-                                                                    display: 'flex', flexDirection: 'column', gap: '1rem'
-                                                                }}>
-                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                                        <div>
-                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.5rem' }}>
-                                                                                <div style={{ color: 'var(--brand-teal)', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                                                                    {booking.startTime} - {endTime}
-                                                                                </div>
-                                                                                <span style={{
-                                                                                    fontSize: '0.70rem', fontWeight: 'bold', textTransform: 'uppercase', padding: '0.2rem 0.6rem', borderRadius: '12px',
-                                                                                    background: booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.2)' : (booking.status === 'pending' ? 'rgba(241, 196, 15, 0.2)' : 'rgba(255,255,255,0.1)'),
-                                                                                    color: booking.status === 'confirmed' ? '#2ecc71' : (booking.status === 'pending' ? '#f1c40f' : '#ccc')
-                                                                                }}>
-                                                                                    {booking.status}
-                                                                                </span>
-                                                                            </div>
-                                                                            <div style={{ fontSize: '1rem', color: '#fff', marginBottom: '0.3rem' }}>
-                                                                                {booking.userName} • Court {booking.courts.join(', ')}
-                                                                            </div>
-                                                                            <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>
-                                                                                Phone: {booking.userPhone} • Order: {booking.orderId || 'N/A'}
-                                                                            </div>
+                                                                <motion.div
+                                                                    key={booking.id}
+                                                                    layout
+                                                                    initial={{ opacity: 0 }}
+                                                                    animate={{ opacity: 1 }}
+                                                                    style={{
+                                                                        background: '#222',
+                                                                        border: '1px solid rgba(255,255,255,0.05)',
+                                                                        borderLeft: `5px solid ${statusColor}`,
+                                                                        borderRadius: '12px',
+                                                                        padding: '1.2rem',
+                                                                        position: 'relative',
+                                                                        overflow: 'hidden',
+                                                                        display: 'flex',
+                                                                        flexDirection: 'column',
+                                                                        gap: '0.8rem'
+                                                                    }}
+                                                                >
+                                                                    {/* Status Badge */}
+                                                                    <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+                                                                        <span style={{
+                                                                            fontSize: '0.7rem',
+                                                                            fontWeight: '800',
+                                                                            padding: '0.3rem 0.6rem',
+                                                                            borderRadius: '6px',
+                                                                            background: statusColor,
+                                                                            color: '#000',
+                                                                            letterSpacing: '0.5px'
+                                                                        }}>
+                                                                            {statusText}
+                                                                        </span>
+                                                                    </div>
+
+                                                                    {/* Time Range */}
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
+                                                                        <div style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
+                                                                            {booking.startTime}
+                                                                        </div>
+                                                                        <div style={{ opacity: 0.4, fontSize: '0.8rem' }}>→</div>
+                                                                        <div style={{ fontWeight: '500', fontSize: '1rem', opacity: 0.5 }}>
+                                                                            {endTime}
                                                                         </div>
                                                                     </div>
 
-                                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                    {/* User Details */}
+                                                                    <div>
+                                                                        <h4 style={{ color: 'white', fontSize: '1.1rem', margin: '0 0 0.3rem 0', fontWeight: '700' }}>{booking.userName}</h4>
+                                                                        <div style={{ color: 'var(--brand-teal)', fontSize: '0.85rem', marginBottom: '0.3rem', fontWeight: 'bold' }}>Court {booking.courts.join(', ')}</div>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                            <a
+                                                                                href={whatsappLink}
+                                                                                target="_blank"
+                                                                                rel="noreferrer"
+                                                                                style={{
+                                                                                    color: booking.userPhone === 'N/A' || !booking.userPhone ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.5)',
+                                                                                    fontSize: '0.9rem',
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: '0.4rem',
+                                                                                    textDecoration: 'none',
+                                                                                    transition: 'color 0.2s',
+                                                                                    cursor: booking.userPhone === 'N/A' || !booking.userPhone ? 'default' : 'pointer'
+                                                                                }}
+                                                                                onMouseOver={(e) => { if (booking.userPhone !== 'N/A' && booking.userPhone) e.target.style.color = '#25D366' }}
+                                                                                onMouseOut={(e) => { if (booking.userPhone !== 'N/A' && booking.userPhone) e.target.style.color = 'rgba(255,255,255,0.5)' }}
+                                                                            >
+                                                                                <Phone size={14} style={{ opacity: 0.8 }} />
+                                                                                {booking.userPhone || 'N/A'}
+                                                                            </a>
+                                                                        </div>
+                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', marginTop: '0.2rem' }}>Order: {booking.orderId || 'N/A'}</div>
+                                                                    </div>
+
+                                                                    {/* Actions */}
+                                                                    <div style={{ display: 'flex', gap: '0.8rem', paddingTop: '0.5rem' }}>
                                                                         {booking.status === 'pending' && (
                                                                             <>
-                                                                                <button onClick={() => handleStatusChange(booking.id, 'confirmed')} style={{ padding: '0.5rem 0.8rem', fontSize: '0.85rem', background: 'var(--brand-teal)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', color: '#000' }}>Accept</button>
-                                                                                <button onClick={() => handleStatusChange(booking.id, 'rejected')} style={{ padding: '0.5rem 0.8rem', fontSize: '0.85rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', cursor: 'pointer', color: 'white' }}>Reject</button>
+                                                                                <button
+                                                                                    onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                                                                                    title="Accept Booking"
+                                                                                    style={{ padding: '0.6rem', background: 'transparent', border: '1px solid #2ecc71', borderRadius: '8px', cursor: 'pointer', color: '#2ecc71', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}
+                                                                                >
+                                                                                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => handleStatusChange(booking.id, 'rejected')}
+                                                                                    title="Reject Booking"
+                                                                                    style={{ padding: '0.6rem', background: 'transparent', border: '1px solid #e74c3c', borderRadius: '8px', cursor: 'pointer', color: '#e74c3c', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}
+                                                                                >
+                                                                                    <X size={18} />
+                                                                                </button>
                                                                             </>
                                                                         )}
+
+                                                                        {/* Edit */}
+                                                                        <button
+                                                                            onClick={() => setEditModal({ isOpen: true, booking })}
+                                                                            title="Edit Booking"
+                                                                            style={{
+                                                                                padding: '0.6rem',
+                                                                                background: 'transparent',
+                                                                                border: '1px solid #3498db',
+                                                                                borderRadius: '8px',
+                                                                                cursor: 'pointer',
+                                                                                color: '#3498db',
+                                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                width: '40px', height: '40px'
+                                                                            }}
+                                                                        >
+                                                                            <Edit size={16} />
+                                                                        </button>
+
+                                                                        {/* Pause/No-Show */}
+                                                                        {booking.status === 'confirmed' && (
+                                                                            <button
+                                                                                onClick={() => handleStatusChange(booking.id, 'no-show')}
+                                                                                title="Mark as No-Show / Pause"
+                                                                                style={{
+                                                                                    padding: '0.6rem',
+                                                                                    background: 'transparent',
+                                                                                    border: '1px solid #f1c40f',
+                                                                                    borderRadius: '8px',
+                                                                                    cursor: 'pointer',
+                                                                                    color: '#f1c40f',
+                                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                    width: '40px', height: '40px'
+                                                                                }}
+                                                                            >
+                                                                                {/* custom pause icon */}
+                                                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                                                                            </button>
+                                                                        )}
+
+                                                                        {/* Delete */}
+                                                                        <button
+                                                                            onClick={(e) => handleDeleteClick(e, booking.id)}
+                                                                            disabled={deletingId === booking.id}
+                                                                            title="Delete Booking"
+                                                                            style={{
+                                                                                padding: '0.6rem',
+                                                                                background: 'transparent',
+                                                                                border: '1px solid #e74c3c',
+                                                                                borderRadius: '8px',
+                                                                                cursor: 'pointer',
+                                                                                color: '#e74c3c',
+                                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                width: '40px', height: '40px',
+                                                                                opacity: deletingId === booking.id ? 0.5 : 1
+                                                                            }}
+                                                                        >
+                                                                            <Trash2 size={16} />
+                                                                        </button>
+
+                                                                        {/* Ban */}
                                                                         <button
                                                                             onClick={async () => {
                                                                                 if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
@@ -1283,29 +1415,21 @@ const AdminPanel = () => {
                                                                             }}
                                                                             title="Ban User"
                                                                             style={{
-                                                                                padding: '0.5rem 0.8rem', fontSize: '0.85rem',
-                                                                                background: 'rgba(0, 0, 0, 0.3)',
-                                                                                border: '1px solid rgba(255, 0, 0, 0.3)',
-                                                                                borderRadius: '8px', cursor: 'pointer', color: '#ff4444',
-                                                                                display: 'flex', alignItems: 'center', gap: '0.4rem'
+                                                                                padding: '0.6rem',
+                                                                                background: 'transparent',
+                                                                                border: '1px solid #ff4444',
+                                                                                borderRadius: '8px',
+                                                                                cursor: 'pointer',
+                                                                                color: '#ff4444',
+                                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                width: '40px', height: '40px',
+                                                                                marginLeft: 'auto' // push to the right
                                                                             }}
                                                                         >
-                                                                            <ShieldAlert size={14} /> Block
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => setEditModal({ isOpen: true, booking })}
-                                                                            style={{ padding: '0.5rem 0.8rem', fontSize: '0.85rem', background: 'rgba(52, 152, 219, 0.1)', color: '#3498db', border: '1px solid rgba(52, 152, 219, 0.2)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-                                                                        >
-                                                                            <Edit size={14} /> Edit
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={(e) => handleDeleteClick(e, booking.id)}
-                                                                            style={{ padding: '0.5rem 0.8rem', fontSize: '0.85rem', background: 'rgba(231, 76, 60, 0.1)', color: '#e74c3c', border: '1px solid rgba(231, 76, 60, 0.2)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-                                                                        >
-                                                                            <Trash2 size={14} /> Delete
+                                                                            <ShieldAlert size={16} />
                                                                         </button>
                                                                     </div>
-                                                                </div>
+                                                                </motion.div>
                                                             );
                                                         })}
                                                     </div>
