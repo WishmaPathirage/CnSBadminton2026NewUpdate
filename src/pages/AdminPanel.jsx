@@ -1191,9 +1191,20 @@ const AdminPanel = () => {
 
                             {(() => {
                                 // 1. Get unique upcoming dates from regular bookings
-                                const todayStr = new Date().toISOString().split('T')[0];
+                                const todayObj = new Date();
+                                const todayStr = todayObj.toISOString().split('T')[0];
                                 const regularUpcoming = bookings.filter(b => b.date >= todayStr && b.status !== 'permanent');
-                                const allDates = [...new Set(regularUpcoming.map(b => b.date))].sort();
+
+                                // Generate next 7 days minimum to ensure weekly templates show up
+                                const next7Days = [];
+                                for (let i = 0; i < 7; i++) {
+                                    const d = new Date(todayObj);
+                                    d.setDate(todayObj.getDate() + i);
+                                    next7Days.push(d.toISOString().split('T')[0]);
+                                }
+
+                                const regularDates = regularUpcoming.map(b => b.date);
+                                const allDates = [...new Set([...next7Days, ...regularDates])].sort();
 
                                 // 2. Generate instances of permanent bookings for these dates
                                 const permanentInstances = [];
