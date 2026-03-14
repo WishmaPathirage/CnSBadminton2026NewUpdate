@@ -1190,15 +1190,38 @@ const AdminPanel = () => {
                             </div>
 
                             {(() => {
+                                // 1. Get unique upcoming dates from regular bookings
                                 const todayStr = new Date().toISOString().split('T')[0];
-                                const upcomingBookings = bookings
-                                    .filter(b => b.date >= todayStr && b.status !== 'permanent')
-                                    .sort((a, b) => {
-                                        if (a.date !== b.date) return a.date.localeCompare(b.date);
-                                        return a.startTime.localeCompare(b.startTime);
-                                    });
+                                const regularUpcoming = bookings.filter(b => b.date >= todayStr && b.status !== 'permanent');
+                                const allDates = [...new Set(regularUpcoming.map(b => b.date))].sort();
 
-                                if (upcomingBookings.length === 0) {
+                                // 2. Generate instances of permanent bookings for these dates
+                                const permanentInstances = [];
+                                const permanentTemplates = bookings.filter(b => b.status === 'permanent');
+
+                                allDates.forEach(dateStr => {
+                                    const dateObj = new Date(dateStr + 'T12:00:00');
+                                    const weekdayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+
+                                    permanentTemplates.forEach(template => {
+                                        if ((template.dayOfWeek || '').toLowerCase() === weekdayName.toLowerCase()) {
+                                            permanentInstances.push({
+                                                ...template,
+                                                id: `inst-${template.id}-${dateStr}`, // unique ID for React keys
+                                                date: dateStr, // assign the generated date
+                                                isPermanentInstance: true // flag for UI logic
+                                            });
+                                        }
+                                    });
+                                });
+
+                                // 3. Combine, sort, and group
+                                const allUpcomingBookings = [...regularUpcoming, ...permanentInstances].sort((a, b) => {
+                                    if (a.date !== b.date) return a.date.localeCompare(b.date);
+                                    return a.startTime.localeCompare(b.startTime);
+                                });
+
+                                if (allUpcomingBookings.length === 0) {
                                     return (
                                         <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.02)', borderRadius: '20px' }}>
                                             <CalendarX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
@@ -1207,7 +1230,7 @@ const AdminPanel = () => {
                                     );
                                 }
 
-                                const groupedBookings = upcomingBookings.reduce((acc, booking) => {
+                                const groupedBookings = allUpcomingBookings.reduce((acc, booking) => {
                                     if (!acc[booking.date]) acc[booking.date] = [];
                                     acc[booking.date].push(booking);
                                     return acc;
