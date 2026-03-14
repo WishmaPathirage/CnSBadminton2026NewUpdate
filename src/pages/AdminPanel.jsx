@@ -1185,14 +1185,14 @@ const AdminPanel = () => {
                         <div>
                             <div style={{ padding: '1rem', background: 'rgba(120, 220, 202, 0.1)', borderRadius: '12px', marginBottom: '2rem', border: '1px solid rgba(120, 220, 202, 0.2)' }}>
                                 <h2 style={{ color: 'var(--brand-teal)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                                    <Clock size={20} /> Upcoming One-Time Bookings
+                                    <Clock size={20} /> Upcoming One-Time Bookings (Grouped Default)
                                 </h2>
                             </div>
 
                             {(() => {
                                 const todayStr = new Date().toISOString().split('T')[0];
                                 const upcomingBookings = bookings
-                                    .filter(b => b.date >= todayStr)
+                                    .filter(b => b.date >= todayStr && b.status !== 'permanent')
                                     .sort((a, b) => {
                                         if (a.date !== b.date) return a.date.localeCompare(b.date);
                                         return a.startTime.localeCompare(b.startTime);
@@ -1207,87 +1207,109 @@ const AdminPanel = () => {
                                     );
                                 }
 
+                                const groupedBookings = upcomingBookings.reduce((acc, booking) => {
+                                    if (!acc[booking.date]) acc[booking.date] = [];
+                                    acc[booking.date].push(booking);
+                                    return acc;
+                                }, {});
+
                                 return (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                        {upcomingBookings.map(booking => {
-                                            const [hours, minutes] = booking.startTime.split(':').map(Number);
-                                            const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
-                                            const endH = Math.floor(totalMinutes / 60);
-                                            const endM = totalMinutes % 60;
-                                            const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
+                                        {Object.keys(groupedBookings).map(date => {
+                                            const dayBookings = groupedBookings[date];
+                                            const formattedDateStr = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
 
                                             return (
-                                                <div key={booking.id} style={{
-                                                    background: 'rgba(255,255,255,0.03)',
-                                                    padding: '1.5rem',
-                                                    borderRadius: '12px',
-                                                    border: '1px solid rgba(255,255,255,0.05)',
-                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                                    flexWrap: 'wrap', gap: '1rem'
-                                                }}>
-                                                    <div style={{ flex: '1 1 300px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-                                                            <div style={{ color: 'var(--brand-teal)', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                                                {booking.date} | {booking.startTime} - {endTime}
-                                                            </div>
-                                                            <span style={{
-                                                                fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', padding: '0.2rem 0.6rem', borderRadius: '12px',
-                                                                background: booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.2)' : (booking.status === 'pending' ? 'rgba(241, 196, 15, 0.2)' : 'rgba(255,255,255,0.1)'),
-                                                                color: booking.status === 'confirmed' ? '#2ecc71' : (booking.status === 'pending' ? '#f1c40f' : '#ccc')
-                                                            }}>
-                                                                {booking.status}
-                                                            </span>
-                                                        </div>
-                                                        <div style={{ fontSize: '1rem', color: '#fff', marginBottom: '0.3rem' }}>
-                                                            {booking.userName} • Court {booking.courts.join(', ')}
-                                                        </div>
-                                                        <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)' }}>
-                                                            Phone: {booking.userPhone} • Order: {booking.orderId || 'N/A'}
-                                                        </div>
+                                                <motion.div key={date} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-panel" style={{ padding: '2rem', borderTop: '4px solid var(--brand-teal)' }}>
+                                                    <h3 style={{ marginBottom: '1.5rem', fontSize: '1.4rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                        <Calendar size={20} color="var(--brand-teal)" />
+                                                        {formattedDateStr} <span style={{ fontSize: '0.9rem', opacity: 0.5, fontWeight: 'normal' }}>({dayBookings.length})</span>
+                                                    </h3>
+
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                                        {dayBookings.map(booking => {
+                                                            const [hours, minutes] = booking.startTime.split(':').map(Number);
+                                                            const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
+                                                            const endH = Math.floor(totalMinutes / 60);
+                                                            const endM = totalMinutes % 60;
+                                                            const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+                                                            return (
+                                                                <div key={booking.id} style={{
+                                                                    background: 'rgba(255,255,255,0.03)',
+                                                                    padding: '1.5rem',
+                                                                    borderRadius: '12px',
+                                                                    border: '1px solid rgba(255,255,255,0.05)',
+                                                                    display: 'flex', flexDirection: 'column', gap: '1rem'
+                                                                }}>
+                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                                        <div>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.5rem' }}>
+                                                                                <div style={{ color: 'var(--brand-teal)', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                                                                    {booking.startTime} - {endTime}
+                                                                                </div>
+                                                                                <span style={{
+                                                                                    fontSize: '0.70rem', fontWeight: 'bold', textTransform: 'uppercase', padding: '0.2rem 0.6rem', borderRadius: '12px',
+                                                                                    background: booking.status === 'confirmed' ? 'rgba(46, 204, 113, 0.2)' : (booking.status === 'pending' ? 'rgba(241, 196, 15, 0.2)' : 'rgba(255,255,255,0.1)'),
+                                                                                    color: booking.status === 'confirmed' ? '#2ecc71' : (booking.status === 'pending' ? '#f1c40f' : '#ccc')
+                                                                                }}>
+                                                                                    {booking.status}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div style={{ fontSize: '1rem', color: '#fff', marginBottom: '0.3rem' }}>
+                                                                                {booking.userName} • Court {booking.courts.join(', ')}
+                                                                            </div>
+                                                                            <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>
+                                                                                Phone: {booking.userPhone} • Order: {booking.orderId || 'N/A'}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                        {booking.status === 'pending' && (
+                                                                            <>
+                                                                                <button onClick={() => handleStatusChange(booking.id, 'confirmed')} style={{ padding: '0.5rem 0.8rem', fontSize: '0.85rem', background: 'var(--brand-teal)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', color: '#000' }}>Accept</button>
+                                                                                <button onClick={() => handleStatusChange(booking.id, 'rejected')} style={{ padding: '0.5rem 0.8rem', fontSize: '0.85rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', cursor: 'pointer', color: 'white' }}>Reject</button>
+                                                                            </>
+                                                                        )}
+                                                                        <button
+                                                                            onClick={async () => {
+                                                                                if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
+                                                                                    const { banUser } = await import('../services/authService');
+                                                                                    const result = await banUser(booking.userId);
+                                                                                    if (result.success) alert('User has been banned.');
+                                                                                    else alert('Failed to ban: ' + result.message);
+                                                                                }
+                                                                            }}
+                                                                            title="Ban User"
+                                                                            style={{
+                                                                                padding: '0.5rem 0.8rem', fontSize: '0.85rem',
+                                                                                background: 'rgba(0, 0, 0, 0.3)',
+                                                                                border: '1px solid rgba(255, 0, 0, 0.3)',
+                                                                                borderRadius: '8px', cursor: 'pointer', color: '#ff4444',
+                                                                                display: 'flex', alignItems: 'center', gap: '0.4rem'
+                                                                            }}
+                                                                        >
+                                                                            <ShieldAlert size={14} /> Block
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => setEditModal({ isOpen: true, booking })}
+                                                                            style={{ padding: '0.5rem 0.8rem', fontSize: '0.85rem', background: 'rgba(52, 152, 219, 0.1)', color: '#3498db', border: '1px solid rgba(52, 152, 219, 0.2)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                                                                        >
+                                                                            <Edit size={14} /> Edit
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={(e) => handleDeleteClick(e, booking.id)}
+                                                                            style={{ padding: '0.5rem 0.8rem', fontSize: '0.85rem', background: 'rgba(231, 76, 60, 0.1)', color: '#e74c3c', border: '1px solid rgba(231, 76, 60, 0.2)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                                                                        >
+                                                                            <Trash2 size={14} /> Delete
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
-                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                        {booking.status === 'pending' && (
-                                                            <>
-                                                                <button onClick={() => handleStatusChange(booking.id, 'confirmed')} style={{ padding: '0.6rem 1rem', background: 'var(--brand-teal)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', color: '#000' }}>Accept</button>
-                                                                <button onClick={() => handleStatusChange(booking.id, 'rejected')} style={{ padding: '0.6rem 1rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', cursor: 'pointer', color: 'white' }}>Reject</button>
-                                                            </>
-                                                        )}
-                                                        <button
-                                                            onClick={async () => {
-                                                                if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
-                                                                    const { banUser } = await import('../services/authService');
-                                                                    const result = await banUser(booking.userId);
-                                                                    if (result.success) alert('User has been banned.');
-                                                                    else alert('Failed to ban: ' + result.message);
-                                                                }
-                                                            }}
-                                                            title="Ban User"
-                                                            style={{
-                                                                padding: '0.6rem 1rem',
-                                                                background: 'rgba(0, 0, 0, 0.3)',
-                                                                border: '1px solid rgba(255, 0, 0, 0.3)',
-                                                                borderRadius: '8px',
-                                                                cursor: 'pointer',
-                                                                color: '#ff4444',
-                                                                display: 'flex', alignItems: 'center', gap: '0.5rem'
-                                                            }}
-                                                        >
-                                                            <ShieldAlert size={16} /> Block
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setEditModal({ isOpen: true, booking })}
-                                                            style={{ padding: '0.6rem 1rem', background: 'rgba(52, 152, 219, 0.1)', color: '#3498db', border: '1px solid rgba(52, 152, 219, 0.2)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                                                        >
-                                                            <Edit size={16} /> Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => handleDeleteClick(e, booking.id)}
-                                                            style={{ padding: '0.6rem 1rem', background: 'rgba(231, 76, 60, 0.1)', color: '#e74c3c', border: '1px solid rgba(231, 76, 60, 0.2)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                                                        >
-                                                            <Trash2 size={16} /> Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                                </motion.div>
                                             );
                                         })}
                                     </div>
