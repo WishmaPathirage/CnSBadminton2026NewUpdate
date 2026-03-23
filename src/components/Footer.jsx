@@ -154,7 +154,7 @@ const Footer = () => {
                     gap: '1rem'
                 }}>
                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
-                        &copy; {new Date().getFullYear()} C & S Badminton Complex (PVT) Ltd. All Rights Reserved.
+                        All Rights Reserved C & S Badminton Complex (PVT) Ltd 2026
                     </p>
                     <div style={{ display: 'flex', gap: '1.5rem', color: 'rgba(255,255,255,0.2)', fontSize: '0.8rem' }}>
                         <span>Privacy Policy</span>
