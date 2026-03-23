@@ -122,26 +122,13 @@ const LandingPage = () => {
                 }}
               />
 
-              <motion.h1
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                style={{
-                  fontSize: '2.5rem',
-                  marginBottom: '0.5rem',
-                  background: 'linear-gradient(to right, #FBCA3F, #E94E8F, #78DCCA)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  fontWeight: '800'
-                }}
-              >
-                Happy New Year 2026!
-              </motion.h1>
-
-              <p style={{ fontSize: '1.2rem', color: '#eee', lineHeight: '1.6' }}>
-                Wishing you a smash-hit year filled with health, happiness, and great badminton! 🏸✨
+              <h2 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '1.5rem' }}>Welcome to 2026!</h2>
+              <p style={{ fontSize: '1.2rem', color: 'var(--text-gray)', marginBottom: '1rem' }}>
+                We've upgraded our systems to provide you with the best badminton experience in Sri Lanka.
               </p>
-              <p style={{ marginTop: '1rem', fontSize: '0.8rem', opacity: 0.3 }}>v1.33 (SL Timezone)</p>
-
+              <p style={{ fontSize: '1.1rem', color: 'var(--brand-teal)', fontWeight: 'bold' }}>
+                New Feature: Personalized User Dashboard is now live!
+              </p>
               <p style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)' }}>
                 - C & S Badminton Complex Team
               </p>
@@ -164,11 +151,7 @@ const LandingPage = () => {
         )}
       </AnimatePresence>
 
-
-      <Navbar />
-      <NotificationBar />
       <div id="home"><Hero /></div>
-
       <div id="booking"><BookingForm /></div>
       <div id="memberships"><Memberships /></div>
       <div id="services"><Services /></div>
@@ -177,7 +160,6 @@ const LandingPage = () => {
       <DevelopmentProgress />
       <div id="reviews"><Reviews /></div>
       <div id="contact"><Contact /></div>
-      <Footer />
     </div>
   );
 };
@@ -185,15 +167,22 @@ const LandingPage = () => {
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/admin" element={<AdminPanel />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/cancel" element={<PaymentCancel />} />
-      </Routes>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Navbar />
+        <NotificationBar />
+        <main style={{ flex: 1 }}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/cancel" element={<PaymentCancel />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </Router>
   );
 }

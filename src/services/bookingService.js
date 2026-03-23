@@ -254,3 +254,18 @@ export const getUserProfile = async (uid) => {
         return null;
     }
 };
+
+// Check if user is blacklisted
+export const checkUserBlacklist = async (uid) => {
+    try {
+        const userRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists() && userSnap.data().isBlacklisted) {
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error("Error checking blacklist:", error);
+        return false;
+    }
+};

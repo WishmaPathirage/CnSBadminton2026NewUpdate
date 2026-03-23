@@ -1,0 +1,29 @@
+
+> cs-badminton-complex@0.0.0 build
+> vite build
+
+vite v7.3.0 building client environment for production...
+transforming...
+✓ 2168 modules transformed.
+✗ Build failed in 951ms
+error during build:
+src/components/BookingForm.jsx (4:41): "checkUserBlacklist" is not exported by "src/services/bookingService.js", imported by "src/components/BookingForm.jsx".
+file: /Users/shanukahimsara/Desktop/CnsWebsite/CnSBadminton2026NewUpdate/src/components/BookingForm.jsx:4:41
+
+2: import { db } from '../firebaseConfig';
+3: import { updateDoc, doc } from 'firebase/firestore';
+4: import { getAvailability, createBooking, checkUserBlacklist, holdSlot, updateBooking, deleteBooking } from '../servic...
+                                            ^
+5: import { getAuth } from 'firebase/auth'; // Import getAuth
+6: import { motion } from 'framer-motion';
+
+    at getRollupError (file:///Users/shanukahimsara/Desktop/CnsWebsite/CnSBadminton2026NewUpdate/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at error (file:///Users/shanukahimsara/Desktop/CnsWebsite/CnSBadminton2026NewUpdate/node_modules/rollup/dist/es/shared/parseAst.js:397:42)
+    at Module.error (file:///Users/shanukahimsara/Desktop/CnsWebsite/CnSBadminton2026NewUpdate/node_modules/rollup/dist/es/shared/node-entry.js:17022:16)
+    at Module.traceVariable (file:///Users/shanukahimsara/Desktop/CnsWebsite/CnSBadminton2026NewUpdate/node_modules/rollup/dist/es/shared/node-entry.js:17478:29)
+    at ModuleScope.findVariable (file:///Users/shanukahimsara/Desktop/CnsWebsite/CnSBadminton2026NewUpdate/node_modules/rollup/dist/es/shared/node-entry.js:15141:39)
+    at ReturnValueScope.findVariable (file:///Users/shanukahimsara/Desktop/CnsWebsite/CnSBadminton2026NewUpdate/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at FunctionBodyScope.findVariable (file:///Users/shanukahimsara/Desktop/CnsWebsite/CnSBadminton2026NewUpdate/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at ReturnValueScope.findVariable (file:///Users/shanukahimsara/Desktop/CnsWebsite/CnSBadminton2026NewUpdate/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at FunctionBodyScope.findVariable (file:///Users/shanukahimsara/Desktop/CnsWebsite/CnSBadminton2026NewUpdate/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at TrackingScope.findVariable (file:///Users/shanukahimsara/Desktop/CnsWebsite/CnSBadminton2026NewUpdate/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)

@@ -85,7 +85,7 @@ const Profile = () => {
                         fontSize: '2.5rem',
                         fontWeight: '800'
                     }}>
-                        {(currentUser.name || currentUser.email)[0].toUpperCase()}
+                        {(currentUser.name || currentUser.email || 'U')[0].toUpperCase()}
                     </div>
                     <div style={{ flex: 1 }}>
                         <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: '800', background: 'linear-gradient(to right, #fff, rgba(255,255,255,0.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>

@@ -417,10 +417,12 @@ const BookingForm = () => {
                         orderId: orderId,
                         status: 'pending'
                     });
+                    console.log("Booking created with ID:", result.id, "OrderId:", orderId);
                     setPendingBookingId(result.id);
                     setPendingOrderId(orderId);
                 }
                 
+                console.log("Starting 5-second timer...");
                 // NEW: Trigger 5-second timer instead of immediate success
                 setShowTimer(true);
                 setTimeLeft(5);
