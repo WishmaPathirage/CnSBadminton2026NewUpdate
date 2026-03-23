@@ -28,7 +28,7 @@ const Footer = () => {
                             marginBottom: '1.5rem',
                             letterSpacing: '-1px'
                         }}>
-                            C & S BADMINTON
+                            C & S badminton Complex (PVT) Ltd
                         </h2>
                         <p style={{ color: 'var(--text-gray)', fontSize: '0.95rem', marginBottom: '2rem', maxWidth: '300px' }}>
                             Experience professional-grade badminton courts with state-of-the-art facilities in Sri Lanka. Your game, our passion.
