@@ -37,6 +37,7 @@ const BookingForm = () => {
     const [showTimer, setShowTimer] = useState(false);
     const [timeLeft, setTimeLeft] = useState(5);
     const [pendingBookingId, setPendingBookingId] = useState(null);
+    const [pendingOrderId, setPendingOrderId] = useState(null);
 
     // Auth State
     const [currentUser, setCurrentUser] = useState(null);
@@ -304,10 +305,10 @@ const BookingForm = () => {
         };
 
         emailjs.send(
-            'service_594scno',
-            'template_g63m5un',
+            'service_i25io04',
+            'template_bv3pwbr',
             templateParams,
-            'v68I0N0K3-x_3vCH_'
+            'cmyBcHcHxEP2ggwV3'
         ).then(() => {
             console.log('Admin Email Sent Successfully');
         }).catch((err) => {
@@ -315,13 +316,12 @@ const BookingForm = () => {
         });
 
         // WhatsApp (Admin)
-        const waMessage = `New Review Booking! Date: ${booking.date}, Time: ${booking.startTime}, Courts: ${booking.courts.join(', ')}. Please check Admin Panel.`;
-        // In a real app, this would be a server-side API call.
+        const waMessage = `New Review Booking! ID: ${booking.id}, Date: ${booking.date}, Time: ${booking.startTime}, Courts: ${booking.courts.join(', ')}. Please check Admin Panel.`;
         console.log("WhatsApp Notification Sent:", waMessage);
 
         setShowTimer(false);
         setStatus('success');
-        setStep(3);
+        navigate(`/payment/success?order_id=${pendingOrderId || 'N/A'}`);
     };
 
     const handleSubmit = async (e) => {
@@ -402,6 +402,7 @@ const BookingForm = () => {
                         status: 'pending'
                     });
                     setPendingBookingId(holdId);
+                    setPendingOrderId(orderId);
                 } else {
                     const result = await createBooking({
                         date,
@@ -417,6 +418,7 @@ const BookingForm = () => {
                         status: 'pending'
                     });
                     setPendingBookingId(result.id);
+                    setPendingOrderId(orderId);
                 }
                 
                 // NEW: Trigger 5-second timer instead of immediate success

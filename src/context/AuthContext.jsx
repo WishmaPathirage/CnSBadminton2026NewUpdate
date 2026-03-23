@@ -16,16 +16,13 @@ export const AuthProvider = ({ children }) => {
             if (user) {
                 try {
                     const userDoc = await getDoc(doc(db, 'users', user.uid));
-                    let role = 'user';
-
                     if (userDoc.exists()) {
                         const data = userDoc.data();
-                        role = data.role || 'user';
-                    } else if (user.email.toLowerCase() === 'cnsb233@gmail.com') {
-                        role = 'admin';
+                        setCurrentUser({ ...user, ...data });
+                    } else {
+                        const role = user.email.toLowerCase() === 'cnsb233@gmail.com' ? 'admin' : 'user';
+                        setCurrentUser({ ...user, role });
                     }
-
-                    setCurrentUser({ ...user, role });
                 } catch (error) {
                     console.error("Error fetching user data:", error);
                     // Fallback for admin if firestore fails but email matches
