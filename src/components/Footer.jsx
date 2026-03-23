@@ -31,7 +31,7 @@ const Footer = () => {
                             C & S badminton Complex (PVT) Ltd
                         </h2>
                         <p style={{ color: 'var(--text-gray)', fontSize: '0.95rem', marginBottom: '2rem', maxWidth: '300px' }}>
-                            Experience professional-grade badminton courts with state-of-the-art facilities in Sri Lanka. Your game, our passion.
+                            Experience professional grade badminton courts with state of the art facilities in Sri Lanka. Your game, our passion.
                         </p>
                         <div style={{ display: 'flex', gap: '1rem' }}>
                             {[
