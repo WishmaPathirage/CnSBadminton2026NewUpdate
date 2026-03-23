@@ -1,9 +1,23 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, Send, MessageCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, MessageCircle, Send } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Footer = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const handleNavClick = (id) => {
+        if (location.pathname === '/') {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        } else {
+            navigate('/', { state: { targetId: id } });
+        }
+    };
+
     return (
         <footer style={{ 
             background: 'rgba(255, 255, 255, 0.02)', 
@@ -40,17 +54,22 @@ const Footer = () => {
                         <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>Useful Links</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                             {[
-                                { label: 'Home', path: '/' },
-                                { label: 'Book a Court', path: '/#booking' },
-                                { label: 'About Us', path: '#' },
-                                { label: 'Contact Us', path: '#' },
-                                { label: 'Privacy Policy', path: '#' },
-                                { label: 'Terms & Conditions', path: '#' },
+                                { label: 'Home', id: 'home' },
+                                { label: 'Book a Court', id: 'booking' },
+                                { label: 'Memberships', id: 'memberships' },
+                                { label: 'Services', id: 'services' },
+                                { label: 'Events', id: 'events' },
+                                { label: 'Contact Us', id: 'contact' },
                             ].map((link, i) => (
-                                <Link 
+                                <button 
                                     key={i} 
-                                    to={link.path} 
+                                    onClick={() => handleNavClick(link.id)}
                                     style={{ 
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: 0,
+                                        cursor: 'pointer',
+                                        textAlign: 'left',
                                         color: 'var(--text-gray)', 
                                         fontSize: '0.9rem', 
                                         transition: 'color 0.3s' 
@@ -59,7 +78,7 @@ const Footer = () => {
                                     onMouseOut={(e) => e.target.style.color = 'var(--text-gray)'}
                                 >
                                     {link.label}
-                                </Link>
+                                </button>
                             ))}
                         </div>
                     </div>
