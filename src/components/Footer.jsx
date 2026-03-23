@@ -33,26 +33,6 @@ const Footer = () => {
                         <p style={{ color: 'var(--text-gray)', fontSize: '0.95rem', marginBottom: '2rem', maxWidth: '300px' }}>
                             Experience professional grade badminton courts with state of the art facilities in Sri Lanka. Your game, our passion.
                         </p>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            {[
-                                { icon: <Facebook size={20} />, link: '#' },
-                                { icon: <Instagram size={20} />, link: '#' },
-                                { icon: <MessageCircle size={20} />, link: '#' }, // WhatsApp
-                                { icon: <Twitter size={20} />, link: '#' },
-                            ].map((social, i) => (
-                                <motion.a
-                                    key={i}
-                                    href={social.link}
-                                    whileHover={{ y: -3, color: 'var(--brand-teal)' }}
-                                    style={{ 
-                                        color: 'rgba(255,255,255,0.6)', 
-                                        transition: 'color 0.3s' 
-                                    }}
-                                >
-                                    {social.icon}
-                                </motion.a>
-                            ))}
-                        </div>
                     </div>
 
                     {/* Useful Links */}
@@ -89,16 +69,24 @@ const Footer = () => {
                         <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>For More Info</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                             <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
-                                <Phone size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
-                                <span>+94 777 983264</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
                                 <MapPin size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
                                 <span>No:38/2 Godaduwa Rd, Galle</span>
                             </div>
                             <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
+                                <Phone size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
+                                <span>+94 77 798 3264</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
                                 <Mail size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
                                 <span>cnsb233@gmail.com</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
+                                <Facebook size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
+                                <span>C & S Badminton Complex</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
+                                <Instagram size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
+                                <span>cnsbadminton</span>
                             </div>
                         </div>
                     </div>
