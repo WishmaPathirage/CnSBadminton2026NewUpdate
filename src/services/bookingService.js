@@ -167,6 +167,17 @@ export const deletePermanentBooking = async (id) => {
     }
 };
 
+export const updatePermanentBooking = async (id, updatedData) => {
+    try {
+        const permRef = doc(db, 'permanent_bookings', id);
+        await updateDoc(permRef, updatedData);
+        return { id, ...updatedData };
+    } catch (error) {
+        console.error("Error updating permanent booking:", error);
+        throw error;
+    }
+};
+
 const sendWhatsAppNotification = (booking) => {
     // Mock WhatsApp API call (e.g. via Twilio or Meta Business API)
     console.log(`[WHATSAPP] Sending notification for booking ${booking.id}`);

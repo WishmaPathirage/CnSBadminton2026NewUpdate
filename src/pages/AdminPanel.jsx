@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { subscribeToBookings, updateBooking, updateBookingStatus, deleteBooking, createBooking, subscribeToPermanentBookings, createPermanentBooking, deletePermanentBooking } from '../services/bookingService';
+import { subscribeToBookings, updateBooking, updateBookingStatus, deleteBooking, createBooking, subscribeToPermanentBookings, createPermanentBooking, deletePermanentBooking, updatePermanentBooking } from '../services/bookingService';
 import { db } from '../firebaseConfig';
 import { logout } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Calendar, Clock, LogOut, Download, Copy, Plus, X, UserX, ShieldAlert, CalendarX, Info, Home, Edit, Phone } from 'lucide-react';
+import { Trash2, Calendar, Clock, LogOut, Download, Copy, Plus, X, UserX, ShieldAlert, CalendarX, Info, Home, Edit, Phone, Pause, Play } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import * as XLSX from 'xlsx';
 
@@ -110,6 +110,19 @@ const AdminPanel = () => {
     }, [currentUser, loading, navigate]);
 
     const handleStatusChange = async (id, newStatus) => {
+        // If it's a permanent booking being held from the daily view
+        if (id.toString().startsWith('perm-')) {
+            const realId = id.split('-')[1];
+            try {
+                await updatePermanentBooking(realId, { isHeld: newStatus === 'held' });
+                alert(`Permanent booking ${newStatus === 'held' ? 'held' : 'released'}`);
+                return;
+            } catch (err) {
+                alert("Error updating permanent booking: " + err.message);
+                return;
+            }
+        }
+
         const booking = bookings.find(b => b.id === id);
 
         // 1. WhatsApp Logic (Trigger immediately to avoid Popup Blockers)
@@ -197,7 +210,6 @@ const AdminPanel = () => {
     };
 
     const [permanentBookings, setPermanentBookings] = useState([]);
-    const [viewMode, setViewMode] = useState('daily'); // 'daily' or 'upcoming'
 
     useEffect(() => {
         // Subscribe to Permanent Bookings too
@@ -249,9 +261,9 @@ const AdminPanel = () => {
 
                 // Update permanent booking directly (requires an update function in service if not already there, 
                 // but since we just wrote updateBooking generic, we can use it on the perm collection if we had one.
-                // Assuming permanentBookings are in a 'permanentBookings' collection
+                // Update permanent booking directly
                 const { doc, updateDoc } = await import('firebase/firestore');
-                const permRef = doc(db, 'permanentBookings', realId);
+                const permRef = doc(db, 'permanent_bookings', realId);
                 await updateDoc(permRef, {
                     userName: editModal.booking.userName,
                     userPhone: editModal.booking.userPhone,
@@ -742,106 +754,8 @@ const AdminPanel = () => {
                 </div>
             </div>
 
-            {/* View Mode Toggle */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', background: 'rgba(255,255,255,0.03)', padding: '0.5rem', borderRadius: '12px', width: 'fit-content' }}>
-                <button
-                    onClick={() => setViewMode('daily')}
-                    style={{
-                        padding: '0.8rem 1.5rem',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: viewMode === 'daily' ? 'var(--brand-teal)' : 'transparent',
-                        color: viewMode === 'daily' ? '#000' : '#888',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                    }}
-                >
-                    <Calendar size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Daily Schedule
-                </button>
-                <button
-                    onClick={() => setViewMode('upcoming')}
-                    style={{
-                        padding: '0.8rem 1.5rem',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: viewMode === 'upcoming' ? 'var(--brand-teal)' : 'transparent',
-                        color: viewMode === 'upcoming' ? '#000' : '#888',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                    }}
-                >
-                    <Clock size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Upcoming Bookings
-                </button>
-            </div>
-
-            {/* Content Switch */}
-            <div>
-                {/* DAILY VIEW SECTION */}
-                {viewMode === 'daily' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
-                        {viewMode === 'combined' && (
-                            <div style={{ padding: '1rem', background: 'rgba(120, 220, 202, 0.1)', borderRadius: '12px', marginBottom: '-2rem', border: '1px solid rgba(120, 220, 202, 0.2)' }}>
-                                <h2 style={{ color: 'var(--brand-teal)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                                    <Calendar size={20} /> Daily Bookings
-                                </h2>
-                            </div>
-                        )}
-
-                        {/* Date Picker Header */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'flex-start',
-                            gap: '2rem',
-                            padding: '1rem 0',
-                            marginTop: '-1rem'
-                        }}>
-                            <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px' }}>
-                                {/* Visible Styled Button */}
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '1rem',
-                                    padding: '0.8rem 1.5rem',
-                                    background: 'var(--brand-teal)',
-                                    color: '#000',
-                                    fontFamily: 'inherit',
-                                    fontSize: '1.25rem',
-                                    fontWeight: '900',
-                                    boxShadow: '0 4px 15px rgba(120, 220, 202, 0.2)',
-                                    cursor: 'pointer'
-                                }}>
-                                    <span>{selectedAdminDate}</span>
-                                    <Calendar size={22} strokeWidth={2.5} />
-                                </div>
-                                {/* Invisible Native Input overlay */}
-                                <input
-                                    type="date"
-                                    value={selectedAdminDate}
-                                    onChange={(e) => setSelectedAdminDate(e.target.value)}
-                                    // Make sure calendar picker natively opens when wrapper is clicked
-                                    onClick={(e) => {
-                                        if (e.target.showPicker) {
-                                            try { e.target.showPicker(); } catch (err) { /* ignore */ }
-                                        }
-                                    }}
-                                    style={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        width: '100%',
-                                        height: '100%',
-                                        opacity: 0,
-                                        cursor: 'pointer',
-                                    }}
-                                />
-                            </div>
-                            <div style={{ color: '#888', fontSize: '1.3rem', fontWeight: '500' }}>
-                                {bookings.filter(b => b.date === selectedAdminDate).length + permanentBookings.filter(b => (b.dayOfWeek || '').toLowerCase() === new Date(selectedAdminDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()).length} Bookings
-                            </div>
-                        </div>
+            {/* Content Display */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
 
                         {/* Rendering the Selected Date's Bookings */}
                         {(() => {
@@ -855,8 +769,8 @@ const AdminPanel = () => {
                                 .map(b => ({
                                     ...b,
                                     date: selectedAdminDate,
-                                    status: 'permanent', // Unique status to identify them in daily view
-                                    userName: b.userName, // Removed the [RECURRING] prefix
+                                    status: b.isHeld ? 'permanent-held' : 'permanent', // Reflect hold status
+                                    userName: b.userName, 
                                     id: `perm-${b.id}-${selectedAdminDate}` // Fake ID just for React key mapping
                                 }));
 
@@ -881,16 +795,43 @@ const AdminPanel = () => {
                                 >
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                                            <div style={{
-                                                background: 'linear-gradient(135deg, var(--brand-teal), var(--brand-yellow))',
-                                                color: '#000',
-                                                padding: '0.8rem 1.5rem',
-                                                borderRadius: '12px',
-                                                fontWeight: '800',
-                                                fontSize: '1.2rem',
-                                                boxShadow: '0 4px 15px rgba(120, 220, 202, 0.3)'
-                                            }}>
-                                                {selectedDayOfWeek}, {selectedAdminDate}
+                                            <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px' }}>
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.8rem',
+                                                    background: 'linear-gradient(135deg, var(--brand-teal), var(--brand-yellow))',
+                                                    color: '#000',
+                                                    padding: '0.8rem 1.5rem',
+                                                    borderRadius: '12px',
+                                                    fontWeight: '800',
+                                                    fontSize: '1.2rem',
+                                                    boxShadow: '0 4px 15px rgba(120, 220, 202, 0.3)',
+                                                    cursor: 'pointer'
+                                                }}>
+                                                    {selectedDayOfWeek}, {selectedAdminDate}
+                                                    <Calendar size={20} strokeWidth={2.5} />
+                                                </div>
+                                                {/* Invisible Native Input overlay */}
+                                                <input
+                                                    type="date"
+                                                    value={selectedAdminDate}
+                                                    onChange={(e) => setSelectedAdminDate(e.target.value)}
+                                                    onClick={(e) => {
+                                                        if (e.target.showPicker) {
+                                                            try { e.target.showPicker(); } catch (err) { /* ignore */ }
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: 0,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        opacity: 0,
+                                                        cursor: 'pointer',
+                                                    }}
+                                                />
                                             </div>
                                             <div style={{ color: 'var(--text-gray)', fontSize: '1.1rem' }}>
                                                 {mergedDayBookings.length} Bookings ({selectedDateRegular.length} Regular, {selectedDatePermanent.length} Recurring)
@@ -898,7 +839,7 @@ const AdminPanel = () => {
                                         </div>
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'combined' ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
                                         {[1, 2, 3].map(courtId => (
                                             <div key={courtId} style={{
                                                 background: '#1a1a1a',
@@ -965,12 +906,15 @@ const AdminPanel = () => {
                                                                 // Status Colors
                                                                 let statusColor = '#3498db'; // default info
                                                                 if (booking.status === 'confirmed') statusColor = '#2ecc71';
+                                                                else if (booking.status === 'permanent-held') statusColor = '#666'; // Held recurring
                                                                 else if (booking.status === 'permanent') statusColor = '#ff69b4';
+                                                                else if (booking.status === 'held') statusColor = '#FBCA3F'; // Brand Yellow for held
                                                                 else if (booking.status === 'pending') statusColor = '#f1c40f';
                                                                 else if (booking.status === 'rejected') statusColor = '#e74c3c';
                                                                 else if (booking.status === 'no-show') statusColor = '#aaaaaa';
 
-                                                                const statusText = booking.status === 'permanent' ? 'WEEKLY' : booking.status.toUpperCase();
+                                                                let statusText = booking.status === 'permanent' ? 'WEEKLY' : booking.status.toUpperCase();
+                                                                if (booking.status === 'permanent-held') statusText = 'WEEKLY (HELD)';
 
                                                                 return (
                                                                     <motion.div
@@ -1065,44 +1009,61 @@ const AdminPanel = () => {
                                                                                 </>
                                                                             )}
 
-                                                                            {/* Edit */}
-                                                                            <button
-                                                                                onClick={() => setEditModal({ isOpen: true, booking })}
-                                                                                title="Edit Booking"
-                                                                                style={{
-                                                                                    padding: '0.6rem',
-                                                                                    background: 'transparent',
-                                                                                    border: '1px solid #3498db',
-                                                                                    borderRadius: '8px',
-                                                                                    cursor: 'pointer',
-                                                                                    color: '#3498db',
-                                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                    width: '40px', height: '40px'
-                                                                                }}
-                                                                            >
-                                                                                <Edit size={16} />
-                                                                            </button>
-
-                                                                            {/* Pause/No-Show */}
-                                                                            {booking.status === 'confirmed' && (
+                                                                            {/* Hold / Unhold Button - Moved here for better visibility */}
+                                                                            {(booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'permanent' || booking.id.toString().includes('perm')) && (
                                                                                 <button
-                                                                                    onClick={() => handleStatusChange(booking.id, 'no-show')}
-                                                                                    title="Mark as No-Show / Pause"
+                                                                                    onClick={() => handleStatusChange(booking.id, 'held')}
+                                                                                    title="Hold Booking"
                                                                                     style={{
                                                                                         padding: '0.6rem',
                                                                                         background: 'transparent',
-                                                                                        border: '1px solid #f1c40f',
+                                                                                        border: '1px solid #FBCA3F',
                                                                                         borderRadius: '8px',
                                                                                         cursor: 'pointer',
-                                                                                        color: '#f1c40f',
+                                                                                        color: '#FBCA3F',
                                                                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                                                         width: '40px', height: '40px'
                                                                                     }}
                                                                                 >
-                                                                                    {/* custom pause icon */}
                                                                                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
                                                                                 </button>
                                                                             )}
+                                                                            {(['held', 'permanent-held'].includes(booking.status) || (booking.id.toString().includes('perm') && booking.status === 'permanent-held')) && (
+                                                                                <button
+                                                                                    onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                                                                                    title="Release Hold / Confirm"
+                                                                                    style={{
+                                                                                        padding: '0.6rem',
+                                                                                        background: 'transparent',
+                                                                                        border: '1px solid #2ecc71',
+                                                                                        borderRadius: '8px',
+                                                                                        cursor: 'pointer',
+                                                                                        color: '#2ecc71',
+                                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                        width: '40px', height: '40px'
+                                                                                    }}
+                                                                                >
+                                                                                    <Play size={16} />
+                                                                                </button>
+                                                                            )}
+
+                                                                                {/* Edit */}
+                                                                                <button
+                                                                                    onClick={() => setEditModal({ isOpen: true, booking })}
+                                                                                    title="Edit Booking"
+                                                                                    style={{
+                                                                                        padding: '0.6rem',
+                                                                                        background: 'transparent',
+                                                                                        border: '1px solid rgba(255,255,255,0.1)',
+                                                                                        borderRadius: '8px',
+                                                                                        cursor: 'pointer',
+                                                                                        color: '#3498db',
+                                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                                        width: '40px', height: '40px'
+                                                                                    }}
+                                                                                >
+                                                                                    <Edit size={16} />
+                                                                                </button>
 
                                                                             {/* Delete */}
                                                                             <button
@@ -1176,372 +1137,6 @@ const AdminPanel = () => {
                                 <h3>No Bookings Found</h3>
                             </div>
                         )}
-                    </div>
-                )}
-
-                {/* UPCOMING VIEW SECTION */}
-                {viewMode === 'upcoming' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
-                        <div>
-                            <div style={{ padding: '1rem', background: 'rgba(120, 220, 202, 0.1)', borderRadius: '12px', marginBottom: '2rem', border: '1px solid rgba(120, 220, 202, 0.2)' }}>
-                                <h2 style={{ color: 'var(--brand-teal)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                                    <Clock size={20} /> Upcoming One-Time Bookings (Grouped Default)
-                                </h2>
-                            </div>
-
-                            {(() => {
-                                // 1. Get unique upcoming dates from regular bookings
-                                const todayObj = new Date();
-                                const todayStr = todayObj.toISOString().split('T')[0];
-                                const regularUpcoming = bookings.filter(b => b.date >= todayStr && b.status !== 'permanent');
-
-                                // Generate next 7 days minimum to ensure weekly templates show up
-                                const next7Days = [];
-                                for (let i = 0; i < 7; i++) {
-                                    const d = new Date(todayObj);
-                                    d.setDate(todayObj.getDate() + i);
-                                    next7Days.push(d.toISOString().split('T')[0]);
-                                }
-
-                                const regularDates = regularUpcoming.map(b => b.date);
-                                const allDates = [...new Set([...next7Days, ...regularDates])].sort();
-
-                                // 2. Generate instances of permanent bookings for these dates
-                                const permanentInstances = [];
-                                const permanentTemplates = permanentBookings || [];
-
-                                allDates.forEach(dateStr => {
-                                    const dateObj = new Date(dateStr + 'T12:00:00');
-                                    const weekdayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-
-                                    permanentTemplates.forEach(template => {
-                                        if ((template.dayOfWeek || '').toLowerCase() === weekdayName.toLowerCase()) {
-                                            permanentInstances.push({
-                                                ...template,
-                                                id: `inst-${template.id}-${dateStr}`, // unique ID for React keys
-                                                date: dateStr, // assign the generated date
-                                                status: 'confirmed', // Force green status for permanent bookings
-                                                isPermanentInstance: true // flag for UI logic
-                                            });
-                                        }
-                                    });
-                                });
-
-                                // 3. Combine, sort, and group
-                                const allUpcomingBookings = [...regularUpcoming, ...permanentInstances].sort((a, b) => {
-                                    if (a.date !== b.date) return a.date.localeCompare(b.date);
-                                    return a.startTime.localeCompare(b.startTime);
-                                });
-
-                                if (allUpcomingBookings.length === 0) {
-                                    return (
-                                        <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.02)', borderRadius: '20px' }}>
-                                            <CalendarX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                                            <p>No upcoming bookings found.</p>
-                                        </div>
-                                    );
-                                }
-
-                                const groupedBookings = allUpcomingBookings.reduce((acc, booking) => {
-                                    if (!acc[booking.date]) acc[booking.date] = [];
-                                    acc[booking.date].push(booking);
-                                    return acc;
-                                }, {});
-
-                                return (
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
-                                        {Object.keys(groupedBookings).map(date => {
-                                            const dayBookings = groupedBookings[date];
-                                            const formattedDateStr = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
-
-                                            return (
-                                                <motion.div key={date} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-panel" style={{ padding: '2rem', borderTop: '4px solid var(--brand-teal)' }}>
-                                                    <h3 style={{ marginBottom: '1.5rem', fontSize: '1.4rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                        <Calendar size={20} color="var(--brand-teal)" />
-                                                        {formattedDateStr} <span style={{ fontSize: '0.9rem', opacity: 0.5, fontWeight: 'normal' }}>({dayBookings.length})</span>
-                                                    </h3>
-
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                                        {dayBookings.map(booking => {
-                                                            const [hours, minutes] = booking.startTime.split(':').map(Number);
-                                                            const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
-                                                            const endH = Math.floor(totalMinutes / 60);
-                                                            const endM = totalMinutes % 60;
-                                                            const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
-
-                                                            // Status Colors
-                                                            let statusColor = '#3498db'; // default info
-                                                            if (booking.status === 'confirmed') statusColor = '#2ecc71';
-                                                            else if (booking.status === 'pending') statusColor = '#f1c40f';
-                                                            else if (booking.status === 'rejected') statusColor = '#e74c3c';
-                                                            else if (booking.status === 'no-show') statusColor = '#aaaaaa';
-
-                                                            const statusText = booking.status.toUpperCase();
-
-                                                            // WhatsApp Link
-                                                            let phoneCode = booking.userPhone || '';
-                                                            phoneCode = phoneCode.replace(/\D/g, '');
-                                                            if (phoneCode.startsWith('0')) phoneCode = '94' + phoneCode.substring(1);
-                                                            const whatsappLink = `https://wa.me/${phoneCode}`;
-
-                                                            return (
-                                                                <motion.div
-                                                                    key={booking.id}
-                                                                    layout
-                                                                    initial={{ opacity: 0 }}
-                                                                    animate={{ opacity: 1 }}
-                                                                    style={{
-                                                                        background: '#222',
-                                                                        border: '1px solid rgba(255,255,255,0.05)',
-                                                                        borderLeft: `5px solid ${statusColor}`,
-                                                                        borderRadius: '12px',
-                                                                        padding: '1.2rem',
-                                                                        position: 'relative',
-                                                                        overflow: 'hidden',
-                                                                        display: 'flex',
-                                                                        flexDirection: 'column',
-                                                                        gap: '0.8rem'
-                                                                    }}
-                                                                >
-                                                                    {/* Status Badge */}
-                                                                    <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
-                                                                        <span style={{
-                                                                            fontSize: '0.7rem',
-                                                                            fontWeight: '800',
-                                                                            padding: '0.3rem 0.6rem',
-                                                                            borderRadius: '6px',
-                                                                            background: statusColor,
-                                                                            color: '#000',
-                                                                            letterSpacing: '0.5px'
-                                                                        }}>
-                                                                            {statusText}
-                                                                        </span>
-                                                                    </div>
-
-                                                                    {/* Time Range */}
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
-                                                                        <div style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
-                                                                            {booking.startTime}
-                                                                        </div>
-                                                                        <div style={{ opacity: 0.4, fontSize: '0.8rem' }}>→</div>
-                                                                        <div style={{ fontWeight: '500', fontSize: '1rem', opacity: 0.5 }}>
-                                                                            {endTime}
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* User Details */}
-                                                                    <div>
-                                                                        <h4 style={{ color: 'white', fontSize: '1.1rem', margin: '0 0 0.3rem 0', fontWeight: '700' }}>{booking.userName}</h4>
-                                                                        <div style={{ color: 'var(--brand-teal)', fontSize: '0.85rem', marginBottom: '0.3rem', fontWeight: 'bold' }}>Court {booking.courts.join(', ')}</div>
-                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                            <a
-                                                                                href={whatsappLink}
-                                                                                target="_blank"
-                                                                                rel="noreferrer"
-                                                                                style={{
-                                                                                    color: booking.userPhone === 'N/A' || !booking.userPhone ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.5)',
-                                                                                    fontSize: '0.9rem',
-                                                                                    display: 'flex',
-                                                                                    alignItems: 'center',
-                                                                                    gap: '0.4rem',
-                                                                                    textDecoration: 'none',
-                                                                                    transition: 'color 0.2s',
-                                                                                    cursor: booking.userPhone === 'N/A' || !booking.userPhone ? 'default' : 'pointer'
-                                                                                }}
-                                                                                onMouseOver={(e) => { if (booking.userPhone !== 'N/A' && booking.userPhone) e.target.style.color = '#25D366' }}
-                                                                                onMouseOut={(e) => { if (booking.userPhone !== 'N/A' && booking.userPhone) e.target.style.color = 'rgba(255,255,255,0.5)' }}
-                                                                            >
-                                                                                <Phone size={14} style={{ opacity: 0.8 }} />
-                                                                                {booking.userPhone || 'N/A'}
-                                                                            </a>
-                                                                        </div>
-                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', marginTop: '0.2rem' }}>Order: {booking.orderId || 'N/A'}</div>
-                                                                    </div>
-
-                                                                    {/* Actions */}
-                                                                    <div style={{ display: 'flex', gap: '0.8rem', paddingTop: '0.5rem' }}>
-                                                                        {booking.status === 'pending' && (
-                                                                            <>
-                                                                                <button
-                                                                                    onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                                                                                    title="Accept Booking"
-                                                                                    style={{ padding: '0.6rem', background: 'transparent', border: '1px solid #2ecc71', borderRadius: '8px', cursor: 'pointer', color: '#2ecc71', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}
-                                                                                >
-                                                                                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={() => handleStatusChange(booking.id, 'rejected')}
-                                                                                    title="Reject Booking"
-                                                                                    style={{ padding: '0.6rem', background: 'transparent', border: '1px solid #e74c3c', borderRadius: '8px', cursor: 'pointer', color: '#e74c3c', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}
-                                                                                >
-                                                                                    <X size={18} />
-                                                                                </button>
-                                                                            </>
-                                                                        )}
-
-                                                                        {/* Edit */}
-                                                                        <button
-                                                                            onClick={() => setEditModal({ isOpen: true, booking })}
-                                                                            title="Edit Booking"
-                                                                            style={{
-                                                                                padding: '0.6rem',
-                                                                                background: 'transparent',
-                                                                                border: '1px solid #3498db',
-                                                                                borderRadius: '8px',
-                                                                                cursor: 'pointer',
-                                                                                color: '#3498db',
-                                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                width: '40px', height: '40px'
-                                                                            }}
-                                                                        >
-                                                                            <Edit size={16} />
-                                                                        </button>
-
-                                                                        {/* Pause/No-Show */}
-                                                                        {booking.status === 'confirmed' && (
-                                                                            <button
-                                                                                onClick={() => handleStatusChange(booking.id, 'no-show')}
-                                                                                title="Mark as No-Show / Pause"
-                                                                                style={{
-                                                                                    padding: '0.6rem',
-                                                                                    background: 'transparent',
-                                                                                    border: '1px solid #f1c40f',
-                                                                                    borderRadius: '8px',
-                                                                                    cursor: 'pointer',
-                                                                                    color: '#f1c40f',
-                                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                    width: '40px', height: '40px'
-                                                                                }}
-                                                                            >
-                                                                                {/* custom pause icon */}
-                                                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                                                                            </button>
-                                                                        )}
-
-                                                                        {/* Delete */}
-                                                                        <button
-                                                                            onClick={(e) => handleDeleteClick(e, booking.id)}
-                                                                            disabled={deletingId === booking.id}
-                                                                            title="Delete Booking"
-                                                                            style={{
-                                                                                padding: '0.6rem',
-                                                                                background: 'transparent',
-                                                                                border: '1px solid #e74c3c',
-                                                                                borderRadius: '8px',
-                                                                                cursor: 'pointer',
-                                                                                color: '#e74c3c',
-                                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                width: '40px', height: '40px',
-                                                                                opacity: deletingId === booking.id ? 0.5 : 1
-                                                                            }}
-                                                                        >
-                                                                            <Trash2 size={16} />
-                                                                        </button>
-
-                                                                        {/* Ban */}
-                                                                        <button
-                                                                            onClick={async () => {
-                                                                                if (window.confirm(`Are you sure you want to PERMANENTLY BAN ${booking.userName}? They will utilize no longer be able to book.`)) {
-                                                                                    const { banUser } = await import('../services/authService');
-                                                                                    const result = await banUser(booking.userId);
-                                                                                    if (result.success) alert('User has been banned.');
-                                                                                    else alert('Failed to ban: ' + result.message);
-                                                                                }
-                                                                            }}
-                                                                            title="Ban User"
-                                                                            style={{
-                                                                                padding: '0.6rem',
-                                                                                background: 'transparent',
-                                                                                border: '1px solid #ff4444',
-                                                                                borderRadius: '8px',
-                                                                                cursor: 'pointer',
-                                                                                color: '#ff4444',
-                                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                                width: '40px', height: '40px',
-                                                                                marginLeft: 'auto' // push to the right
-                                                                            }}
-                                                                        >
-                                                                            <ShieldAlert size={16} />
-                                                                        </button>
-                                                                    </div>
-                                                                </motion.div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })}
-                                    </div>
-                                );
-                            })()}
-                        </div>
-
-                        <div>
-                            <div style={{ padding: '1rem', background: 'rgba(255, 105, 180, 0.1)', borderRadius: '12px', marginBottom: '2rem', border: '1px solid rgba(255, 105, 180, 0.2)' }}>
-                                <h2 style={{ color: 'var(--brand-pink)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                                    <Clock size={20} /> Manage Recurring Bookings (Templates)
-                                </h2>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
-                                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
-                                    const dayBookings = permanentBookings.filter(b => (b.dayOfWeek || '').toLowerCase() === day.toLowerCase());
-                                    if (dayBookings.length === 0) return null;
-
-                                    return (
-                                        <motion.div key={day} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-panel" style={{ padding: '2rem', borderTop: '4px solid var(--brand-pink)' }}>
-                                            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.4rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                {day} <span style={{ fontSize: '0.9rem', opacity: 0.5, fontWeight: 'normal' }}>({dayBookings.length})</span>
-                                            </h3>
-
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                                {dayBookings.sort((a, b) => a.startTime.localeCompare(b.startTime)).map(booking => {
-                                                    const [hours, minutes] = booking.startTime.split(':').map(Number);
-                                                    const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
-                                                    const endH = Math.floor(totalMinutes / 60);
-                                                    const endM = totalMinutes % 60;
-                                                    const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
-
-                                                    return (
-                                                        <div key={booking.id} style={{
-                                                            background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)',
-                                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                                                        }}>
-                                                            <div>
-                                                                <div style={{ color: 'var(--brand-pink)', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                                                    {booking.startTime} - {endTime}
-                                                                </div>
-                                                                <div style={{ fontSize: '0.9rem', color: '#aaa', marginTop: '0.3rem' }}>
-                                                                    {booking.userName} • Court {booking.courts.join(', ')}
-                                                                </div>
-                                                            </div>
-                                                            <button
-                                                                onClick={async () => {
-                                                                    if (window.confirm("Delete this PERMANENT template?")) {
-                                                                        await deletePermanentBooking(booking.id);
-                                                                    }
-                                                                }}
-                                                                style={{ padding: '0.5rem', background: 'rgba(231, 76, 60, 0.1)', color: '#e74c3c', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                                                            >
-                                                                <Trash2 size={16} />
-                                                            </button>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })}
-                                {permanentBookings.length === 0 && (
-                                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: '#666' }}>
-                                        <CalendarX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                                        <p>No recurring bookings found.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* EDIT BOOKING MODAL */}
