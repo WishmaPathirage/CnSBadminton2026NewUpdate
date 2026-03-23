@@ -90,15 +90,15 @@ const Footer = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                             <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
                                 <Phone size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
-                                <span>+94 77 123 4567</span>
+                                <span>+94 777 983264</span>
                             </div>
                             <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
                                 <MapPin size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
-                                <span>123/E, Pittugala Junction,<br />New Kandy Road, Malabe</span>
+                                <span>No:38/2 Godaduwa Rd, Galle</span>
                             </div>
                             <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
                                 <Mail size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
-                                <span>info@cnsbadminton.lk</span>
+                                <span>cnsb233@gmail.com</span>
                             </div>
                         </div>
                     </div>
