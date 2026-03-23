@@ -33,10 +33,28 @@ const BookingForm = () => {
     const [status, setStatus] = useState('idle'); // idle, submitting, success, error
     const [step, setStep] = useState(1); // 1: Select Time, 2: Details, 3: Payment/Success
 
+    // 5-Second Cancellation Window States
+    const [showTimer, setShowTimer] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(5);
+    const [pendingBookingId, setPendingBookingId] = useState(null);
+
     // Auth State
     const [currentUser, setCurrentUser] = useState(null);
     const [loadingAuth, setLoadingAuth] = useState(true);
     const navigate = useNavigate();
+
+    // Timer Effect for Cancellation Window
+    useEffect(() => {
+        let timer;
+        if (showTimer && timeLeft > 0) {
+            timer = setInterval(() => {
+                setTimeLeft(prev => prev - 1);
+            }, 1000);
+        } else if (showTimer && timeLeft === 0) {
+            finalizeBooking();
+        }
+        return () => clearInterval(timer);
+    }, [showTimer, timeLeft]);
 
     // Handle Mobile Back Button
     useEffect(() => {
@@ -238,6 +256,74 @@ const BookingForm = () => {
         }
     };
 
+    const handleCancelPending = async () => {
+        if (!pendingBookingId) return;
+        setStatus('submitting');
+        try {
+            await deleteBooking(pendingBookingId);
+            setShowTimer(false);
+            setTimeLeft(5);
+            setPendingBookingId(null);
+            setStatus('idle');
+            setStep(1);
+            alert("Booking Cancelled successfully.");
+        } catch (err) {
+            console.error("Failed to cancel booking:", err);
+            alert("Error cancelling booking. Please try again or contact support.");
+        }
+    };
+
+    const finalizeBooking = async () => {
+        if (!pendingBookingId) return;
+        
+        // Change status to actual 'pending' or whatever logic needed
+        // Actually it's already 'pending' (for Admin Review)
+        
+        const booking = {
+            id: pendingBookingId,
+            userName: userDetails.name,
+            userEmail: userDetails.email,
+            userPhone: userDetails.Phone,
+            date,
+            startTime: selectedTime,
+            duration,
+            courts: selectedCourts,
+            amount: (900 * (duration / 60)) * selectedCourts.length
+        };
+
+        // Trigger Notifications
+        // EmailJS
+        const templateParams = {
+            booking_id: booking.id,
+            user_name: booking.userName,
+            user_email: booking.userEmail,
+            booking_date: booking.date,
+            booking_time: `${booking.startTime} (${booking.duration} mins)`,
+            court_no: booking.courts.join(', '),
+            amount: `Rs. ${booking.amount.toFixed(2)}`
+        };
+
+        emailjs.send(
+            'service_594scno',
+            'template_g63m5un',
+            templateParams,
+            'v68I0N0K3-x_3vCH_'
+        ).then(() => {
+            console.log('Admin Email Sent Successfully');
+        }).catch((err) => {
+            console.error('Email Failed:', err);
+        });
+
+        // WhatsApp (Admin)
+        const waMessage = `New Review Booking! Date: ${booking.date}, Time: ${booking.startTime}, Courts: ${booking.courts.join(', ')}. Please check Admin Panel.`;
+        // In a real app, this would be a server-side API call.
+        console.log("WhatsApp Notification Sent:", waMessage);
+
+        setShowTimer(false);
+        setStatus('success');
+        setStep(3);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -315,9 +401,9 @@ const BookingForm = () => {
                         orderId: orderId,
                         status: 'pending'
                     });
+                    setPendingBookingId(holdId);
                 } else {
-                    // Fallback if hold failed but we reached here
-                    await createBooking({
+                    const result = await createBooking({
                         date,
                         startTime: selectedTime,
                         duration,
@@ -330,7 +416,13 @@ const BookingForm = () => {
                         orderId: orderId,
                         status: 'pending'
                     });
+                    setPendingBookingId(result.id);
                 }
+                
+                // NEW: Trigger 5-second timer instead of immediate success
+                setShowTimer(true);
+                setTimeLeft(5);
+                return; // Wait for timer in finalizeBooking
             } catch (e) {
                 console.warn("Booking save failed (Demo mode - proceeding to payment):", e);
             }
@@ -882,6 +974,68 @@ const BookingForm = () => {
 
                 </motion.div>
             </div>
+
+            {/* 5-Second Cancellation Overlay */}
+            {showTimer && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.9)',
+                    zIndex: 10000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backdropFilter: 'blur(10px)'
+                }}>
+                    <motion.div 
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="glass-panel"
+                        style={{ padding: '3rem', textAlign: 'center', maxWidth: '400px', border: '1px solid var(--brand-teal)', borderRadius: '30px' }}
+                    >
+                        <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Hold on! 🏸</h2>
+                        <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '2rem' }}>
+                            Your booking is being finalized. You can cancel it within the next 5 seconds.
+                        </p>
+                        
+                        <div style={{ 
+                            width: '80px', 
+                            height: '80px', 
+                            borderRadius: '50%', 
+                            border: '4px solid var(--brand-teal)', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            fontSize: '2.5rem',
+                            fontWeight: '800',
+                            margin: '0 auto 2rem',
+                            color: 'var(--brand-teal)'
+                        }}>
+                            {timeLeft}
+                        </div>
+
+                        <button 
+                            onClick={handleCancelPending}
+                            className="btn-gradient"
+                            style={{ 
+                                width: '100%', 
+                                padding: '1rem', 
+                                borderRadius: '30px', 
+                                background: 'linear-gradient(45deg, #ff416c, #ff4b2b)',
+                                border: 'none',
+                                fontWeight: 'bold',
+                                color: 'white',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Cancel Booking
+                        </button>
+                    </motion.div>
+                </div>
+            )}
         </section>
     );
 };

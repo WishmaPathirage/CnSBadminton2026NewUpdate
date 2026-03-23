@@ -115,10 +115,10 @@ const Navbar = () => {
                     {/* Auth Section */}
                     {currentUser ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem' }}>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--brand-teal)' }}>
+                            <Link to="/profile" style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--brand-teal)', textDecoration: 'none' }}>
                                 <User size={18} />
                                 <span style={{ fontWeight: 'bold' }}>{currentUser.name || currentUser.email.split('@')[0]}</span>
-                            </div>
+                            </Link>
                             {currentUser.role === 'admin' && (
                                 <Link to="/admin" style={{ fontSize: '0.9rem', color: 'var(--brand-pink)', fontWeight: 'bold' }}>
                                     Dashboard
@@ -182,9 +182,9 @@ const Navbar = () => {
                             ))}
                             {currentUser ? (
                                 <>
-                                    <div style={{ padding: '1rem 0', color: 'var(--brand-teal)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <Link to="/profile" onClick={() => setIsOpen(false)} style={{ padding: '1rem 0', display: 'block', color: 'var(--brand-teal)', borderBottom: '1px solid rgba(255,255,255,0.05)', textDecoration: 'none' }}>
                                         Signed in as {currentUser.name || currentUser.email}
-                                    </div>
+                                    </Link>
                                     {currentUser.role === 'admin' && (
                                         <Link to="/admin" onClick={() => setIsOpen(false)} style={{ padding: '1rem 0', color: 'var(--brand-pink)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                             Admin Dashboard

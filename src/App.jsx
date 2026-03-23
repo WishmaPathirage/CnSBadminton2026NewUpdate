@@ -17,6 +17,7 @@ import Register from './pages/Register';
 import AdminPanel from './pages/AdminPanel';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentCancel from './pages/PaymentCancel';
+import Profile from './pages/Profile';
 import DevelopmentProgress from './components/DevelopmentProgress';
 
 
@@ -189,6 +190,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/cancel" element={<PaymentCancel />} />
       </Routes>

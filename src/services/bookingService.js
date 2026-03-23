@@ -22,6 +22,20 @@ export const getBookings = async () => {
     }
 };
 
+export const getBookingsByUser = async (userId) => {
+    try {
+        const q = query(
+            collection(db, BOOKINGS_COL),
+            where("userId", "==", userId)
+        );
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error("Error fetching bookings by user:", error);
+        return [];
+    }
+};
+
 export const createBooking = async (bookingDetails) => {
     try {
         // Add new booking to Firestore
@@ -226,17 +240,17 @@ const sendWhatsAppNotification = (booking) => {
     // });
 };
 
-// Check if user is blacklisted
-export const checkUserBlacklist = async (uid) => {
+// Get user profile data
+export const getUserProfile = async (uid) => {
     try {
         const userRef = doc(db, 'users', uid);
         const userSnap = await getDoc(userRef);
-        if (userSnap.exists() && userSnap.data().isBlacklisted) {
-            return true;
+        if (userSnap.exists()) {
+            return { id: userSnap.id, ...userSnap.data() };
         }
-        return false;
+        return null;
     } catch (error) {
-        console.error("Error checking blacklist:", error);
-        return false;
+        console.error("Error fetching user profile:", error);
+        return null;
     }
 };
