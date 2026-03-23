@@ -800,16 +800,16 @@ const AdminPanel = () => {
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     gap: '0.8rem',
-                                                    background: 'linear-gradient(135deg, var(--brand-teal), var(--brand-yellow))',
+                                                    background: '#25b6a1',
                                                     color: '#000',
-                                                    padding: '0.8rem 1.5rem',
-                                                    borderRadius: '12px',
-                                                    fontWeight: '800',
-                                                    fontSize: '1.2rem',
-                                                    boxShadow: '0 4px 15px rgba(120, 220, 202, 0.3)',
+                                                    padding: '0.8rem 1.2rem',
+                                                    borderRadius: '10px',
+                                                    fontWeight: 'bold',
+                                                    fontSize: '1.1rem',
+                                                    boxShadow: '0 4px 10px rgba(37, 182, 161, 0.2)',
                                                     cursor: 'pointer'
                                                 }}>
-                                                    {selectedDayOfWeek}, {selectedAdminDate}
+                                                    {selectedAdminDate}
                                                     <Calendar size={20} strokeWidth={2.5} />
                                                 </div>
                                                 {/* Invisible Native Input overlay */}
