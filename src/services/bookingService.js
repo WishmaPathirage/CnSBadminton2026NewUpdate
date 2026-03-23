@@ -27,14 +27,31 @@ export const createBooking = async (bookingDetails) => {
         // Add new booking to Firestore
         const docRef = await addDoc(collection(db, BOOKINGS_COL), {
             ...bookingDetails,
-            status: 'pending',
+            status: bookingDetails.status || 'pending',
             createdAt: new Date().toISOString()
         });
 
         // Return the new booking with its generated ID
-        return { id: docRef.id, ...bookingDetails, status: 'pending' };
+        return { id: docRef.id, ...bookingDetails, status: bookingDetails.status || 'pending' };
     } catch (error) {
         console.error("Error creating booking:", error);
+        throw error;
+    }
+};
+
+export const holdSlot = async (bookingDetails) => {
+    try {
+        // A hold is just a booking with status 'held'
+        const holdData = {
+            ...bookingDetails,
+            status: 'held',
+            createdAt: new Date().toISOString(),
+            holdExpiry: new Date(Date.now() + 10 * 60000).toISOString() // 10 minutes from now
+        };
+        const docRef = await addDoc(collection(db, BOOKINGS_COL), holdData);
+        return { id: docRef.id, ...holdData };
+    } catch (error) {
+        console.error("Error holding slot:", error);
         throw error;
     }
 };
@@ -102,12 +119,20 @@ export const getAvailability = async (date) => {
 
         const bookedSlots = querySnapshot.docs
             .map(doc => doc.data())
-            .filter(b => b.status !== 'rejected')
+            .filter(b => {
+                if (b.status === 'rejected') return false;
+                // If held, check if it's expired
+                if (b.status === 'held') {
+                    const expiry = b.holdExpiry ? new Date(b.holdExpiry) : null;
+                    if (expiry && expiry < new Date()) return false; // Expired
+                }
+                return true;
+            })
             .map(b => ({
                 startTime: b.startTime,
                 duration: b.duration,
                 courts: b.courts,
-                type: 'regular'
+                type: b.status === 'held' ? 'held' : 'regular'
             }));
 
         // 2. Fetch Permanent Bookings for this Day of Week

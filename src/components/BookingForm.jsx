@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { updateDoc, doc } from 'firebase/firestore';
-import { getAvailability, createBooking, checkUserBlacklist } from '../services/bookingService';
+import { getAvailability, createBooking, checkUserBlacklist, holdSlot, updateBooking, deleteBooking } from '../services/bookingService';
 import { getAuth } from 'firebase/auth'; // Import getAuth
 import { motion } from 'framer-motion';
 import { Calendar, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
@@ -27,6 +27,7 @@ const BookingForm = () => {
     const [duration, setDuration] = useState(30); // Default 30 minutes
     const [selectedTime, setSelectedTime] = useState(null);
     const [selectedCourts, setSelectedCourts] = useState([]);
+    const [holdId, setHoldId] = useState(null);
     const [slots, setSlots] = useState([]);
     const [userDetails, setUserDetails] = useState({ name: '', email: '', Phone: '' });
     const [status, setStatus] = useState('idle'); // idle, submitting, success, error
@@ -208,6 +209,35 @@ const BookingForm = () => {
         }
     };
 
+    const handleNextStep = async () => {
+        if (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c))) return;
+
+        setStatus('submitting');
+        try {
+            // Create a hold in Firestore
+            const holdData = await holdSlot({
+                date,
+                startTime: selectedTime,
+                duration,
+                courts: selectedCourts,
+                userId: currentUser.uid,
+                userName: userDetails.name || 'Anonymous',
+                status: 'held',
+                isSessionHold: true
+            });
+            setHoldId(holdData.id);
+            setStep(2);
+        } catch (err) {
+            console.error("Failed to hold slot:", err);
+            alert("Error: This slot was just taken by someone else or a connection error occurred. Please try again.");
+            // Refresh slots
+            const data = await getAvailability(date);
+            setSlots(data);
+        } finally {
+            setStatus('idle');
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -276,19 +306,31 @@ const BookingForm = () => {
                     }
                 }
 
-                await createBooking({
-                    date,
-                    startTime: selectedTime,
-                    duration,
-                    courts: selectedCourts,
-                    userId: userId, // Link booking to user
-                    userName: userDetails.name,
-                    userPhone: userDetails.Phone,
-                    userEmail: userDetails.email, // Save strictly validated email
-                    amount: totalAmount, // Store number in DB
-                    orderId: orderId,
-                    status: 'pending' // PREVIOUSLY 'confirmed'. Changed to 'pending' to require Admin Approval.
-                });
+                if (holdId) {
+                    await updateBooking(holdId, {
+                        userName: userDetails.name,
+                        userPhone: userDetails.Phone,
+                        userEmail: userDetails.email,
+                        amount: totalAmount,
+                        orderId: orderId,
+                        status: 'pending'
+                    });
+                } else {
+                    // Fallback if hold failed but we reached here
+                    await createBooking({
+                        date,
+                        startTime: selectedTime,
+                        duration,
+                        courts: selectedCourts,
+                        userId: userId,
+                        userName: userDetails.name,
+                        userPhone: userDetails.Phone,
+                        userEmail: userDetails.email,
+                        amount: totalAmount,
+                        orderId: orderId,
+                        status: 'pending'
+                    });
+                }
             } catch (e) {
                 console.warn("Booking save failed (Demo mode - proceeding to payment):", e);
             }
@@ -576,13 +618,23 @@ const BookingForm = () => {
                                                             disabled={isOccupied && !isSelected}
                                                             whileHover={!isOccupied ? { scale: 1.02 } : {}}
                                                             whileTap={!isOccupied ? { scale: 0.95 } : {}}
-                                                            onClick={() => {
+                                                            onClick={async () => {
                                                                 if (selectedTime !== time) {
                                                                     if (!isOccupied) {
+                                                                        // If we had a previous hold, release it?
+                                                                        // For UX, maybe just let it expire or release when changing time.
+                                                                        if (holdId) {
+                                                                            deleteBooking(holdId).catch(console.error);
+                                                                            setHoldId(null);
+                                                                        }
                                                                         setSelectedTime(time);
                                                                         setSelectedCourts([courtId]);
                                                                     }
                                                                 } else {
+                                                                    if (holdId) {
+                                                                        deleteBooking(holdId).catch(console.error);
+                                                                        setHoldId(null);
+                                                                    }
                                                                     handleCourtToggle(courtId);
                                                                 }
                                                             }}
@@ -635,8 +687,8 @@ const BookingForm = () => {
 
                             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
                                 <button
-                                    disabled={selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c))}
-                                    onClick={() => setStep(2)}
+                                    disabled={selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c)) || status === 'submitting'}
+                                    onClick={handleNextStep}
                                     className="btn-gradient"
                                     style={{
                                         padding: '1rem 2rem',
@@ -779,7 +831,18 @@ const BookingForm = () => {
                             <div style={{ display: 'flex', gap: '1.5rem' }}>
                                 <button
                                     type="button"
-                                    onClick={() => {
+                                    onClick={async () => {
+                                        // Release hold if user goes back to Step 1
+                                        if (holdId) {
+                                            setStatus('submitting');
+                                            try {
+                                                await deleteBooking(holdId);
+                                                setHoldId(null);
+                                            } catch (err) {
+                                                console.error("Failed to release hold:", err);
+                                            }
+                                            setStatus('idle');
+                                        }
                                         setStep(1);
                                         // Manually go back in history to keep sync
                                         window.history.back();

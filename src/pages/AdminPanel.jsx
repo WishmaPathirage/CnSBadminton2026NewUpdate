@@ -331,7 +331,13 @@ const AdminPanel = () => {
             const newStart = timeToMin(manualForm.startTime);
             const newEnd = newStart + parseInt(manualForm.duration);
             const selectedDate = manualForm.date;
-            const selectedCourt = parseInt(manualForm.court);
+            const selectedCourts = manualForm.courts.map(Number);
+
+            if (selectedCourts.length === 0) {
+                alert('Please select at least one court.');
+                setManualLoading(false);
+                return;
+            }
 
             if (bookingType === 'permanent') {
                 // Permanent Booking Logic
@@ -340,7 +346,7 @@ const AdminPanel = () => {
                 // Check conflicts with other permanent bookings
                 const permConflict = permanentBookings.some(b => {
                     if ((b.dayOfWeek || '').toLowerCase() !== dayOfWeek.toLowerCase()) return false;
-                    if (!b.courts.includes(selectedCourt)) return false;
+                    if (!b.courts.some(c => selectedCourts.includes(Number(c)))) return false;
                     const existStart = timeToMin(b.startTime);
                     const existEnd = existStart + parseInt(b.duration);
                     return (newStart < existEnd && existStart < newEnd);
@@ -356,17 +362,16 @@ const AdminPanel = () => {
                     dayOfWeek,
                     startTime: manualForm.startTime,
                     duration: parseInt(manualForm.duration),
-                    courts: [selectedCourt],
+                    courts: selectedCourts,
                     userName: manualForm.name,
                     userPhone: 'N/A', // No phone in manual form
                 });
-                alert('Permanent Booking successfully added for every ' + dayOfWeek + '!');
 
             } else {
                 // Check Regular Conflicts
                 const hasConflict = bookings.some(b => {
                     if (b.date !== selectedDate || b.status === 'rejected') return false;
-                    if (!b.courts.includes(selectedCourt)) return false;
+                    if (!b.courts.some(c => selectedCourts.includes(Number(c)))) return false;
                     const existStart = timeToMin(b.startTime);
                     const existEnd = existStart + parseInt(b.duration);
                     return (newStart < existEnd && existStart < newEnd);
@@ -382,7 +387,7 @@ const AdminPanel = () => {
                 const dayOfWeek = new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
                 const hasPermConflict = permanentBookings.some(b => {
                     if ((b.dayOfWeek || '').toLowerCase() !== dayOfWeek.toLowerCase()) return false;
-                    if (!b.courts.includes(selectedCourt)) return false;
+                    if (!b.courts.some(c => selectedCourts.includes(Number(c)))) return false;
                     const existStart = timeToMin(b.startTime);
                     const existEnd = existStart + parseInt(b.duration);
                     return (newStart < existEnd && existStart < newEnd);
@@ -399,13 +404,12 @@ const AdminPanel = () => {
                     date: manualForm.date,
                     startTime: manualForm.startTime,
                     duration: parseInt(manualForm.duration),
-                    courts: [selectedCourt],
+                    courts: selectedCourts,
                     userName: manualForm.name,
                     userPhone: 'N/A', // No phone in manual form
                     userId: 'admin-manual',
                     status: 'confirmed'
                 });
-                alert('Booking successfully added!');
             }
 
             setShowManualModal(false);
@@ -414,7 +418,7 @@ const AdminPanel = () => {
                 date: new Date().toISOString().split('T')[0],
                 startTime: '08:00',
                 duration: '60',
-                court: '1',
+                courts: [1],
                 name: ''
             });
 
@@ -578,16 +582,36 @@ const AdminPanel = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Court</label>
-                                        <select
-                                            className="glass-input"
-                                            value={manualForm.court}
-                                            onChange={e => setManualForm({ ...manualForm, court: e.target.value })}
-                                        >
-                                            <option value="1" style={{ color: 'black' }}>Court 1</option>
-                                            <option value="2" style={{ color: 'black' }}>Court 2</option>
-                                            <option value="3" style={{ color: 'black' }}>Court 3</option>
-                                        </select>
+                                        <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Courts</label>
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            {[1, 2, 3].map(c => (
+                                                <button
+                                                    key={c}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const current = manualForm.courts || [];
+                                                        if (current.includes(c)) {
+                                                            setManualForm({ ...manualForm, courts: current.filter(item => item !== c) });
+                                                        } else {
+                                                            setManualForm({ ...manualForm, courts: [...current, c] });
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        flex: 1,
+                                                        padding: '0.6rem',
+                                                        borderRadius: '8px',
+                                                        border: (manualForm.courts || []).includes(c) ? '2px solid var(--brand-teal)' : '1px solid rgba(255,255,255,0.1)',
+                                                        background: (manualForm.courts || []).includes(c) ? 'rgba(37, 182, 161, 0.2)' : 'transparent',
+                                                        color: (manualForm.courts || []).includes(c) ? 'var(--brand-teal)' : '#fff',
+                                                        cursor: 'pointer',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '0.8rem'
+                                                    }}
+                                                >
+                                                    Court {c}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -917,6 +941,7 @@ const AdminPanel = () => {
 
                                                                 let statusText = booking.status === 'permanent' ? 'WEEKLY' : booking.status.toUpperCase();
                                                                 if (booking.status === 'permanent-held') statusText = 'WEEKLY (HELD)';
+                                                                if (booking.status === 'held' && booking.isSessionHold) statusText = 'SESSION HOLD';
 
                                                                 return (
                                                                     <motion.div
