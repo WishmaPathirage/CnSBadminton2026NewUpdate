@@ -147,22 +147,11 @@ const Footer = () => {
                 background: 'rgba(0,0,0,0.3)' 
             }}>
                 <div className="container" style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '1rem'
+                    textAlign: 'center'
                 }}>
                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
-                        All Rights Reserved C & S Badminton Complex (PVT) Ltd 2026
+                        &copy; C & S Badminton Complex (PVT) Ltd - 2026
                     </p>
-                    <div style={{ display: 'flex', gap: '1.5rem', color: 'rgba(255,255,255,0.2)', fontSize: '0.8rem' }}>
-                        <span>Privacy Policy</span>
-                        <span>Terms of Service</span>
-                        <div style={{ color: 'rgba(255,255,255,0.4)' }}>
-                            Design & Developed By <span style={{ color: 'var(--brand-teal)', fontWeight: 'bold' }}>Antigravity</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </footer>
