@@ -23,16 +23,19 @@ const Footer = () => {
             background: 'rgba(255, 255, 255, 0.02)', 
             backdropFilter: 'blur(20px)',
             borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-            padding: '80px 0 0',
+            padding: 'var(--footer-padding-top, 80px) 0 0',
             marginTop: '4rem'
         }}>
             <div className="container">
-                <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-                    gap: '3rem',
-                    marginBottom: '60px'
-                }}>
+                <div 
+                    className="footer-grid"
+                    style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(var(--footer-grid-min, 250px), 1fr))', 
+                        gap: 'var(--footer-grid-gap, 3rem)',
+                        marginBottom: '60px'
+                    }}
+                >
                     
                     {/* Brand Section */}
                     <div>
@@ -161,6 +164,24 @@ const Footer = () => {
                     </p>
                 </div>
             </div>
+
+            <style>{`
+                :root {
+                    --footer-padding-top: 80px;
+                    --footer-grid-min: 250px;
+                    --footer-grid-gap: 3rem;
+                }
+                @media (max-width: 768px) {
+                    :root {
+                        --footer-padding-top: 40px;
+                        --footer-grid-min: 200px;
+                        --footer-grid-gap: 1.5rem;
+                    }
+                    .footer-grid {
+                        gap: 1.5rem !important;
+                    }
+                }
+            `}</style>
         </footer>
     );
 };

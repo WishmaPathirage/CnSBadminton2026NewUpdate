@@ -1,6 +1,6 @@
 import React from 'react';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import NotificationBar from './components/NotificationBar';
 import Hero from './components/Hero';
@@ -22,16 +22,6 @@ import DevelopmentProgress from './components/DevelopmentProgress';
 
 
 const LandingPage = () => {
-  const [showGreeting, setShowGreeting] = React.useState(() => {
-    return !localStorage.getItem('greeting_shown_2026');
-  });
-
-  const handleCloseGreeting = () => {
-    localStorage.setItem('greeting_shown_2026', 'true');
-    setShowGreeting(false);
-  };
-
-
   const location = useLocation();
 
   React.useEffect(() => {
@@ -51,105 +41,7 @@ const LandingPage = () => {
 
   return (
     <div className="app-container" style={{ position: 'relative' }}>
-      {/* Happy New Year Overlay */}
-      <AnimatePresence>
-        {showGreeting && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0,0,0,0.85)',
-              zIndex: 9999,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backdropFilter: 'blur(10px)'
-            }}
-            onClick={handleCloseGreeting}
-          >
-            <motion.div
-              initial={{ scale: 0.8, y: 50 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.8, y: 50 }}
-              onClick={e => e.stopPropagation()}
-              style={{
-                background: 'linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: '30px',
-                padding: '3rem',
-                maxWidth: '500px',
-                textAlign: 'center',
-                boxShadow: '0 0 50px rgba(120, 220, 202, 0.3)',
-                position: 'relative'
-              }}
-            >
-              <button
-                onClick={handleCloseGreeting}
-                style={{
-                  position: 'absolute',
-                  top: '20px',
-                  right: '20px',
-                  background: 'none',
-                  border: 'none',
-                  color: 'white',
-                  fontSize: '1.5rem',
-                  cursor: 'pointer',
-                  opacity: 0.7
-                }}
-              >
-                ×
-              </button>
-
-              <motion.img
-                src="/logo.jpg"
-                alt="CS Badminton Logo"
-                initial={{ rotate: -10, scale: 0.8 }}
-                animate={{ rotate: 0, scale: 1 }}
-                transition={{ type: "spring", bounce: 0.5 }}
-                style={{
-                  width: '120px',
-                  height: '120px',
-                  borderRadius: '50%',
-                  border: '4px solid var(--brand-teal)',
-                  marginBottom: '1.5rem',
-                  boxShadow: '0 0 30px rgba(120, 220, 202, 0.4)'
-                }}
-              />
-
-              <h2 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '1.5rem' }}>Welcome to 2026!</h2>
-              <p style={{ fontSize: '1.2rem', color: 'var(--text-gray)', marginBottom: '1rem' }}>
-                We've upgraded our systems to provide you with the best badminton experience in Sri Lanka.
-              </p>
-              <p style={{ fontSize: '1.1rem', color: 'var(--brand-teal)', fontWeight: 'bold' }}>
-                New Feature: Personalized User Dashboard is now live!
-              </p>
-              <p style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)' }}>
-                - C & S Badminton Complex Team
-              </p>
-
-              <button
-                onClick={handleCloseGreeting}
-                className="btn-gradient"
-                style={{
-                  marginTop: '2rem',
-                  padding: '0.8rem 2rem',
-                  borderRadius: '50px',
-                  fontSize: '1rem',
-                  fontWeight: 'bold'
-                }}
-              >
-                Let's Play!
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <NotificationBar />
 
       <div id="home"><Hero /></div>
       <div id="booking"><BookingForm /></div>
@@ -169,7 +61,6 @@ function App() {
     <Router>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Navbar />
-        <NotificationBar />
         <main style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<LandingPage />} />

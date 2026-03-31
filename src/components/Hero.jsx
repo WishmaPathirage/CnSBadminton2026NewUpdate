@@ -9,7 +9,7 @@ const Hero = () => {
             display: 'flex',
             alignItems: 'center',
             overflow: 'hidden',
-            marginTop: '-115px' // Pull up behind navbar and notification bar
+            marginTop: 'var(--hero-margin-top, -115px)' 
         }}>
             {/* Background with overlay */}
             <div style={{
@@ -33,24 +33,24 @@ const Hero = () => {
                 zIndex: 0
             }} />
 
-            <div className="container" style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+            <div className="container" style={{ position: 'relative', zIndex: 1, width: '100%', padding: '0 clamp(1rem, 5vw, 2rem)' }}>
                 <motion.div
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
                 >
                     <h2 className="text-gradient" style={{
-                        fontSize: 'clamp(0.9rem, 3vw, 1.2rem)',
+                        fontSize: 'clamp(0.8rem, 3vw, 1.2rem)',
                         fontWeight: '700',
                         textTransform: 'uppercase',
                         letterSpacing: '2px',
                         marginBottom: '1rem',
-                        display: 'inline-block' // needed for gradient text sometimes
+                        display: 'inline-block' 
                     }}>
                         Welcome to C & S Badminton Complex (PVT) Ltd, Galle
                     </h2>
                     <h1 style={{
-                        fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+                        fontSize: 'clamp(2.5rem, 10vw, 5rem)',
                         marginBottom: '1.5rem',
                         lineHeight: 1.1,
                         color: 'white'
@@ -58,21 +58,19 @@ const Hero = () => {
                         ELEVATE YOUR <br />
                         <span style={{
                             color: 'transparent',
-                            WebkitTextStroke: '2px white',
+                            WebkitTextStroke: 'clamp(1px, 0.5vw, 2px) white',
                             fontStyle: 'italic'
                         }}>GAME</span>
                     </h1>
                     <p style={{
                         maxWidth: '600px',
-                        fontSize: '1.1rem',
+                        fontSize: 'clamp(0.9rem, 3vw, 1.1rem)',
                         color: 'var(--text-gray)',
                         marginBottom: '2rem'
                     }}>
                         Experience Galle's premium 24/7 indoor badminton facility.
                         Professional courts, expert services, and a community of champions.
                     </p>
-
-
 
                     <motion.button
                         onClick={() => document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' })}
@@ -94,6 +92,17 @@ const Hero = () => {
                     </motion.button>
                 </motion.div>
             </div>
+
+            <style>{`
+                :root {
+                    --hero-margin-top: -115px;
+                }
+                @media (max-width: 768px) {
+                    :root {
+                        --hero-margin-top: -80px;
+                    }
+                }
+            `}</style>
 
             {/* Scroll indicator */}
             <motion.div

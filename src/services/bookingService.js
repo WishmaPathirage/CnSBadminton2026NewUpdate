@@ -132,38 +132,40 @@ export const getAvailability = async (date) => {
         const querySnapshot = await getDocs(q);
 
         const bookedSlots = querySnapshot.docs
-            .map(doc => doc.data())
+            .map(doc => ({ id: doc.id, ...doc.data() }))
             .filter(b => {
                 if (b.status === 'rejected') return false;
                 // If held, check if it's expired
-                if (b.status === 'held') {
-                    const expiry = b.holdExpiry ? new Date(b.holdExpiry) : null;
-                    if (expiry && expiry < new Date()) return false; // Expired
+                if (b.status === 'held' && b.holdExpiry) {
+                    const expiry = new Date(b.holdExpiry);
+                    if (!isNaN(expiry.getTime()) && expiry < new Date()) return false; // Expired
                 }
                 return true;
             })
             .map(b => ({
+                id: b.id,
                 startTime: b.startTime,
-                duration: b.duration,
+                duration: Number(b.duration),
                 courts: b.courts,
                 type: b.status === 'held' ? 'held' : 'regular'
             }));
 
         // 2. Fetch Permanent Bookings for this Day of Week
-        const dayOfWeek = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        const d = new Date(date + 'T12:00:00');
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayOfWeek = dayNames[d.getDay()];
         const permSnapshot = await getDocs(collection(db, 'permanent_bookings'));
 
         const permSlots = permSnapshot.docs
             .map(doc => doc.data())
             .filter(data => (data.dayOfWeek || '').toLowerCase() === dayOfWeek)
-            .map(data => {
                 return {
+                    id: data.id,
                     startTime: data.startTime,
                     duration: Number(data.duration),
                     courts: (data.courts || []).map(Number),
                     type: 'permanent' // Special flag for UI
                 };
-            });
 
         // Merge both
         return [...bookedSlots, ...permSlots];
@@ -172,6 +174,68 @@ export const getAvailability = async (date) => {
         console.error("Error checking availability:", error);
         return [];
     }
+};
+
+export const subscribeToAvailability = (date, callback) => {
+    // 1. Subscribe to Regular Bookings for this date
+    const qReg = query(collection(db, BOOKINGS_COL), where("date", "==", date));
+    
+    // 2. Subscribe to All Permanent Bookings
+    const qPerm = collection(db, 'permanent_bookings');
+
+    let regularBookings = [];
+    let permanentBookings = [];
+
+    const update = () => {
+        const d = new Date(date + 'T12:00:00');
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayOfWeek = dayNames[d.getDay()];
+        
+        const bookedSlots = regularBookings
+            .filter(b => {
+                if (b.status === 'rejected') return false;
+                // If held, only ignore if explicitly expired
+                if (b.status === 'held' && b.holdExpiry) {
+                    const expiry = new Date(b.holdExpiry);
+                    if (!isNaN(expiry.getTime()) && expiry < new Date()) return false;
+                }
+                return true;
+            })
+            .map(b => ({
+                id: b.id,
+                startTime: b.startTime,
+                duration: Number(b.duration),
+                courts: b.courts,
+                type: b.status === 'held' ? 'held' : 'regular'
+            }));
+
+        const permSlots = permanentBookings
+            .filter(data => (data.dayOfWeek || '').toLowerCase() === dayOfWeek)
+            .map(data => ({
+                id: data.id,
+                startTime: data.startTime,
+                duration: Number(data.duration),
+                courts: (data.courts || []).map(Number),
+                type: 'permanent'
+            }));
+
+        callback([...bookedSlots, ...permSlots]);
+    };
+
+    const unsubReg = onSnapshot(qReg, (snap) => {
+        regularBookings = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        update();
+    });
+
+    const unsubPerm = onSnapshot(qPerm, (snap) => {
+        permanentBookings = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        update();
+    });
+
+    return () => {
+        unsubReg();
+        unsubPerm();
+    };
 };
 
 // Permanent Bookings (Admin Only)

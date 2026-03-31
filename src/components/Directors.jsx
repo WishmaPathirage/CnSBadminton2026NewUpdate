@@ -10,17 +10,24 @@ const Directors = () => {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    style={{ textAlign: 'center', marginBottom: '4rem' }}
+                    style={{ textAlign: 'center', marginBottom: 'clamp(2rem, 8vw, 4rem)' }}
                 >
-                    <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: 'white' }}>
+                    <h2 style={{ fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', marginBottom: '1rem', color: 'white' }}>
                         Message from the <span className="text-gradient">Directors</span>
                     </h2>
-                    <p style={{ color: 'var(--text-gray)', maxWidth: '600px', margin: '0 auto' }}>
+                    <p style={{ color: 'var(--text-gray)', maxWidth: '600px', margin: '0 auto', fontSize: 'clamp(0.9rem, 2.5vw, 1rem)' }}>
                         Driving excellence in badminton through visionary leadership and passion.
                     </p>
                 </motion.div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '3rem' }}>
+                <div 
+                    className="directors-grid"
+                    style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(var(--dir-grid-min, 320px), 1fr))', 
+                        gap: 'var(--dir-grid-gap, 3rem)' 
+                    }}
+                >
 
                     {/* Director 1 */}
                     <motion.div
@@ -88,6 +95,18 @@ const Directors = () => {
 
                 </div>
             </div>
+
+            <style>{`
+                @media (max-width: 768px) {
+                    :root {
+                        --dir-grid-min: 280px;
+                        --dir-grid-gap: 1.5rem;
+                    }
+                    .directors-grid {
+                        gap: 1.5rem !important;
+                    }
+                }
+            `}</style>
         </section>
     );
 };

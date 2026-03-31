@@ -33,7 +33,9 @@ const AdminPanel = () => {
         startTime: '08:00',
         duration: '60',
         court: '1',
-        name: ''
+        name: '',
+        userPhone: '',
+        userEmail: ''
     });
     // Edit Booking State
     const [editModal, setEditModal] = useState({ isOpen: false, booking: null });
@@ -110,48 +112,38 @@ const AdminPanel = () => {
     }, [currentUser, loading, navigate]);
 
     const handleStatusChange = async (id, newStatus) => {
-        // If it's a permanent booking being held from the daily view
-        if (id.toString().startsWith('perm-')) {
+        let booking = bookings.find(b => b.id === id);
+
+        // If it's a permanent booking, find it in the permanentBookings array 
+        // to get its email/phone (even if we are just "confirming" a template)
+        if (!booking && id.toString().startsWith('perm-')) {
             const realId = id.split('-')[1];
-            try {
-                await updatePermanentBooking(realId, { isHeld: newStatus === 'held' });
-                alert(`Permanent booking ${newStatus === 'held' ? 'held' : 'released'}`);
-                return;
-            } catch (err) {
-                alert("Error updating permanent booking: " + err.message);
-                return;
+            const permBase = permanentBookings.find(pb => pb.id === realId);
+            if (permBase) {
+                booking = {
+                    ...permBase,
+                    date: selectedAdminDate, 
+                    id: id // Keep the virtual ID
+                };
             }
         }
 
-        const booking = bookings.find(b => b.id === id);
-
-        // 1. WhatsApp Logic (Trigger immediately to avoid Popup Blockers)
+        // 1. Notification Logic (WhatsApp + Email) - Shared for both types
         if (newStatus === 'confirmed' && booking) {
+            // WhatsApp
             const message = `Booking Confirmation - C & S Badminton Complex (PVT) Ltd\n\nPlayer Name: ${booking.userName}\nDate: ${booking.date}\nTime Slot: ${booking.startTime}\nDuration: ${booking.duration} mins\nCourt No: ${booking.courts.join(', ')}\nOther: Ref #${booking.id}\n\nPlease arrive and depart on time. Smoking is prohibited. For cancellations, inform us at least 3 hours in advance. Your e-invoice will follow shortly.\n\nThank you for your cooperation!\n\nBest Regards,\nC & S Badminton Complex (PVT) Ltd\nPhone: +94 777 98 32 64\nEmail: cnsb233@gmail.com\nWebsite: www.cnsbadminton.lk`;
 
             let phone = booking.userPhone || '';
             phone = phone.replace(/\D/g, '');
             if (phone.startsWith('0')) phone = '94' + phone.substring(1);
 
-            // Open WhatsApp immediately
-            const waWindow = window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
-            if (!waWindow) alert("⚠️ WhatsApp Popup was blocked! Please allow popups for this site.");
-        }
+            if (phone && phone !== 'N/A') {
+                const waWindow = window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+                if (!waWindow) alert("⚠️ WhatsApp Popup was blocked! Please allow popups for this site.");
+            }
 
-        // 2. Database Update
-        try {
-            await updateBookingStatus(id, newStatus);
-        } catch (err) {
-            alert("Error updating database: " + err.message);
-            return; // Stop if DB fails
-        }
-
-        // 3. Email Logic (Background)
-        if (newStatus === 'confirmed' && booking) {
-
+            // Email (Background)
             if (booking.userEmail) {
-                // Corrected keys based on your screenshot
-                // Calculate End Time
                 const [hours, minutes] = booking.startTime.split(':').map(Number);
                 const totalMinutes = hours * 60 + minutes + parseInt(booking.duration);
                 const endHour = Math.floor(totalMinutes / 60);
@@ -163,16 +155,8 @@ const AdminPanel = () => {
                     user_name: booking.userName,
                     booking_date: booking.date,
                     booking_time: booking.startTime,
-
-                    // Sending multiple variations 
                     end_time: endTime,
-                    endTime: endTime,
-                    EndTime: endTime,
-
-                    duration: booking.duration,
-                    Duration: booking.duration,
                     duration_mins: booking.duration,
-
                     courts: booking.courts.join(', '),
                     user_phone: booking.userPhone || 'N/A',
                     reply_to: 'cnsb233@gmail.com'
@@ -182,20 +166,28 @@ const AdminPanel = () => {
                 const TEMPLATE_ID = 'template_x9qs76e';
                 const PUBLIC_KEY = 'cmyBcHcHxEP2ggwV3';
 
-                emailjs.send(
-                    SERVICE_ID,
-                    TEMPLATE_ID,
-                    emailParams,
-                    PUBLIC_KEY
-                ).then((response) => {
-                    console.log('SUCCESS!', response.status, response.text);
-                    alert(`✅ Email Sent!\n\nSent Data:\nEnd Time: ${endTime}\nDuration: ${booking.duration}\n\nPlease check if these are filled in the email now.`);
-                }).catch((err) => {
-                    console.error('FAILED...', err);
-                    alert(`❌ Email Failed!\n\nUsed Service: ${SERVICE_ID}\nUsed Template: ${TEMPLATE_ID}\n\nError: ${JSON.stringify(err)}`);
-                });
-            } else {
-                alert(`⚠️ Email Skipped.\n\nReason: No email address found for this user.\n\nBooking ID: ${booking.id}\nUser Name: ${booking.userName}\nStatus: Confirmed`);
+                emailjs.send(SERVICE_ID, TEMPLATE_ID, emailParams, PUBLIC_KEY)
+                    .then(() => console.log('SUCCESS: Confirmation Email Sent'))
+                    .catch((err) => console.error('FAILED: Confirmation Email', err));
+            }
+        }
+
+        // 2. Database Update Logic
+        if (id.toString().startsWith('perm-')) {
+            const realId = id.split('-')[1];
+            try {
+                await updatePermanentBooking(realId, { isHeld: newStatus === 'held' });
+                alert(`Permanent template updated! (${newStatus === 'held' ? 'Held' : 'Released'})`);
+            } catch (err) {
+                alert("Error updating permanent booking: " + err.message);
+            }
+        } else {
+            try {
+                await updateBookingStatus(id, newStatus);
+                // If confirming, you might want to show a success alert too
+                if (newStatus === 'confirmed') alert('Booking confirmed and user notified!');
+            } catch (err) {
+                alert("Error updating database: " + err.message);
             }
         }
     };
@@ -267,10 +259,10 @@ const AdminPanel = () => {
                 await updateDoc(permRef, {
                     userName: editModal.booking.userName,
                     userPhone: editModal.booking.userPhone,
+                    userEmail: editModal.booking.userEmail || '',
                     startTime: editModal.booking.startTime,
                     duration: parseInt(editModal.booking.duration),
                     courts: [selectedCourt],
-                    // don't change dayOfWeek from edit modal currently
                 });
                 alert('Permanent template updated!');
 
@@ -294,6 +286,7 @@ const AdminPanel = () => {
                 await updateBooking(editModal.booking.id, {
                     userName: editModal.booking.userName,
                     userPhone: editModal.booking.userPhone,
+                    userEmail: editModal.booking.userEmail || '',
                     startTime: editModal.booking.startTime,
                     duration: parseInt(editModal.booking.duration),
                     courts: [selectedCourt],
@@ -341,7 +334,9 @@ const AdminPanel = () => {
 
             if (bookingType === 'permanent') {
                 // Permanent Booking Logic
-                const dayOfWeek = new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+                const d = new Date(selectedDate + 'T12:00:00');
+                const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                const dayOfWeek = dayNames[d.getDay()];
 
                 // Check conflicts with other permanent bookings
                 const permConflict = permanentBookings.some(b => {
@@ -364,7 +359,8 @@ const AdminPanel = () => {
                     duration: parseInt(manualForm.duration),
                     courts: selectedCourts,
                     userName: manualForm.name,
-                    userPhone: 'N/A', // No phone in manual form
+                    userPhone: manualForm.userPhone || 'N/A',
+                    userEmail: manualForm.userEmail || ''
                 });
 
             } else {
@@ -406,7 +402,8 @@ const AdminPanel = () => {
                     duration: parseInt(manualForm.duration),
                     courts: selectedCourts,
                     userName: manualForm.name,
-                    userPhone: 'N/A', // No phone in manual form
+                    userPhone: manualForm.userPhone || 'N/A',
+                    userEmail: manualForm.userEmail || '',
                     userId: 'admin-manual',
                     status: 'confirmed'
                 });
@@ -419,7 +416,9 @@ const AdminPanel = () => {
                 startTime: '08:00',
                 duration: '60',
                 courts: [1],
-                name: ''
+                name: '',
+                userPhone: '',
+                userEmail: ''
             });
 
         } catch (err) {
@@ -482,7 +481,61 @@ const AdminPanel = () => {
     };
 
     return (
-        <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', paddingTop: '100px', position: 'relative' }}>
+        <div style={{ 
+            padding: 'var(--admin-padding, 2rem)', 
+            maxWidth: '1200px', 
+            margin: '0 auto', 
+            paddingTop: 'clamp(80px, 12vw, 100px)', 
+            position: 'relative' 
+        }}>
+            <style>{`
+                :root {
+                    --admin-padding: clamp(1rem, 3vw, 2rem);
+                    --admin-header-size: clamp(1.5rem, 5vw, 2.2rem);
+                    --admin-panel-padding: clamp(1rem, 4vw, 2.5rem);
+                }
+                
+                @media (max-width: 768px) {
+                    .admin-toolbar {
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                    }
+                    .admin-toolbar-actions {
+                        width: 100% !important;
+                        display: grid !important;
+                        grid-template-columns: 1fr 1fr !important;
+                        gap: 0.8rem !important;
+                    }
+                    .admin-toolbar-actions button {
+                        width: 100% !important;
+                        justify-content: center !important;
+                    }
+                    .admin-toolbar-system {
+                        width: 100% !important;
+                        justify-content: space-between !important;
+                    }
+                    .day-header {
+                        flex-direction: column !important;
+                        align-items: flex-start !important;
+                        gap: 1rem !important;
+                    }
+                }
+                
+                @media (max-width: 480px) {
+                    .admin-toolbar-actions {
+                        grid-template-columns: 1fr !important;
+                    }
+                    .admin-toolbar-system {
+                        display: grid !important;
+                        grid-template-columns: auto 1fr 1fr !important;
+                        gap: 0.5rem !important;
+                    }
+                    .admin-toolbar-system button {
+                        width: 100% !important;
+                        justify-content: center !important;
+                    }
+                }
+            `}</style>
             {/* ... Modal ... */}
             <AnimatePresence>
                 {showManualModal && (
@@ -627,6 +680,29 @@ const AdminPanel = () => {
                                     />
                                 </div>
 
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Phone</label>
+                                        <input
+                                            type="text"
+                                            className="glass-input"
+                                            placeholder="+94..."
+                                            value={manualForm.userPhone}
+                                            onChange={e => setManualForm({ ...manualForm, userPhone: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', color: '#888', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Email</label>
+                                        <input
+                                            type="email"
+                                            className="glass-input"
+                                            placeholder="user@example.com"
+                                            value={manualForm.userEmail}
+                                            onChange={e => setManualForm({ ...manualForm, userEmail: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
 
 
                                 <button
@@ -645,29 +721,32 @@ const AdminPanel = () => {
 
             {/* Dashboard Header & Toolbar */}
             <div style={{ marginBottom: '2.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h1 style={{ color: 'var(--primary-green)', margin: 0, fontSize: '2.2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h1 style={{ color: 'var(--primary-green)', margin: 0, fontSize: 'var(--admin-header-size)' }}>
                         Admin Dashboard
-                        <span style={{ fontSize: '0.9rem', opacity: 0.5, color: '#aaa', marginLeft: '1rem', fontWeight: 'normal' }}>v1.34 (UI Polish)</span>
+                        <span style={{ fontSize: '0.8rem', opacity: 0.5, color: '#aaa', marginLeft: '0.8rem', fontWeight: 'normal', display: 'inline-block' }}>v1.34</span>
                     </h1>
                 </div>
 
                 {/* Glass Toolbar */}
-                <div style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '1rem',
-                    alignItems: 'center',
-                    background: 'rgba(255,255,255,0.03)',
-                    padding: '1rem',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    backdropFilter: 'blur(10px)'
-                }}>
+                <div 
+                    className="admin-toolbar"
+                    style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '1rem',
+                        alignItems: 'center',
+                        background: 'rgba(255,255,255,0.03)',
+                        padding: '1rem',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        backdropFilter: 'blur(10px)'
+                    }}
+                >
 
 
                     {/* Group 2: Actions */}
-                    <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+                    <div className="admin-toolbar-actions" style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
                         <button
                             onClick={handleExportExcel}
                             style={{
@@ -712,10 +791,10 @@ const AdminPanel = () => {
                     </div>
 
                     {/* Spacer to push Group 3 to right */}
-                    <div style={{ flex: 1 }}></div>
+                    <div style={{ flex: 1 }} className="toolbar-spacer"></div>
 
                     {/* Group 3: System */}
-                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                    <div className="admin-toolbar-system" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
 
                         <button
                             onClick={() => {
@@ -789,7 +868,9 @@ const AdminPanel = () => {
                             const selectedDateRegular = bookings.filter(b => b.date === selectedAdminDate);
 
                             // 2. Get Permanent Bookings for Selected Date's Day of Week
-                            const selectedDayOfWeek = new Date(selectedAdminDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+                            const d = new Date(selectedAdminDate + 'T12:00:00');
+                            const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                            const selectedDayOfWeek = dayNames[d.getDay()];
                             const selectedDatePermanent = permanentBookings
                                 .filter(b => (b.dayOfWeek || '').toLowerCase() === selectedDayOfWeek.toLowerCase())
                                 .map(b => ({
@@ -817,10 +898,10 @@ const AdminPanel = () => {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="glass-panel"
-                                    style={{ padding: '2.5rem', marginBottom: '2rem' }}
+                                    style={{ padding: 'var(--admin-panel-padding)', marginBottom: '2rem' }}
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                                    <div className="day-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 3vw, 1.5rem)', flexWrap: 'wrap' }}>
                                             <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px' }}>
                                                 <div style={{
                                                     display: 'flex',
@@ -859,7 +940,7 @@ const AdminPanel = () => {
                                                     }}
                                                 />
                                             </div>
-                                            <div style={{ color: 'var(--text-gray)', fontSize: '1.1rem' }}>
+                                            <div style={{ color: 'var(--text-gray)', fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
                                                 {mergedDayBookings.length} Bookings ({selectedDateRegular.length} Regular, {selectedDatePermanent.length} Recurring)
                                             </div>
                                         </div>
@@ -1016,7 +1097,7 @@ const AdminPanel = () => {
                                                                         </div>
 
                                                                         {/* Actions */}
-                                                                        <div style={{ display: 'flex', gap: '0.8rem', paddingTop: '0.5rem' }}>
+                                                                        <div className="action-buttons" style={{ display: 'flex', gap: '0.6rem', paddingTop: '0.5rem', flexWrap: 'wrap' }}>
                                                                             {booking.status === 'pending' && (
                                                                                 <>
                                                                                     <button
@@ -1220,6 +1301,15 @@ const AdminPanel = () => {
                                         type="text"
                                         value={editModal.booking.userPhone || ''}
                                         onChange={(e) => setEditModal(prev => ({ ...prev, booking: { ...prev.booking, userPhone: e.target.value } }))}
+                                        style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Email Address</label>
+                                    <input
+                                        type="email"
+                                        value={editModal.booking.userEmail || ''}
+                                        onChange={(e) => setEditModal(prev => ({ ...prev, booking: { ...prev.booking, userEmail: e.target.value } }))}
                                         style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
                                     />
                                 </div>
