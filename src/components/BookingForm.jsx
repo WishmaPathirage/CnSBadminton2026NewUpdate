@@ -652,6 +652,7 @@ const BookingForm = () => {
                                                     let isOccupied = false;
                                                     let isPermanent = false;
                                                     let isHeld = false;
+                                                    let isSessionHold = false;
 
                                                     slots.forEach(booking => {
                                                         if (!booking.courts.some(c => Number(c) === Number(courtId))) return;
@@ -661,7 +662,10 @@ const BookingForm = () => {
                                                         if (Math.max(slotStart, bookingStart) < Math.min(slotEnd, bookingEnd)) {
                                                             isOccupied = true;
                                                             if (booking.type === 'permanent') isPermanent = true;
-                                                            if (booking.type === 'held') isHeld = true;
+                                                            if (booking.type === 'held') {
+                                                                isHeld = true;
+                                                                if (booking.isSessionHold) isSessionHold = true;
+                                                            }
                                                         }
                                                     });
 
@@ -718,10 +722,18 @@ const BookingForm = () => {
 
                                                         // Yellow Override for Held (Admin manual hold)
                                                         if (isHeld) {
-                                                            label = 'Held';
-                                                            bgColor = 'rgba(251, 202, 63, 0.15)';
-                                                            borderColor = 'rgba(251, 202, 63, 0.4)';
-                                                            textColor = '#FBCA3F';
+                                                            if (isSessionHold) {
+                                                                // Session hold by another user -> Show as Booked
+                                                                label = 'Booked';
+                                                                bgColor = 'rgba(231, 76, 60, 0.15)';
+                                                                borderColor = 'rgba(231, 76, 60, 0.3)';
+                                                                textColor = '#e74c3c';
+                                                            } else {
+                                                                label = 'Held';
+                                                                bgColor = 'rgba(251, 202, 63, 0.15)';
+                                                                borderColor = 'rgba(251, 202, 63, 0.4)';
+                                                                textColor = '#FBCA3F';
+                                                            }
                                                         }
 
                                                         // Orange Override for Tournament

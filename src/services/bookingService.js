@@ -147,7 +147,8 @@ export const getAvailability = async (date) => {
                 startTime: b.startTime,
                 duration: Number(b.duration),
                 courts: b.courts,
-                type: b.status === 'held' ? 'held' : 'regular'
+                type: b.status === 'held' ? 'held' : 'regular',
+                isSessionHold: !!b.isSessionHold
             }));
 
         // 2. Fetch Permanent Bookings for this Day of Week
@@ -206,7 +207,8 @@ export const subscribeToAvailability = (date, callback) => {
                 startTime: b.startTime,
                 duration: Number(b.duration),
                 courts: b.courts,
-                type: b.status === 'held' ? 'held' : 'regular'
+                type: b.status === 'held' ? 'held' : 'regular',
+                isSessionHold: !!b.isSessionHold
             }));
 
         const permSlots = permanentBookings
