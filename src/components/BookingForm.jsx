@@ -241,7 +241,7 @@ const BookingForm = () => {
     };
 
     const handleNextStep = async () => {
-        if (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c))) return;
+        if (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId))) return;
 
         setStatus('submitting');
         try {
@@ -815,7 +815,7 @@ const BookingForm = () => {
                             </div>
 
                             {/* visual conflict warning */}
-                            {selectedTime && selectedCourts.some(c => !isSlotAvailable(selectedTime, c)) && (
+                            {selectedTime && selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId)) && (
                                 <motion.div
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -836,7 +836,7 @@ const BookingForm = () => {
 
                             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
                                 <button
-                                    disabled={selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c)) || status === 'submitting'}
+                                    disabled={selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId)) || status === 'submitting'}
                                     onClick={handleNextStep}
                                     className="btn-gradient"
                                     style={{
@@ -844,10 +844,10 @@ const BookingForm = () => {
                                         borderRadius: '50px',
                                         fontWeight: 'bold',
                                         fontSize: '1rem',
-                                        cursor: (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c))) ? 'not-allowed' : 'pointer',
-                                        opacity: (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c))) ? 0.5 : 1,
+                                        cursor: (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId))) ? 'not-allowed' : 'pointer',
+                                        opacity: (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId))) ? 0.5 : 1,
                                         boxShadow: selectedCourts.length === 0 ? 'none' : '0 10px 30px rgba(120, 220, 202, 0.3)',
-                                        filter: selectedCourts.some(c => !isSlotAvailable(selectedTime, c)) ? 'grayscale(1)' : 'none'
+                                        filter: selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId)) ? 'grayscale(1)' : 'none'
                                     }}
                                 >
                                     Next Details →
