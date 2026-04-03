@@ -1285,132 +1285,138 @@ const AdminPanel = () => {
                             );
                         })()
                 ) : (
-                    /* UPCOMING LIST VIEW */
+                    /* UPCOMING LIST VIEW - PENDING ONLY */
                     <div className="glass-panel" style={{ padding: '2rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                             <h2 style={{ color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                                <Clock size={24} style={{ color: 'var(--brand-teal)' }} />
-                                Upcoming Bookings
+                                <ShieldAlert size={24} style={{ color: '#f1c40f' }} />
+                                Pending Requests
                             </h2>
                             <div style={{ color: '#888', fontSize: '0.9rem' }}>
-                                Showing all future regular bookings
+                                Action required for these upcoming slots
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
                             {(() => {
                                 const today = new Date().toISOString().split('T')[0];
-                                const upcomingBookings = bookings
-                                    .filter(b => b.date >= today && b.status !== 'rejected' && b.status !== 'cancelled')
+                                const pendingBookings = bookings
+                                    .filter(b => b.status === 'pending' && b.date >= today)
                                     .sort((a, b) => {
                                         if (a.date !== b.date) return a.date.localeCompare(b.date);
                                         return a.startTime.localeCompare(b.startTime);
                                     });
 
-                                if (upcomingBookings.length === 0) {
+                                if (pendingBookings.length === 0) {
                                     return (
                                         <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.2)' }}>
                                             <Calendar size={48} style={{ marginBottom: '1rem', opacity: 0.1 }} />
-                                            <h3>No upcoming bookings</h3>
+                                            <h3>No pending requests</h3>
                                         </div>
                                     );
                                 }
 
-                                return upcomingBookings.map(booking => {
-                                    let statusColor = '#3498db';
-                                    if (booking.status === 'confirmed') statusColor = '#2ecc71';
-                                    else if (booking.status === 'held') statusColor = '#FBCA3F';
-                                    else if (booking.status === 'pending') statusColor = '#f1c40f';
+                                // Group by date
+                                const groups = pendingBookings.reduce((acc, b) => {
+                                    if (!acc[b.date]) acc[b.date] = [];
+                                    acc[b.date].push(b);
+                                    return acc;
+                                }, {});
 
-                                    return (
-                                        <motion.div
-                                            key={booking.id}
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            style={{
-                                                background: 'rgba(255,255,255,0.02)',
-                                                border: '1px solid rgba(255,255,255,0.05)',
-                                                borderLeft: `4px solid ${statusColor}`,
-                                                borderRadius: '12px',
-                                                padding: '1.2rem',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                gap: '1.5rem',
-                                                flexWrap: 'wrap'
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 2, minWidth: '300px' }}>
-                                                {/* Date & Time */}
-                                                <div style={{ minWidth: '120px' }}>
-                                                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.1rem' }}>{booking.date}</div>
-                                                    <div style={{ color: 'var(--brand-teal)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                                        <Clock size={14} /> {booking.startTime}
+                                return Object.keys(groups).sort().map(date => (
+                                    <div key={date} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        <div style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '1rem', 
+                                            padding: '0.5rem 1rem', 
+                                            background: 'rgba(241, 196, 15, 0.1)', 
+                                            borderLeft: '4px solid #f1c40f',
+                                            borderRadius: '8px',
+                                            color: '#f1c40f',
+                                            fontWeight: 'bold',
+                                            fontSize: '1.1rem'
+                                        }}>
+                                            <Calendar size={18} />
+                                            {date}
+                                            <span style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 'normal' }}>
+                                                — {groups[date].length} request{groups[date].length > 1 ? 's' : ''}
+                                            </span>
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', paddingLeft: '1rem' }}>
+                                            {groups[date].map(booking => (
+                                                <motion.div
+                                                    key={booking.id}
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    style={{
+                                                        background: 'rgba(255,255,255,0.02)',
+                                                        border: '1px solid rgba(255,255,255,0.05)',
+                                                        borderRadius: '12px',
+                                                        padding: '1.2rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        gap: '1.5rem',
+                                                        flexWrap: 'wrap'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 2, minWidth: '300px' }}>
+                                                        {/* Time */}
+                                                        <div style={{ minWidth: '80px' }}>
+                                                            <div style={{ color: 'var(--brand-teal)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                <Clock size={14} /> {booking.startTime}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* User Info */}
+                                                        <div style={{ flex: 1 }}>
+                                                            <div style={{ color: 'white', fontWeight: 'bold' }}>{booking.userName}</div>
+                                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>{booking.userPhone}</div>
+                                                        </div>
+
+                                                        {/* Court Info */}
+                                                        <div style={{ minWidth: '100px' }}>
+                                                            <div style={{ color: '#aaa', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Courts</div>
+                                                            <div style={{ color: 'white', fontWeight: '500' }}>
+                                                                {booking.courts?.join(', ') || 'N/A'}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
 
-                                                {/* User Info */}
-                                                <div style={{ flex: 1 }}>
-                                                    <div style={{ color: 'white', fontWeight: 'bold' }}>{booking.userName}</div>
-                                                    <div style={{ color: '#888', fontSize: '0.8rem' }}>{booking.userPhone}</div>
-                                                </div>
-
-                                                {/* Court Info */}
-                                                <div style={{ minWidth: '100px' }}>
-                                                    <div style={{ color: '#aaa', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Courts</div>
-                                                    <div style={{ color: 'white', fontWeight: '500' }}>
-                                                        {booking.courts?.join(', ') || 'N/A'}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Status & Actions */}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                                                <span style={{ 
-                                                    fontSize: '0.75rem', 
-                                                    padding: '0.3rem 0.8rem', 
-                                                    borderRadius: '20px', 
-                                                    background: `${statusColor}22`, 
-                                                    color: statusColor, 
-                                                    fontWeight: 'bold', 
-                                                    textTransform: 'uppercase' 
-                                                }}>
-                                                    {booking.status.toUpperCase()}
-                                                </span>
-
-                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                    {booking.status === 'pending' && (
+                                                    {/* Actions */}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                                                         <button
                                                             onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                                                            style={{ padding: '0.5rem', background: '#2ecc7122', border: 'none', borderRadius: '8px', color: '#2ecc71', cursor: 'pointer' }}
-                                                            title="Confirm"
+                                                            style={{ padding: '0.6rem 1.2rem', background: '#2ecc7122', border: '1px solid #2ecc7144', borderRadius: '8px', color: '#2ecc71', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}
                                                         >
-                                                            <Play size={16} />
+                                                            <Play size={16} /> Confirm
                                                         </button>
-                                                    )}
-                                                    <button
-                                                        onClick={() => setEditModal({ isOpen: true, booking })}
-                                                        style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', color: '#3498db', cursor: 'pointer' }}
-                                                        title="Edit"
-                                                    >
-                                                        <Edit size={16} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(booking.id)}
-                                                        style={{ padding: '0.5rem', background: 'rgba(231,76,60,0.1)', border: 'none', borderRadius: '8px', color: '#e74c3c', cursor: 'pointer' }}
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    );
-                                });
+                                                        <button
+                                                            onClick={() => handleStatusChange(booking.id, 'rejected')}
+                                                            style={{ padding: '0.6rem', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.2)', borderRadius: '8px', color: '#e74c3c', cursor: 'pointer' }}
+                                                            title="Reject"
+                                                        >
+                                                            <X size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setEditModal({ isOpen: true, booking })}
+                                                            style={{ padding: '0.6rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#3498db', cursor: 'pointer' }}
+                                                            title="Edit"
+                                                        >
+                                                            <Edit size={16} />
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ));
                             })()}
                         </div>
                     </div>
-                )}
+                 )}
 
                         {bookings.length === 0 && (
                             <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)' }}>
