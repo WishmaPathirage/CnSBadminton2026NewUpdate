@@ -3,7 +3,7 @@ import { subscribeToBookings, updateBooking, updateBookingStatus, deleteBooking,
 import { db } from '../firebaseConfig';
 import { logout } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
-import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Calendar, Clock, LogOut, Download, Copy, Plus, X, UserX, ShieldAlert, CalendarX, Info, Home, Edit, Phone, Pause, Play } from 'lucide-react';
@@ -179,8 +179,14 @@ const AdminPanel = () => {
         if (id.toString().startsWith('perm-')) {
             const realId = id.split('-')[1];
             try {
-                await updatePermanentBooking(realId, { isHeld: newStatus === 'held' });
-                alert(`Permanent template updated! (${newStatus === 'held' ? 'Held' : 'Released'})`);
+                const permRef = doc(db, 'permanent_bookings', realId);
+                if (newStatus === 'held') {
+                    await updateDoc(permRef, { heldDates: arrayUnion(selectedAdminDate) });
+                    alert(`Held for ${selectedAdminDate} only!`);
+                } else {
+                    await updateDoc(permRef, { heldDates: arrayRemove(selectedAdminDate) });
+                    alert(`Released for ${selectedAdminDate} onwards!`);
+                }
             } catch (err) {
                 alert("Error updating permanent booking: " + err.message);
             }
@@ -876,13 +882,16 @@ const AdminPanel = () => {
                             const selectedDayOfWeek = dayNames[d.getDay()];
                             const selectedDatePermanent = permanentBookings
                                 .filter(b => (b.dayOfWeek || '').toLowerCase() === selectedDayOfWeek.toLowerCase())
-                                .map(b => ({
-                                    ...b,
-                                    date: selectedAdminDate,
-                                    status: b.isHeld ? 'permanent-held' : 'permanent', // Reflect hold status
-                                    userName: b.userName, 
-                                    id: `perm-${b.id}-${selectedAdminDate}` // Fake ID just for React key mapping
-                                }));
+                                .map(b => {
+                                    const isHeldForToday = (b.heldDates || []).includes(selectedAdminDate);
+                                    return {
+                                        ...b,
+                                        date: selectedAdminDate,
+                                        status: (b.isHeld || isHeldForToday) ? 'permanent-held' : 'permanent',
+                                        userName: b.userName, 
+                                        id: `perm-${b.id}-${selectedAdminDate}`
+                                    };
+                                });
 
                             // 3. Merge them
                             const mergedDayBookings = [...selectedDateRegular, ...selectedDatePermanent];
@@ -1121,7 +1130,7 @@ const AdminPanel = () => {
                                                                             )}
 
                                                                             {/* Hold / Unhold Button - Moved here for better visibility */}
-                                                                            {(booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'permanent' || booking.id.toString().includes('perm')) && (
+                                                                            {(booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'permanent') && (
                                                                                 <button
                                                                                     onClick={() => handleStatusChange(booking.id, 'held')}
                                                                                     title="Hold Booking"
@@ -1136,13 +1145,13 @@ const AdminPanel = () => {
                                                                                         width: '40px', height: '40px'
                                                                                     }}
                                                                                 >
-                                                                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                                                                                    <Pause size={16} />
                                                                                 </button>
                                                                             )}
-                                                                            {(['held', 'permanent-held'].includes(booking.status) || (booking.id.toString().includes('perm') && booking.status === 'permanent-held')) && (
+                                                                            {booking.status === 'permanent-held' && (
                                                                                 <button
                                                                                     onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                                                                                    title="Release Hold / Confirm"
+                                                                                    title="Release Hold"
                                                                                     style={{
                                                                                         padding: '0.6rem',
                                                                                         background: 'transparent',
