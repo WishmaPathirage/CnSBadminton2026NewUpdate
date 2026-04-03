@@ -1285,7 +1285,7 @@ const AdminPanel = () => {
                             );
                         })()
                 ) : (
-                    /* UPCOMING CARD VIEW - PENDING ONLY */
+                    /* UPCOMING CARD VIEW - DASHBOARD STYLE */
                     <div className="glass-panel" style={{ padding: '2rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                             <h2 style={{ color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
