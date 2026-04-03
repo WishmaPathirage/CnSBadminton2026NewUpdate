@@ -77,8 +77,10 @@ const AdminPanel = () => {
                     // Check for new pending bookings
                     const prevBookings = prevBookingsRef.current;
                     if (prevBookings.length > 0) { // Only check after initial load
+                        // Only check non-session-hold bookings for new pending alerts
                         const newPending = data.find(b =>
                             b.status === 'pending' &&
+                            !b.isSessionHold && 
                             !prevBookings.find(pb => pb.id === b.id)
                         );
 

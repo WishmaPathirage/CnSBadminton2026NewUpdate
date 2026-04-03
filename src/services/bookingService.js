@@ -134,9 +134,10 @@ export const getAvailability = async (date) => {
         const bookedSlots = querySnapshot.docs
             .map(doc => ({ id: doc.id, ...doc.data() }))
             .filter(b => {
-                if (b.status === 'rejected') return false;
+                const status = (b.status || '').toLowerCase();
+                if (status === 'rejected' || status === 'cancelled') return false;
                 // If held, check if it's expired
-                if (b.status === 'held' && b.holdExpiry) {
+                if (status === 'held' && b.holdExpiry) {
                     const expiry = new Date(b.holdExpiry);
                     if (!isNaN(expiry.getTime()) && expiry < new Date()) return false; // Expired
                 }

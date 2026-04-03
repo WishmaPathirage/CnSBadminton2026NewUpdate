@@ -217,11 +217,11 @@ const BookingForm = () => {
         }
 
         return !slots.some(booking => {
-            // 1. Ignore the user's own current hold ID (explicitly passed)
+            // 1. Ignore currently held ID (explicitly passed)
             if (ignoreId && booking.id === ignoreId) return false;
             
-            // 2. NEW: Safety check - Ignore ANY current session hold belonging to the user
-            // This prevents "Conflict" flashing during Step 1 -> Step 2 transition
+            // 2. Safety Rule: Ignore ANY session hold that belongs to the current user
+            // This prevents "Conflict" or "Overlapping" errors caused by state lag
             if (booking.isSessionHold && booking.userId === currentUser?.uid) return false;
 
             if (!booking.courts.some(c => Number(c) === Number(courtId))) return false;
@@ -617,10 +617,16 @@ const BookingForm = () => {
                                                         if (Math.max(slotStart, bookingStart) < Math.min(slotEnd, bookingEnd)) {
                                                             isOccupied = true;
                                                             if (booking.type === 'permanent') isPermanent = true;
-                                                            // If status was 'pending', it should be treated as held/hold
+                                                            
+                                                            // Determine if this is OUR booking/hold
+                                                            const belongsToUs = booking.userId === currentUser?.uid;
+
+                                                            // Determine if it should be shown as Yellow "Hold"
+                                                            // Both 'pending' (submitted) and 'held' (session or manual) show as Yellow Hold for others
                                                             if (booking.type === 'held' || (booking.status && booking.status.toLowerCase() === 'pending')) {
                                                                 isHeld = true;
                                                                 if (booking.isSessionHold) isSessionHold = true;
+                                                                if (belongsToUs) isOurHold = true;
                                                             }
                                                         }
                                                     });
@@ -678,19 +684,12 @@ const BookingForm = () => {
 
                                                         // Yellow Override for Held or Pending
                                                         if (isHeld) {
-                                                            if (isSessionHold && !isOurHold) {
-                                                                // Session hold by another user -> Show as Booked (Red)
-                                                                label = 'Booked';
-                                                                bgColor = 'rgba(231, 76, 60, 0.15)';
-                                                                borderColor = 'rgba(231, 76, 60, 0.3)';
-                                                                textColor = '#e74c3c';
-                                                            } else {
-                                                                // Admin Manual Hold OR Customer Pending Booking -> Show as Hold (Yellow)
-                                                                label = 'Hold';
-                                                                bgColor = 'rgba(251, 202, 63, 0.15)';
-                                                                borderColor = 'rgba(251, 202, 63, 0.4)';
-                                                                textColor = '#FBCA3F';
-                                                            }
+                                                            // Admin Manual Hold OR Customer Pending Booking OR Session hold by someone else -> Show as Hold (Yellow)
+                                                            // We want to avoid turning red during a session hold, even if it's someone else.
+                                                            label = 'Hold';
+                                                            bgColor = 'rgba(251, 202, 63, 0.15)';
+                                                            borderColor = 'rgba(251, 202, 63, 0.4)';
+                                                            textColor = '#FBCA3F';
                                                         }
 
                                                         // Orange Override for Tournament
