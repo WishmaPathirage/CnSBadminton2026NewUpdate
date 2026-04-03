@@ -53,22 +53,6 @@ export const createBooking = async (bookingDetails) => {
     }
 };
 
-export const holdSlot = async (bookingDetails) => {
-    try {
-        // A hold is just a booking with status 'held'
-        const holdData = {
-            ...bookingDetails,
-            status: 'held',
-            createdAt: new Date().toISOString(),
-            holdExpiry: new Date(Date.now() + 10 * 60000).toISOString() // 10 minutes from now
-        };
-        const docRef = await addDoc(collection(db, BOOKINGS_COL), holdData);
-        return { id: docRef.id, ...holdData };
-    } catch (error) {
-        console.error("Error holding slot:", error);
-        throw error;
-    }
-};
 
 export const updateBookingStatus = async (id, status) => {
     try {
@@ -148,8 +132,7 @@ export const getAvailability = async (date) => {
                 startTime: b.startTime,
                 duration: Number(b.duration),
                 courts: b.courts,
-                type: b.status === 'held' ? 'held' : 'regular',
-                isSessionHold: !!b.isSessionHold
+                type: (b.status || '').toLowerCase() === 'held' ? 'held' : 'regular'
             }));
 
         // 2. Fetch Permanent Bookings for this Day of Week
@@ -209,8 +192,7 @@ export const subscribeToAvailability = (date, callback) => {
                 startTime: b.startTime,
                 duration: Number(b.duration),
                 courts: b.courts,
-                type: b.status === 'held' ? 'held' : 'regular',
-                isSessionHold: !!b.isSessionHold
+                type: (b.status || '').toLowerCase() === 'held' ? 'held' : 'regular'
             }));
 
         const permSlots = permanentBookings

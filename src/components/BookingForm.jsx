@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { updateDoc, doc } from 'firebase/firestore';
-import { getAvailability, subscribeToAvailability, createBooking, checkUserBlacklist, holdSlot, updateBooking, deleteBooking } from '../services/bookingService';
+import { getAvailability, subscribeToAvailability, createBooking, checkUserBlacklist } from '../services/bookingService';
 import { getAuth } from 'firebase/auth'; // Import getAuth
 import { motion } from 'framer-motion';
 import { Calendar, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
@@ -30,11 +30,10 @@ const BookingForm = () => {
     const [duration, setDuration] = useState(30); // Default 30 minutes
     const [selectedTime, setSelectedTime] = useState(null);
     const [selectedCourts, setSelectedCourts] = useState([]);
-    const [holdId, setHoldId] = useState(null);
     const [slots, setSlots] = useState([]);
     const [userDetails, setUserDetails] = useState({ name: '', email: '', Phone: '' });
     const [status, setStatus] = useState('idle'); // idle, submitting, success, error
-    const [step, setStep] = useState(1); // 1: Select Time, 2: Details, 3: Payment/Success
+    const [step, setStep] = useState(1); // 1: Select Time, 2: Details
 
     // 5-Second Cancellation Window States
     const [showTimer, setShowTimer] = useState(false);
@@ -188,7 +187,7 @@ const BookingForm = () => {
 
     // Auto-deselect removed to show visual conflict instead.
 
-    const isSlotAvailable = (time, courtId, ignoreId = null) => {
+    const isSlotAvailable = (time, courtId) => {
         const timeToMinutes = (t) => {
             if (!t) return 0;
             const str = String(t).toUpperCase().trim();
@@ -209,27 +208,13 @@ const BookingForm = () => {
         if (tournamentDates.includes(date)) {
             const tournamentStart = 480; // 08:00 AM
             const tournamentEnd = 1200;  // 8:00 PM (20:00)
-
-            // If the PROPOSED slot overlaps with the tournament hours
-            if (proposedStart < tournamentEnd && proposedEnd > tournamentStart) {
-                return false; // Slot is NOT available
-            }
+            if (proposedStart < tournamentEnd && proposedEnd > tournamentStart) return false;
         }
 
         return !slots.some(booking => {
-            // 1. Ignore currently held ID (explicitly passed)
-            if (ignoreId && booking.id === ignoreId) return false;
-            
-            // 2. Safety Rule: Ignore ANY session hold that belongs to the current user
-            // This prevents "Conflict" or "Overlapping" errors caused by state lag
-            if (booking.isSessionHold && booking.userId === currentUser?.uid) return false;
-
             if (!booking.courts.some(c => Number(c) === Number(courtId))) return false;
-
             const bookingStart = timeToMinutes(booking.startTime);
             const bookingEnd = bookingStart + booking.duration;
-
-            // Check for overlap
             return proposedStart < bookingEnd && proposedEnd > bookingStart;
         });
     };
@@ -242,33 +227,12 @@ const BookingForm = () => {
         }
     };
 
-    const handleNextStep = async () => {
-        if (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId))) return;
-
-        setStatus('submitting');
-        try {
-            // Create a hold in Firestore
-            const holdData = await holdSlot({
-                date,
-                startTime: selectedTime,
-                duration,
-                courts: selectedCourts,
-                userId: currentUser.uid,
-                userName: userDetails.name || 'Anonymous',
-                status: 'held',
-                isSessionHold: true
-            });
-            setHoldId(holdData.id);
-            setStep(2);
-        } catch (err) {
-            console.error("Failed to hold slot:", err);
-            alert("Error: This slot was just taken by someone else or a connection error occurred. Please try again.");
-            // Refresh slots
-            const data = await getAvailability(date);
-            setSlots(data);
-        } finally {
-            setStatus('idle');
+    const handleNextStep = () => {
+        if (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c))) {
+            alert("One or more selected slots are no longer available. Please refresh and try again.");
+            return;
         }
+        setStep(2);
     };
 
     const handleCancelPending = async () => {
@@ -365,8 +329,7 @@ const BookingForm = () => {
         }
 
         // Final Validation: Check for overlaps before submitting
-        // IMPORTANT: Pass holdId as ignoreId to avoid blocking our own hold
-        const hasOverlap = selectedCourts.some(courtId => !isSlotAvailable(selectedTime, courtId, holdId));
+        const hasOverlap = selectedCourts.some(courtId => !isSlotAvailable(selectedTime, courtId));
         if (hasOverlap) {
             alert("One or more selected slots are no longer available. Please choose another time.");
             // Refresh slots to show latest status
@@ -407,35 +370,31 @@ const BookingForm = () => {
                     }
                 }
 
-                if (holdId) {
-                    await updateBooking(holdId, {
-                        userName: userDetails.name,
-                        userPhone: userDetails.Phone,
-                        userEmail: userDetails.email,
-                        amount: totalAmount,
-                        orderId: orderId,
-                        status: 'pending'
-                    });
-                    setPendingBookingId(holdId);
-                    setPendingOrderId(orderId);
-                } else {
-                    const result = await createBooking({
-                        date,
-                        startTime: selectedTime,
-                        duration,
-                        courts: selectedCourts,
-                        userId: userId,
-                        userName: userDetails.name,
-                        userPhone: userDetails.Phone,
-                        userEmail: userDetails.email,
-                        amount: totalAmount,
-                        orderId: orderId,
-                        status: 'pending'
-                    });
-                    console.log("Booking created with ID:", result.id, "OrderId:", orderId);
-                    setPendingBookingId(result.id);
-                    setPendingOrderId(orderId);
+                // Final availability check before creating the formal request
+                const stillAvailable = selectedCourts.every(c => isSlotAvailable(selectedTime, c));
+                if (!stillAvailable) {
+                    alert("Sorry, one or more of your selected slots have just been taken by another user. Please choose another time.");
+                    setStep(1);
+                    setStatus('idle');
+                    return;
                 }
+
+                const result = await createBooking({
+                    date,
+                    startTime: selectedTime,
+                    duration,
+                    courts: selectedCourts,
+                    userId: userId,
+                    userName: userDetails.name,
+                    userPhone: userDetails.Phone,
+                    userEmail: userDetails.email,
+                    amount: totalAmount,
+                    orderId: orderId,
+                    status: 'pending'
+                });
+                console.log("Booking created with ID:", result.id, "OrderId:", orderId);
+                setPendingBookingId(result.id);
+                setPendingOrderId(orderId);
                 
                 console.log("Starting 5-second timer...");
                 // Trigger 5-second timer instead of immediate success
@@ -559,7 +518,7 @@ const BookingForm = () => {
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(251, 202, 63, 0.2)', border: '1px solid #FBCA3F' }}></div>
-                                            <span style={{ color: '#aaa' }}>Hold</span>
+                                            <span style={{ color: '#aaa' }}>Pending / Hold</span>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(255, 105, 180, 0.2)', border: '1px solid #ff69b4' }}></div>
@@ -618,15 +577,9 @@ const BookingForm = () => {
                                                             isOccupied = true;
                                                             if (booking.type === 'permanent') isPermanent = true;
                                                             
-                                                            // Determine if this is OUR booking/hold
-                                                            const belongsToUs = booking.userId === currentUser?.uid;
-
-                                                            // Determine if it should be shown as Yellow "Hold"
-                                                            // Both 'pending' (submitted) and 'held' (session or manual) show as Yellow Hold for others
-                                                            if (booking.type === 'held' || (booking.status && booking.status.toLowerCase() === 'pending')) {
+                                                            // Determine if it should be shown as Yellow "Hold" (for pending status)
+                                                            if ((booking.status && booking.status.toLowerCase() === 'pending')) {
                                                                 isHeld = true;
-                                                                if (booking.isSessionHold) isSessionHold = true;
-                                                                if (belongsToUs) isOurHold = true;
                                                             }
                                                         }
                                                     });
@@ -642,22 +595,8 @@ const BookingForm = () => {
                                                         }
                                                     }
 
-                                                    // 2. Fits Duration Check - Pass holdId to ignore our own hold
-                                                    const fitsDuration = isSlotAvailable(time, courtId, holdId);
-                                                    
-                                                    // Determine if this specific block is occupied by the user's current hold
-                                                    let isOurHold = false;
-                                                    if (holdId) {
-                                                        const ourHold = slots.find(b => b.id === holdId);
-                                                        if (ourHold && ourHold.courts.some(c => Number(c) === Number(courtId))) {
-                                                            const ourStart = timeToMinutes(ourHold.startTime);
-                                                            const ourEnd = ourStart + ourHold.duration;
-                                                            if (Math.max(slotStart, ourStart) < Math.min(slotEnd, ourEnd)) {
-                                                                isOurHold = true;
-                                                            }
-                                                        }
-                                                    }
-
+                                                    // 2. Fits Duration Check
+                                                    const fitsDuration = isSlotAvailable(time, courtId);
                                                     const isSelected = selectedTime === time && selectedCourts.includes(courtId);
 
                                                     // Visual State Logic
@@ -667,7 +606,7 @@ const BookingForm = () => {
                                                     let textColor = '#2ecc71';
                                                     let cursor = 'pointer';
 
-                                                    if (isOccupied && !isOurHold) {
+                                                    if (isOccupied) {
                                                         label = 'Booked';
                                                         bgColor = 'rgba(231, 76, 60, 0.15)';
                                                         borderColor = 'rgba(231, 76, 60, 0.3)';
@@ -676,16 +615,14 @@ const BookingForm = () => {
 
                                                         // Pink Override for Permanent
                                                         if (isPermanent) {
-                                                            label = 'Permanent'; // Or 'Booked' if preferred, but user said 'Pink - Permanent'
-                                                            bgColor = 'rgba(255, 105, 180, 0.15)'; // Pink bg
-                                                            borderColor = 'rgba(255, 105, 180, 0.4)'; // Pink border
-                                                            textColor = '#ff69b4'; // HotPink text
+                                                            label = 'Permanent';
+                                                            bgColor = 'rgba(255, 105, 180, 0.15)';
+                                                            borderColor = 'rgba(255, 105, 180, 0.4)';
+                                                            textColor = '#ff69b4';
                                                         }
 
-                                                        // Yellow Override for Held or Pending
+                                                        // Yellow Override for Pending / Hold
                                                         if (isHeld) {
-                                                            // Admin Manual Hold OR Customer Pending Booking OR Session hold by someone else -> Show as Hold (Yellow)
-                                                            // We want to avoid turning red during a session hold, even if it's someone else.
                                                             label = 'Hold';
                                                             bgColor = 'rgba(251, 202, 63, 0.15)';
                                                             borderColor = 'rgba(251, 202, 63, 0.4)';
@@ -695,15 +632,15 @@ const BookingForm = () => {
                                                         // Orange Override for Tournament
                                                         if (isTournament) {
                                                             label = 'Tournament';
-                                                            bgColor = 'rgba(255, 165, 0, 0.15)'; // Orange background
-                                                            borderColor = 'rgba(255, 165, 0, 0.4)'; // Orange border
-                                                            textColor = '#ffa500'; // Orange text
+                                                            bgColor = 'rgba(255, 165, 0, 0.15)';
+                                                            borderColor = 'rgba(255, 165, 0, 0.4)';
+                                                            textColor = '#ffa500';
                                                         }
                                                     }
 
-                                                    // Select Override (Either manually selected OR currently held by session)
-                                                    if (isSelected || isOurHold) {
-                                                        if (!fitsDuration && !isOurHold) {
+                                                    // Select Override (manual selection in Step 1)
+                                                    if (isSelected) {
+                                                        if (!fitsDuration) {
                                                             label = 'Conflict';
                                                             bgColor = 'rgba(255, 68, 68, 0.2)';
                                                             borderColor = '#ff4444';
@@ -726,20 +663,10 @@ const BookingForm = () => {
                                                             onClick={async () => {
                                                                 if (selectedTime !== time) {
                                                                     if (!isOccupied) {
-                                                                        // If we had a previous hold, release it?
-                                                                        // For UX, maybe just let it expire or release when changing time.
-                                                                        if (holdId) {
-                                                                            deleteBooking(holdId).catch(console.error);
-                                                                            setHoldId(null);
-                                                                        }
                                                                         setSelectedTime(time);
                                                                         setSelectedCourts([courtId]);
                                                                     }
                                                                 } else {
-                                                                    if (holdId) {
-                                                                        deleteBooking(holdId).catch(console.error);
-                                                                        setHoldId(null);
-                                                                    }
                                                                     handleCourtToggle(courtId);
                                                                 }
                                                             }}
@@ -771,7 +698,7 @@ const BookingForm = () => {
                             </div>
 
                             {/* visual conflict warning */}
-                            {selectedTime && selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId)) && (
+                            {selectedTime && selectedCourts.some(c => !isSlotAvailable(selectedTime, c)) && (
                                 <motion.div
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -792,7 +719,7 @@ const BookingForm = () => {
 
                             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
                                 <button
-                                    disabled={selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId)) || status === 'submitting'}
+                                    disabled={selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c)) || status === 'submitting'}
                                     onClick={handleNextStep}
                                     className="btn-gradient"
                                     style={{
@@ -800,10 +727,10 @@ const BookingForm = () => {
                                         borderRadius: '50px',
                                         fontWeight: 'bold',
                                         fontSize: '1rem',
-                                        cursor: (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId))) ? 'not-allowed' : 'pointer',
-                                        opacity: (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId))) ? 0.5 : 1,
+                                        cursor: (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c))) ? 'not-allowed' : 'pointer',
+                                        opacity: (selectedCourts.length === 0 || selectedCourts.some(c => !isSlotAvailable(selectedTime, c))) ? 0.5 : 1,
                                         boxShadow: selectedCourts.length === 0 ? 'none' : '0 10px 30px rgba(120, 220, 202, 0.3)',
-                                        filter: selectedCourts.some(c => !isSlotAvailable(selectedTime, c, holdId)) ? 'grayscale(1)' : 'none'
+                                        filter: selectedCourts.some(c => !isSlotAvailable(selectedTime, c)) ? 'grayscale(1)' : 'none'
                                     }}
                                 >
                                     Next Details →
