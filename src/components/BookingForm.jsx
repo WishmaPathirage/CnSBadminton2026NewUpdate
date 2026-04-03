@@ -217,17 +217,19 @@ const BookingForm = () => {
         }
 
         return !slots.some(booking => {
-            // Ignore the user's own current hold ID
+            // 1. Ignore the user's own current hold ID (explicitly passed)
             if (ignoreId && booking.id === ignoreId) return false;
             
+            // 2. NEW: Safety check - Ignore ANY current session hold belonging to the user
+            // This prevents "Conflict" flashing during Step 1 -> Step 2 transition
+            if (booking.isSessionHold && booking.userId === currentUser?.uid) return false;
+
             if (!booking.courts.some(c => Number(c) === Number(courtId))) return false;
 
             const bookingStart = timeToMinutes(booking.startTime);
             const bookingEnd = bookingStart + booking.duration;
 
-            // Check for overlap:
-            // Two time ranges (StartA, EndA) and (StartB, EndB) overlap if:
-            // StartA < EndB && EndA > StartB
+            // Check for overlap
             return proposedStart < bookingEnd && proposedEnd > bookingStart;
         });
     };
@@ -436,63 +438,16 @@ const BookingForm = () => {
                 }
                 
                 console.log("Starting 5-second timer...");
-                // NEW: Trigger 5-second timer instead of immediate success
+                // Trigger 5-second timer instead of immediate success
                 setShowTimer(true);
                 setTimeLeft(5);
-                return; // Wait for timer in finalizeBooking
+                return; 
             } catch (e) {
-                console.warn("Booking save failed (Demo mode - proceeding to payment):", e);
+                console.error("Booking submission error:", e);
+                alert("Something went wrong with the booking. Please try again.");
             }
-
-
-            // Calculate End Time
-            const [startHour, startMin] = selectedTime.split(':').map(Number);
-            const totalStartMins = startHour * 60 + startMin;
-            const totalEndMins = totalStartMins + duration;
-            const endHour = Math.floor(totalEndMins / 60);
-            const endMin = totalEndMins % 60;
-            const endTime = `${endHour < 10 ? '0' + endHour : endHour}:${endMin < 10 ? '0' + endMin : endMin}`;
-
-            // 3. Send Admin Email Notification (Pre-payment)
-            const templateParams = {
-                order_id: orderId,
-                customer_name: userDetails.name,
-                customer_phone: userDetails.Phone,
-                date: date,
-
-                // Sending multiple variations to match potential template variables
-                start_time: selectedTime,
-                startTime: selectedTime,
-                starting_time: selectedTime,
-
-                end_time: endTime,
-                endTime: endTime,
-                ending_time: endTime,
-
-                time: `Start: ${selectedTime} | End: ${endTime}`,
-                duration: duration + " mins",
-                courts: selectedCourts.map(c => `Court ${c}`).join(', '),
-                amount: `Rs. ${amountFormatted}`,
-            };
-
-            try {
-                // Debugging: Alert to confirm attempt
-                // alert("Attempting to send email..."); 
-
-                await emailjs.send('service_i25io04', 'template_bv3pwbr', templateParams, 'cmyBcHcHxEP2ggwV3');
-                console.log("Admin Notification Sent!");
-                // alert("Email Sent Successfully!"); // Uncomment if you want to verify success
-            } catch (emailErr) {
-                console.error("Failed to send admin notification:", emailErr);
-                alert("Email Notification Failed: " + JSON.stringify(emailErr));
-                // We still proceed to payment, but now user knows email failed
-            }
-
-            // 3. Redirect to Success Page directly
-            navigate(`/payment/success?order_id=${orderId}`);
-
         } catch (error) {
-            console.error("Booking Error:", error);
+            console.error("Outer Booking Error:", error);
             alert("Something went wrong. Please try again.");
             setStatus('idle');
         }
@@ -603,12 +558,12 @@ const BookingForm = () => {
                                             <span style={{ color: '#aaa' }}>Booked</span>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(255, 105, 180, 0.2)', border: '1px solid #ff69b4' }}></div>
-                                            <span style={{ color: '#aaa' }}>Permanent</span>
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(251, 202, 63, 0.2)', border: '1px solid #FBCA3F' }}></div>
+                                            <span style={{ color: '#aaa' }}>Hold</span>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(251, 202, 63, 0.2)', border: '1px solid #FBCA3F' }}></div>
-                                            <span style={{ color: '#aaa' }}>Held</span>
+                                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(255, 105, 180, 0.2)', border: '1px solid #ff69b4' }}></div>
+                                            <span style={{ color: '#aaa' }}>Permanent</span>
                                         </div>
                                         {tournamentDates.includes(date) && (
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -662,7 +617,8 @@ const BookingForm = () => {
                                                         if (Math.max(slotStart, bookingStart) < Math.min(slotEnd, bookingEnd)) {
                                                             isOccupied = true;
                                                             if (booking.type === 'permanent') isPermanent = true;
-                                                            if (booking.type === 'held') {
+                                                            // If status was 'pending', it should be treated as held/hold
+                                                            if (booking.type === 'held' || (booking.status && booking.status.toLowerCase() === 'pending')) {
                                                                 isHeld = true;
                                                                 if (booking.isSessionHold) isSessionHold = true;
                                                             }
@@ -720,16 +676,17 @@ const BookingForm = () => {
                                                             textColor = '#ff69b4'; // HotPink text
                                                         }
 
-                                                        // Yellow Override for Held (Admin manual hold)
+                                                        // Yellow Override for Held or Pending
                                                         if (isHeld) {
-                                                            if (isSessionHold) {
-                                                                // Session hold by another user -> Show as Booked
+                                                            if (isSessionHold && !isOurHold) {
+                                                                // Session hold by another user -> Show as Booked (Red)
                                                                 label = 'Booked';
                                                                 bgColor = 'rgba(231, 76, 60, 0.15)';
                                                                 borderColor = 'rgba(231, 76, 60, 0.3)';
                                                                 textColor = '#e74c3c';
                                                             } else {
-                                                                label = 'Held';
+                                                                // Admin Manual Hold OR Customer Pending Booking -> Show as Hold (Yellow)
+                                                                label = 'Hold';
                                                                 bgColor = 'rgba(251, 202, 63, 0.15)';
                                                                 borderColor = 'rgba(251, 202, 63, 0.4)';
                                                                 textColor = '#FBCA3F';

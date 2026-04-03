@@ -98,7 +98,10 @@ const AdminPanel = () => {
                     // Update ref
                     prevBookingsRef.current = data;
 
-                    const sorted = data.sort((a, b) => {
+                    // Filter out temporary session holds (Step 1 holds) to avoid premature admin alerts/clutter
+                    const filtered = data.filter(b => !(b.status === 'held' && b.isSessionHold));
+
+                    const sorted = filtered.sort((a, b) => {
                         if (a.status === 'pending' && b.status !== 'pending') return -1;
                         if (a.status !== 'pending' && b.status === 'pending') return 1;
                         return new Date(a.date) - new Date(b.date);
