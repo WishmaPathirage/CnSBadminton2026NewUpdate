@@ -464,10 +464,11 @@ const BookingForm = () => {
                                             className="glass-input"
                                             style={{ paddingLeft: '3rem', appearance: 'none' }}
                                         >
-                                            <option value={30}>30 Minutes</option>
-                                            <option value={60}>1 Hour</option>
-                                            <option value={90}>1.5 Hours</option>
-                                            <option value={120}>2 Hours</option>
+                                            {Array.from({ length: 18 }, (_, i) => (i + 1) * 30).map(min => (
+                                                <option key={min} value={min}>
+                                                    {min < 60 ? `${min} Minutes` : `${min / 60} ${min / 60 === 1 ? 'Hour' : 'Hours'}`}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>

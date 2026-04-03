@@ -640,9 +640,9 @@ const AdminPanel = () => {
                                             value={manualForm.duration}
                                             onChange={e => setManualForm({ ...manualForm, duration: e.target.value })}
                                         >
-                                            {Array.from({ length: 15 }, (_, i) => (i + 2) * 30).map(min => (
+                                            {Array.from({ length: 18 }, (_, i) => (i + 1) * 30).map(min => (
                                                 <option key={min} value={min.toString()} style={{ color: 'black' }}>
-                                                    {min / 60} {min / 60 === 1 ? 'Hour' : 'Hours'}
+                                                    {min < 60 ? `${min} Minutes` : `${min / 60} ${min / 60 === 1 ? 'Hour' : 'Hours'}`}
                                                 </option>
                                             ))}
                                         </select>
@@ -1585,8 +1585,10 @@ const AdminPanel = () => {
                                             onChange={(e) => setEditModal(prev => ({ ...prev, booking: { ...prev.booking, duration: e.target.value } }))}
                                             style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
                                         >
-                                            {Array.from({ length: 15 }, (_, i) => (i + 2) * 30).map(min => (
-                                                <option key={min} value={min.toString()}>{min / 60} {min / 60 === 1 ? 'Hour' : 'Hours'}</option>
+                                            {Array.from({ length: 18 }, (_, i) => (i + 1) * 30).map(min => (
+                                                <option key={min} value={min.toString()}>
+                                                    {min < 60 ? `${min} Minutes` : `${min / 60} ${min / 60 === 1 ? 'Hour' : 'Hours'}`}
+                                                </option>
                                             ))}
                                         </select>
                                     </div>
