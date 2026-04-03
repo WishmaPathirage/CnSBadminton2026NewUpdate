@@ -158,15 +158,15 @@ export const getAvailability = async (date) => {
         const permSnapshot = await getDocs(collection(db, 'permanent_bookings'));
 
         const permSlots = permSnapshot.docs
-            .map(doc => doc.data())
-            .filter(data => (data.dayOfWeek || '').toLowerCase() === dayOfWeek)
-                return {
-                    id: data.id,
-                    startTime: data.startTime,
-                    duration: Number(data.duration),
-                    courts: (data.courts || []).map(Number),
-                    type: 'permanent' // Special flag for UI
-                };
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(data => (data.dayOfWeek || '').toLowerCase() === dayOfWeek && !data.isHeld)
+            .map(data => ({
+                id: data.id,
+                startTime: data.startTime,
+                duration: Number(data.duration),
+                courts: (data.courts || []).map(Number),
+                type: 'permanent' // Special flag for UI
+            }));
 
         // Merge both
         return [...bookedSlots, ...permSlots];
@@ -194,9 +194,10 @@ export const subscribeToAvailability = (date, callback) => {
         
         const bookedSlots = regularBookings
             .filter(b => {
-                if (b.status === 'rejected') return false;
+                const status = (b.status || '').toLowerCase();
+                if (status === 'rejected' || status === 'cancelled') return false;
                 // If held, only ignore if explicitly expired
-                if (b.status === 'held' && b.holdExpiry) {
+                if (status === 'held' && b.holdExpiry) {
                     const expiry = new Date(b.holdExpiry);
                     if (!isNaN(expiry.getTime()) && expiry < new Date()) return false;
                 }
@@ -212,7 +213,7 @@ export const subscribeToAvailability = (date, callback) => {
             }));
 
         const permSlots = permanentBookings
-            .filter(data => (data.dayOfWeek || '').toLowerCase() === dayOfWeek)
+            .filter(data => (data.dayOfWeek || '').toLowerCase() === dayOfWeek && !data.isHeld)
             .map(data => ({
                 id: data.id,
                 startTime: data.startTime,
