@@ -80,7 +80,6 @@ const AdminPanel = () => {
                         // Only check non-session-hold bookings for new pending alerts
                         const newPending = data.find(b =>
                             b.status === 'pending' &&
-                            !b.isSessionHold && 
                             !prevBookings.find(pb => pb.id === b.id)
                         );
 
@@ -1026,7 +1025,7 @@ const AdminPanel = () => {
 
                                                                 let statusText = booking.status === 'permanent' ? 'WEEKLY' : booking.status.toUpperCase();
                                                                 if (booking.status === 'permanent-held') statusText = 'WEEKLY (HELD)';
-                                                                if (booking.status === 'held' && booking.isSessionHold) statusText = 'SESSION HOLD';
+                                                                if (booking.status === 'held') statusText = 'HOLD';
 
                                                                 return (
                                                                     <motion.div

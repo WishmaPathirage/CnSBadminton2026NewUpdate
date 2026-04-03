@@ -132,6 +132,7 @@ export const getAvailability = async (date) => {
                 startTime: b.startTime,
                 duration: Number(b.duration),
                 courts: b.courts,
+                status: b.status,
                 type: (b.status || '').toLowerCase() === 'held' ? 'held' : 'regular'
             }));
 
@@ -192,6 +193,7 @@ export const subscribeToAvailability = (date, callback) => {
                 startTime: b.startTime,
                 duration: Number(b.duration),
                 courts: b.courts,
+                status: b.status,
                 type: (b.status || '').toLowerCase() === 'held' ? 'held' : 'regular'
             }));
 

@@ -68,10 +68,9 @@ const BookingForm = () => {
         }
 
         const handlePopState = (event) => {
-            // If user hits Back Button
+            // Check if we are moving BACK to a state where step 2 is no longer valid
+            // Since we pushed state on entry to Step 2, popping it means we should go to Step 1
             if (step === 2) {
-                // Prevent default back (which might leave site) if we just want to go to Step 1
-                // But history.back() already happened, so we just update UI
                 setStep(1);
             }
         };
@@ -566,7 +565,6 @@ const BookingForm = () => {
                                                     let isOccupied = false;
                                                     let isPermanent = false;
                                                     let isHeld = false;
-                                                    let isSessionHold = false;
 
                                                     slots.forEach(booking => {
                                                         if (!booking.courts.some(c => Number(c) === Number(courtId))) return;
@@ -863,20 +861,9 @@ const BookingForm = () => {
                             <div style={{ display: 'flex', gap: '1.5rem' }}>
                                 <button
                                     type="button"
-                                    onClick={async () => {
-                                        // Release hold if user goes back to Step 1
-                                        if (holdId) {
-                                            setStatus('submitting');
-                                            try {
-                                                await deleteBooking(holdId);
-                                                setHoldId(null);
-                                            } catch (err) {
-                                                console.error("Failed to release hold:", err);
-                                            }
-                                            setStatus('idle');
-                                        }
+                                    onClick={() => {
                                         setStep(1);
-                                        // Manually go back in history to keep sync
+                                        // Manually go back in history to keep browser sync
                                         window.history.back();
                                     }}
                                     style={{
