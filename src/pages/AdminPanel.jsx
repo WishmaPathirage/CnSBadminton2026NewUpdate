@@ -11,7 +11,8 @@ import emailjs from '@emailjs/browser';
 import * as XLSX from 'xlsx';
 
 const AdminPanel = () => {
-    const [bookings, setBookings] = useState([]);
+    const [bookings, setBookings] = useState([]); // This was accidentally deleted
+    const [viewMode, setViewMode] = useState('day'); // 'day' or 'upcoming'
     const { currentUser, loading } = useAuth();
     const navigate = useNavigate();
     const prevBookingsRef = useRef([]);
@@ -757,7 +758,37 @@ const AdminPanel = () => {
                 >
 
 
-                    {/* Group 2: Actions */}
+                    {/* Group 1.5: View Toggle */}
+                    <div className="admin-toolbar-view" style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '4px' }}>
+                        <button
+                            onClick={() => setViewMode('day')}
+                            style={{
+                                padding: '0.6rem 1.2rem',
+                                borderRadius: '10px',
+                                border: 'none',
+                                background: viewMode === 'day' ? 'var(--brand-teal)' : 'transparent',
+                                color: viewMode === 'day' ? '#000' : '#aaa',
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                        >
+                            <Calendar size={18} /> Day View
+                        </button>
+                        <button
+                            onClick={() => setViewMode('upcoming')}
+                            style={{
+                                padding: '0.6rem 1.2rem',
+                                borderRadius: '10px',
+                                border: 'none',
+                                background: viewMode === 'upcoming' ? 'var(--brand-teal)' : 'transparent',
+                                color: viewMode === 'upcoming' ? '#000' : '#aaa',
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                        >
+                            <Clock size={18} /> Upcoming
+                        </button>
+                    </div>
                     <div className="admin-toolbar-actions" style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
                         <button
                             onClick={handleExportExcel}
@@ -872,10 +903,9 @@ const AdminPanel = () => {
             </div>
 
             {/* Content Display */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
-
-                        {/* Rendering the Selected Date's Bookings */}
-                        {(() => {
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {viewMode === 'day' ? (
+                    (() => {
                             // 1. Get Regular Bookings for Selected Date
                             const selectedDateRegular = bookings.filter(b => b.date === selectedAdminDate);
 
@@ -1253,7 +1283,134 @@ const AdminPanel = () => {
                                     </div>
                                 </motion.div>
                             );
-                        })()}
+                        })()
+                ) : (
+                    /* UPCOMING LIST VIEW */
+                    <div className="glass-panel" style={{ padding: '2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                            <h2 style={{ color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                <Clock size={24} style={{ color: 'var(--brand-teal)' }} />
+                                Upcoming Bookings
+                            </h2>
+                            <div style={{ color: '#888', fontSize: '0.9rem' }}>
+                                Showing all future regular bookings
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {(() => {
+                                const today = new Date().toISOString().split('T')[0];
+                                const upcomingBookings = bookings
+                                    .filter(b => b.date >= today && b.status !== 'rejected' && b.status !== 'cancelled')
+                                    .sort((a, b) => {
+                                        if (a.date !== b.date) return a.date.localeCompare(b.date);
+                                        return a.startTime.localeCompare(b.startTime);
+                                    });
+
+                                if (upcomingBookings.length === 0) {
+                                    return (
+                                        <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.2)' }}>
+                                            <Calendar size={48} style={{ marginBottom: '1rem', opacity: 0.1 }} />
+                                            <h3>No upcoming bookings</h3>
+                                        </div>
+                                    );
+                                }
+
+                                return upcomingBookings.map(booking => {
+                                    let statusColor = '#3498db';
+                                    if (booking.status === 'confirmed') statusColor = '#2ecc71';
+                                    else if (booking.status === 'held') statusColor = '#FBCA3F';
+                                    else if (booking.status === 'pending') statusColor = '#f1c40f';
+
+                                    return (
+                                        <motion.div
+                                            key={booking.id}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            style={{
+                                                background: 'rgba(255,255,255,0.02)',
+                                                border: '1px solid rgba(255,255,255,0.05)',
+                                                borderLeft: `4px solid ${statusColor}`,
+                                                borderRadius: '12px',
+                                                padding: '1.2rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                gap: '1.5rem',
+                                                flexWrap: 'wrap'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 2, minWidth: '300px' }}>
+                                                {/* Date & Time */}
+                                                <div style={{ minWidth: '120px' }}>
+                                                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.1rem' }}>{booking.date}</div>
+                                                    <div style={{ color: 'var(--brand-teal)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                        <Clock size={14} /> {booking.startTime}
+                                                    </div>
+                                                </div>
+
+                                                {/* User Info */}
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ color: 'white', fontWeight: 'bold' }}>{booking.userName}</div>
+                                                    <div style={{ color: '#888', fontSize: '0.8rem' }}>{booking.userPhone}</div>
+                                                </div>
+
+                                                {/* Court Info */}
+                                                <div style={{ minWidth: '100px' }}>
+                                                    <div style={{ color: '#aaa', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Courts</div>
+                                                    <div style={{ color: 'white', fontWeight: '500' }}>
+                                                        {booking.courts?.join(', ') || 'N/A'}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Status & Actions */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                                                <span style={{ 
+                                                    fontSize: '0.75rem', 
+                                                    padding: '0.3rem 0.8rem', 
+                                                    borderRadius: '20px', 
+                                                    background: `${statusColor}22`, 
+                                                    color: statusColor, 
+                                                    fontWeight: 'bold', 
+                                                    textTransform: 'uppercase' 
+                                                }}>
+                                                    {booking.status.toUpperCase()}
+                                                </span>
+
+                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                    {booking.status === 'pending' && (
+                                                        <button
+                                                            onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                                                            style={{ padding: '0.5rem', background: '#2ecc7122', border: 'none', borderRadius: '8px', color: '#2ecc71', cursor: 'pointer' }}
+                                                            title="Confirm"
+                                                        >
+                                                            <Play size={16} />
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => setEditModal({ isOpen: true, booking })}
+                                                        style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', color: '#3498db', cursor: 'pointer' }}
+                                                        title="Edit"
+                                                    >
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(booking.id)}
+                                                        style={{ padding: '0.5rem', background: 'rgba(231,76,60,0.1)', border: 'none', borderRadius: '8px', color: '#e74c3c', cursor: 'pointer' }}
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                });
+                            })()}
+                        </div>
+                    </div>
+                )}
 
                         {bookings.length === 0 && (
                             <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)' }}>
