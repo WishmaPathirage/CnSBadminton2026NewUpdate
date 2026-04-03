@@ -1285,7 +1285,7 @@ const AdminPanel = () => {
                             );
                         })()
                 ) : (
-                    /* UPCOMING LIST VIEW - PENDING ONLY */
+                    /* UPCOMING CARD VIEW - PENDING ONLY */
                     <div className="glass-panel" style={{ padding: '2rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                             <h2 style={{ color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
@@ -1297,7 +1297,7 @@ const AdminPanel = () => {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
                             {(() => {
                                 const today = new Date().toISOString().split('T')[0];
                                 const pendingBookings = bookings
@@ -1324,92 +1324,143 @@ const AdminPanel = () => {
                                 }, {});
 
                                 return Object.keys(groups).sort().map(date => (
-                                    <div key={date} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    <div key={date} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                        {/* Date Header matching image style */}
                                         <div style={{ 
                                             display: 'flex', 
                                             alignItems: 'center', 
                                             gap: '1rem', 
-                                            padding: '0.5rem 1rem', 
-                                            background: 'rgba(241, 196, 15, 0.1)', 
-                                            borderLeft: '4px solid #f1c40f',
-                                            borderRadius: '8px',
-                                            color: '#f1c40f',
+                                            padding: '0.6rem 1.2rem', 
+                                            background: '#25b6a1', 
+                                            borderRadius: '10px',
+                                            color: '#000',
                                             fontWeight: 'bold',
-                                            fontSize: '1.1rem'
+                                            fontSize: '1.1rem',
+                                            width: 'fit-content',
+                                            boxShadow: '0 4px 10px rgba(37, 182, 161, 0.2)'
                                         }}>
-                                            <Calendar size={18} />
-                                            {date}
-                                            <span style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 'normal' }}>
-                                                — {groups[date].length} request{groups[date].length > 1 ? 's' : ''}
-                                            </span>
+                                            {date} <Calendar size={18} />
                                         </div>
 
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', paddingLeft: '1rem' }}>
-                                            {groups[date].map(booking => (
-                                                <motion.div
-                                                    key={booking.id}
-                                                    initial={{ opacity: 0, x: -10 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    style={{
-                                                        background: 'rgba(255,255,255,0.02)',
-                                                        border: '1px solid rgba(255,255,255,0.05)',
-                                                        borderRadius: '12px',
-                                                        padding: '1.2rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
-                                                        gap: '1.5rem',
-                                                        flexWrap: 'wrap'
-                                                    }}
-                                                >
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 2, minWidth: '300px' }}>
-                                                        {/* Time */}
-                                                        <div style={{ minWidth: '80px' }}>
-                                                            <div style={{ color: 'var(--brand-teal)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                                                <Clock size={14} /> {booking.startTime}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                                            {groups[date].map(booking => {
+                                                // Calculate end time
+                                                const [h, m] = booking.startTime.split(':').map(Number);
+                                                const endTimeObj = new Date();
+                                                endTimeObj.setHours(h);
+                                                endTimeObj.setMinutes(m + (booking.duration || 60));
+                                                const endTime = `${String(endTimeObj.getHours()).padStart(2, '0')}:${String(endTimeObj.getMinutes()).padStart(2, '0')}`;
+
+                                                // WhatsApp Link
+                                                let phoneCode = booking.userPhone || '';
+                                                phoneCode = phoneCode.replace(/\D/g, '');
+                                                if (phoneCode.startsWith('0')) phoneCode = '94' + phoneCode.substring(1);
+                                                const whatsappLink = `https://wa.me/${phoneCode}`;
+
+                                                let statusColor = '#f1c40f'; // Pending yellow
+
+                                                return (
+                                                    <motion.div
+                                                        key={booking.id}
+                                                        layout
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        style={{
+                                                            background: '#222',
+                                                            border: '1px solid rgba(255,255,255,0.05)',
+                                                            borderLeft: `5px solid ${statusColor}`,
+                                                            borderRadius: '12px',
+                                                            padding: '1.2rem',
+                                                            position: 'relative',
+                                                            overflow: 'hidden',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            gap: '0.8rem'
+                                                        }}
+                                                    >
+                                                        {/* Status Badge */}
+                                                        <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+                                                            <span style={{
+                                                                fontSize: '0.7rem',
+                                                                fontWeight: '800',
+                                                                padding: '0.3rem 0.6rem',
+                                                                borderRadius: '6px',
+                                                                background: statusColor,
+                                                                color: '#000',
+                                                                letterSpacing: '0.5px'
+                                                            }}>
+                                                                PENDING
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Time Range */}
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
+                                                            <div style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
+                                                                {booking.startTime}
+                                                            </div>
+                                                            <div style={{ opacity: 0.4, fontSize: '0.8rem' }}>→</div>
+                                                            <div style={{ fontWeight: '500', fontSize: '1rem', opacity: 0.5 }}>
+                                                                {endTime}
                                                             </div>
                                                         </div>
 
-                                                        {/* User Info */}
-                                                        <div style={{ flex: 1 }}>
-                                                            <div style={{ color: 'white', fontWeight: 'bold' }}>{booking.userName}</div>
-                                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>{booking.userPhone}</div>
-                                                        </div>
-
-                                                        {/* Court Info */}
-                                                        <div style={{ minWidth: '100px' }}>
-                                                            <div style={{ color: '#aaa', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Courts</div>
-                                                            <div style={{ color: 'white', fontWeight: '500' }}>
-                                                                {booking.courts?.join(', ') || 'N/A'}
+                                                        {/* User Details */}
+                                                        <div>
+                                                            <h4 style={{ color: 'white', fontSize: '1.1rem', margin: '0 0 0.3rem 0', fontWeight: '700' }}>{booking.userName}</h4>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                <a
+                                                                    href={whatsappLink}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    style={{
+                                                                        color: booking.userPhone === 'N/A' || !booking.userPhone ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.5)',
+                                                                        fontSize: '0.9rem',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '0.4rem',
+                                                                        textDecoration: 'none',
+                                                                        transition: 'color 0.2s',
+                                                                        cursor: booking.userPhone === 'N/A' || !booking.userPhone ? 'default' : 'pointer'
+                                                                    }}
+                                                                    onMouseOver={(e) => { if (booking.userPhone !== 'N/A' && booking.userPhone) e.target.style.color = '#25D366' }}
+                                                                    onMouseOut={(e) => { if (booking.userPhone !== 'N/A' && booking.userPhone) e.target.style.color = 'rgba(255,255,255,0.5)' }}
+                                                                >
+                                                                    <Phone size={14} style={{ opacity: 0.8 }} />
+                                                                    {booking.userPhone || 'N/A'}
+                                                                </a>
+                                                            </div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', marginTop: '0.4rem' }}>
+                                                                Courts: {booking.courts?.join(', ')}
                                                             </div>
                                                         </div>
-                                                    </div>
 
-                                                    {/* Actions */}
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                                                        <button
-                                                            onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                                                            style={{ padding: '0.6rem 1.2rem', background: '#2ecc7122', border: '1px solid #2ecc7144', borderRadius: '8px', color: '#2ecc71', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}
-                                                        >
-                                                            <Play size={16} /> Confirm
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleStatusChange(booking.id, 'rejected')}
-                                                            style={{ padding: '0.6rem', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.2)', borderRadius: '8px', color: '#e74c3c', cursor: 'pointer' }}
-                                                            title="Reject"
-                                                        >
-                                                            <X size={18} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setEditModal({ isOpen: true, booking })}
-                                                            style={{ padding: '0.6rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#3498db', cursor: 'pointer' }}
-                                                            title="Edit"
-                                                        >
-                                                            <Edit size={16} />
-                                                        </button>
-                                                    </div>
-                                                </motion.div>
-                                            ))}
+                                                        {/* Actions */}
+                                                        <div className="action-buttons" style={{ display: 'flex', gap: '0.6rem', paddingTop: '0.5rem', flexWrap: 'wrap' }}>
+                                                            <button
+                                                                onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                                                                title="Accept Booking"
+                                                                style={{ padding: '0.6rem', background: 'transparent', border: '1px solid #2ecc71', borderRadius: '8px', cursor: 'pointer', color: '#2ecc71', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}
+                                                            >
+                                                                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditModal({ isOpen: true, booking })}
+                                                                title="Edit Booking"
+                                                                style={{ padding: '0.6rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: 'pointer', color: '#3498db', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}
+                                                            >
+                                                                <Edit size={16} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(booking.id)}
+                                                                title="Delete Booking"
+                                                                style={{ padding: '0.6rem', background: 'transparent', border: '1px solid rgba(231, 76, 60, 0.3)', borderRadius: '8px', cursor: 'pointer', color: '#e74c3c', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 ));
