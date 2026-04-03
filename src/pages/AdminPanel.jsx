@@ -184,7 +184,10 @@ const AdminPanel = () => {
                     await updateDoc(permRef, { heldDates: arrayUnion(selectedAdminDate) });
                     alert(`Held for ${selectedAdminDate} only!`);
                 } else {
-                    await updateDoc(permRef, { heldDates: arrayRemove(selectedAdminDate) });
+                    await updateDoc(permRef, { 
+                        heldDates: arrayRemove(selectedAdminDate),
+                        isHeld: false // Clear legacy global flag if it exists
+                    });
                     alert(`Released for ${selectedAdminDate} onwards!`);
                 }
             } catch (err) {
@@ -887,7 +890,7 @@ const AdminPanel = () => {
                                     return {
                                         ...b,
                                         date: selectedAdminDate,
-                                        status: (b.isHeld || isHeldForToday) ? 'permanent-held' : 'permanent',
+                                        status: isHeldForToday ? 'permanent-held' : 'permanent',
                                         userName: b.userName, 
                                         id: `perm-${b.id}-${selectedAdminDate}`
                                     };

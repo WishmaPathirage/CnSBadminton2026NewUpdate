@@ -144,7 +144,7 @@ export const getAvailability = async (date) => {
 
         const permSlots = permSnapshot.docs
             .map(doc => ({ id: doc.id, ...doc.data() }))
-            .filter(data => (data.dayOfWeek || '').toLowerCase() === dayOfWeek && !data.isHeld && !(data.heldDates || []).includes(date))
+            .filter(data => (data.dayOfWeek || '').toLowerCase() === dayOfWeek && !(data.heldDates || []).includes(date))
             .map(data => ({
                 id: data.id,
                 startTime: data.startTime,
@@ -198,7 +198,7 @@ export const subscribeToAvailability = (date, callback) => {
             }));
 
         const permSlots = permanentBookings
-            .filter(data => (data.dayOfWeek || '').toLowerCase() === dayOfWeek && !data.isHeld && !(data.heldDates || []).includes(date))
+            .filter(data => (data.dayOfWeek || '').toLowerCase() === dayOfWeek && !(data.heldDates || []).includes(date))
             .map(data => ({
                 id: data.id,
                 startTime: data.startTime,
