@@ -1331,15 +1331,15 @@ const AdminPanel = () => {
                                             alignItems: 'center', 
                                             gap: '1rem', 
                                             padding: '0.6rem 1.2rem', 
-                                            background: '#25b6a1', 
+                                            background: '#f39c12', 
                                             borderRadius: '10px',
                                             color: '#000',
                                             fontWeight: 'bold',
                                             fontSize: '1.1rem',
                                             width: 'fit-content',
-                                            boxShadow: '0 4px 10px rgba(37, 182, 161, 0.2)'
+                                            boxShadow: '0 4px 10px rgba(243, 156, 18, 0.3)'
                                         }}>
-                                            {date} <Calendar size={18} />
+                                            <Calendar size={18} /> {date} (NEW)
                                         </div>
 
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
