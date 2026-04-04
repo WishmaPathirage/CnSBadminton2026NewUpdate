@@ -53,6 +53,21 @@ export const createBooking = async (bookingDetails) => {
     }
 };
 
+export const addSubscriber = async (email) => {
+    try {
+        const subscribersRef = collection(db, 'subscribers');
+        // Check if already subscribed could be added here, but for simplicity let's just add
+        await addDoc(subscribersRef, {
+            email,
+            subscribedAt: new Date().toISOString()
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Error adding subscriber:", error);
+        throw error;
+    }
+};
+
 
 export const updateBookingStatus = async (id, status) => {
     try {

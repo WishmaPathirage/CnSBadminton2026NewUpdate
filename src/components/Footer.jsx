@@ -1,11 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, MessageCircle, Send } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { addSubscriber } from '../services/bookingService';
 
 const Footer = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [email, setEmail] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const [status, setStatus] = useState('idle'); // idle, success, error
+    const [statusMessage, setStatusMessage] = useState('');
+
+    const handleSubscribe = async (e) => {
+        e.preventDefault();
+        if (!email) return;
+
+        setSubmitting(true);
+        setStatus('idle');
+        setStatusMessage('');
+
+        try {
+            await addSubscriber(email);
+            setStatus('success');
+            setStatusMessage('Successfully subscribed! Thank you.');
+            setEmail('');
+        } catch (error) {
+            setStatus('error');
+            setStatusMessage('Something went wrong. Please try again.');
+        } finally {
+            setSubmitting(false);
+            // Clear message after 5 seconds
+            setTimeout(() => setStatusMessage(''), 5000);
+        }
+    };
 
     const handleNavClick = (id) => {
         if (location.pathname === '/') {
@@ -119,33 +147,84 @@ const Footer = () => {
                         <p style={{ color: 'var(--text-gray)', fontSize: '0.9rem', marginBottom: '1.2rem' }}>
                             Subscribe for latest tournament news and updates.
                         </p>
-                        <div style={{ position: 'relative' }}>
+                        <form 
+                            onSubmit={handleSubscribe}
+                            style={{ position: 'relative' }}
+                        >
                             <input 
                                 type="email" 
-                                placeholder="Your Email Site..." 
+                                placeholder="Enter your email..." 
                                 className="glass-input"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                disabled={submitting}
                                 style={{ 
-                                    paddingRight: '50px', 
-                                    fontSize: '0.85rem',
-                                    borderRadius: '30px'
+                                    paddingLeft: '1.5rem',
+                                    paddingRight: '60px', 
+                                    height: '54px',
+                                    fontSize: '0.95rem',
+                                    borderRadius: '100px',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: `1px solid ${status === 'success' ? 'var(--brand-teal)' : status === 'error' ? 'var(--brand-pink)' : 'rgba(255, 255, 255, 0.1)'}`,
+                                    opacity: submitting ? 0.7 : 1
                                 }}
                             />
-                            <button style={{ 
-                                position: 'absolute', 
-                                right: '5px', 
-                                top: '5px', 
-                                bottom: '5px', 
-                                width: '40px', 
-                                background: 'var(--brand-teal)', 
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#000'
-                            }}>
-                                <Send size={16} />
+                            <button 
+                                type="submit"
+                                disabled={submitting || !email}
+                                style={{ 
+                                    position: 'absolute', 
+                                    right: '6px', 
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    width: '42px', 
+                                    height: '42px',
+                                    background: 'var(--brand-teal)', 
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: '#040b11',
+                                    boxShadow: '0 4px 10px rgba(120, 220, 202, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    cursor: submitting ? 'not-allowed' : 'pointer',
+                                    opacity: submitting || !email ? 0.5 : 1
+                                }}
+                                onMouseOver={(e) => {
+                                    if (!submitting && email) {
+                                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
+                                        e.currentTarget.style.background = '#6cd1bf';
+                                    }
+                                }}
+                                onMouseOut={(e) => {
+                                    if (!submitting && email) {
+                                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                                        e.currentTarget.style.background = 'var(--brand-teal)';
+                                    }
+                                }}
+                            >
+                                {submitting ? (
+                                    <div className="btn-spinner" style={{ width: '20px', height: '20px' }}></div>
+                                ) : (
+                                    <Send size={20} />
+                                )}
                             </button>
-                        </div>
+                        </form>
+                        {statusMessage && (
+                            <motion.p 
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                style={{ 
+                                    fontSize: '0.8rem', 
+                                    marginTop: '0.5rem', 
+                                    paddingLeft: '1rem',
+                                    color: status === 'success' ? 'var(--brand-teal)' : 'var(--brand-pink)'
+                                }}
+                            >
+                                {statusMessage}
+                            </motion.p>
+                        )}
                     </div>
                 </div>
             </div>
