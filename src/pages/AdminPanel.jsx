@@ -251,6 +251,10 @@ const AdminPanel = () => {
                 const realId = editModal.booking.id.split('-')[1] || editModal.booking.id;
                 const permConflict = permanentBookings.some(b => {
                     if (b.id === realId) return false;
+                    // Ignore held permanent bookings for conflict checks
+                    if (b.status === 'permanent-held') return false;
+                    if (b.heldDates?.includes(editModal.booking.date)) return false;
+
                     if ((b.dayOfWeek || '').toLowerCase() !== (editModal.booking.dayOfWeek || '').toLowerCase()) return false;
                     if (!b.courts.includes(selectedCourt)) return false;
 
@@ -283,7 +287,8 @@ const AdminPanel = () => {
                 // Check One-Time Conflicts
                 const hasConflict = bookings.some(b => {
                     if (b.id === editModal.booking.id) return false;
-                    if (b.date !== editModal.booking.date || b.status === 'rejected') return false;
+                    // Ignore rejected and held bookings for conflict checks
+                    if (b.date !== editModal.booking.date || b.status === 'rejected' || b.status === 'held') return false;
                     if (!b.courts.includes(selectedCourt)) return false;
 
                     const existStart = timeToMin(b.startTime);
@@ -353,6 +358,7 @@ const AdminPanel = () => {
 
                 // Check conflicts with other permanent bookings
                 const permConflict = permanentBookings.some(b => {
+                    if (b.status === 'permanent-held') return false; // Ignore fully held templates
                     if ((b.dayOfWeek || '').toLowerCase() !== dayOfWeek.toLowerCase()) return false;
                     if (!b.courts.some(c => selectedCourts.includes(Number(c)))) return false;
                     const existStart = timeToMin(b.startTime);
@@ -379,7 +385,8 @@ const AdminPanel = () => {
             } else {
                 // Check Regular Conflicts
                 const hasConflict = bookings.some(b => {
-                    if (b.date !== selectedDate || b.status === 'rejected') return false;
+                    // Ignore rejected and held bookings for conflict checks
+                    if (b.date !== selectedDate || b.status === 'rejected' || b.status === 'held') return false;
                     if (!b.courts.some(c => selectedCourts.includes(Number(c)))) return false;
                     const existStart = timeToMin(b.startTime);
                     const existEnd = existStart + parseInt(b.duration);
@@ -395,6 +402,8 @@ const AdminPanel = () => {
                 // Check Permanent Conflicts (New Validation)
                 const dayOfWeek = new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
                 const hasPermConflict = permanentBookings.some(b => {
+                    if (b.status === 'permanent-held') return false; // Ignore fully held templates
+                    if (b.heldDates?.includes(selectedDate)) return false; // Ignore if held on this specific date
                     if ((b.dayOfWeek || '').toLowerCase() !== dayOfWeek.toLowerCase()) return false;
                     if (!b.courts.some(c => selectedCourts.includes(Number(c)))) return false;
                     const existStart = timeToMin(b.startTime);
@@ -1451,7 +1460,7 @@ const AdminPanel = () => {
                                                                 <Edit size={16} />
                                                             </button>
                                                             <button
-                                                                onClick={() => handleDelete(booking.id)}
+                                                                onClick={(e) => handleDeleteClick(e, booking.id)}
                                                                 title="Delete Booking"
                                                                 style={{ padding: '0.6rem', background: 'transparent', border: '1px solid rgba(231, 76, 60, 0.3)', borderRadius: '8px', cursor: 'pointer', color: '#e74c3c', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}
                                                             >
