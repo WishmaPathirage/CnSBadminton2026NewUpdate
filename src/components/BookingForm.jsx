@@ -426,7 +426,15 @@ const BookingForm = () => {
                     return;
                 }
 
+                // Calculate End Time for Firestore record (used by potential automated email triggers)
+                const [startH, startM] = selectedTime.split(':').map(Number);
+                const totalMins = startH * 60 + startM + parseInt(duration);
+                const endH = Math.floor(totalMins / 60);
+                const endM = totalMins % 60;
+                const endTimeStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
                 const result = await createBooking({
+                    // CamelCase (App Core)
                     date,
                     startTime: selectedTime,
                     duration,
@@ -437,7 +445,22 @@ const BookingForm = () => {
                     userEmail: userDetails.email,
                     amount: totalAmount,
                     orderId: orderId,
-                    status: 'pending'
+                    status: 'pending',
+
+                    // Snake_Case (Exhaustive fields for Automated Email Triggers)
+                    order_id: orderId,
+                    customer_name: userDetails.name,
+                    phone: userDetails.Phone,
+                    starting_time: selectedTime,
+                    ending_time: endTimeStr,
+                    courts_booked: selectedCourts.join(', '),
+                    total_amount: totalAmount.toFixed(2),
+                    user_id: userId,
+                    user_name: userDetails.name,
+                    user_phone: userDetails.Phone,
+                    user_email: userDetails.email,
+                    booking_date: date,
+                    booking_time: `${selectedTime} - ${endTimeStr}`
                 });
                 console.log("Booking created with ID:", result.id, "OrderId:", orderId);
                 setPendingBookingId(result.id);

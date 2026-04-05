@@ -442,8 +442,16 @@ const AdminPanel = () => {
                     return;
                 }
 
+                // Calculate End Time for Firestore record
+                const [mStartH, mStartM] = manualForm.startTime.split(':').map(Number);
+                const mTotalMins = mStartH * 60 + mStartM + parseInt(manualForm.duration);
+                const mEndH = Math.floor(mTotalMins / 60);
+                const mEndM = mTotalMins % 60;
+                const mEndTimeStr = `${String(mEndH).padStart(2, '0')}:${String(mEndM).padStart(2, '0')}`;
+
                 // Create Standard Booking
                 await createBooking({
+                    // CamelCase
                     date: manualForm.date,
                     startTime: manualForm.startTime,
                     duration: parseInt(manualForm.duration),
@@ -452,7 +460,16 @@ const AdminPanel = () => {
                     userPhone: manualForm.userPhone || 'N/A',
                     userEmail: manualForm.userEmail || '',
                     userId: 'admin-manual',
-                    status: 'confirmed'
+                    status: 'confirmed',
+
+                    // Snake_Case (Exhaustive)
+                    customer_name: manualForm.name,
+                    phone: manualForm.userPhone || 'N/A',
+                    starting_time: manualForm.startTime,
+                    ending_time: mEndTimeStr,
+                    courts_booked: selectedCourts.join(', '),
+                    booking_date: manualForm.date,
+                    booking_time: `${manualForm.startTime} - ${mEndTimeStr}`
                 });
             }
 
