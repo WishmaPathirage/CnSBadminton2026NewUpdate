@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { updateDoc, doc } from 'firebase/firestore';
+import { updateDoc, doc, getDoc } from 'firebase/firestore';
 import { getAvailability, subscribeToAvailability, createBooking, checkUserBlacklist } from '../services/bookingService';
 import { getAuth } from 'firebase/auth'; // Import getAuth
 import { motion } from 'framer-motion';
@@ -253,52 +253,100 @@ const BookingForm = () => {
 
     const finalizeBooking = async () => {
         if (!pendingBookingId) return;
-        
-        // Change status to actual 'pending' or whatever logic needed
-        // Actually it's already 'pending' (for Admin Review)
-        
-        const booking = {
-            id: pendingBookingId,
-            userName: userDetails.name,
-            userEmail: userDetails.email,
-            userPhone: userDetails.Phone,
-            date,
-            startTime: selectedTime,
-            duration,
-            courts: selectedCourts,
-            amount: (900 * (duration / 60)) * selectedCourts.length
-        };
 
-        // Trigger Notifications
-        // EmailJS
-        const templateParams = {
-            booking_id: booking.id,
-            user_name: booking.userName,
-            user_email: booking.userEmail,
-            booking_date: booking.date,
-            booking_time: `${booking.startTime} (${booking.duration} mins)`,
-            court_no: booking.courts.join(', '),
-            amount: `Rs. ${booking.amount.toFixed(2)}`
-        };
+        try {
+            // 1. Fetch latest booking data directly from Firestore (ensures no stale state)
+            const snap = await getDoc(doc(db, 'bookings', pendingBookingId));
+            if (!snap.exists()) {
+                console.error("Critical Error: Booking doc not found for email send.");
+                return;
+            }
+            const b = snap.data();
 
-        emailjs.send(
-            'service_i25io04',
-            'template_bv3pwbr',
-            templateParams,
-            'cmyBcHcHxEP2ggwV3'
-        ).then(() => {
-            console.log('Admin Email Sent Successfully');
-        }).catch((err) => {
-            console.error('Email Failed:', err);
-        });
+            // 2. Calculate End Time
+            const [hours, minutes] = b.startTime.split(':').map(Number);
+            const totalMinutes = hours * 60 + minutes + parseInt(b.duration);
+            const endHour = Math.floor(totalMinutes / 60);
+            const endMinute = totalMinutes % 60;
+            const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
 
-        // WhatsApp (Admin)
-        const waMessage = `New Review Booking! ID: ${booking.id}, Date: ${booking.date}, Time: ${booking.startTime}, Courts: ${booking.courts.join(', ')}. Please check Admin Panel.`;
-        console.log("WhatsApp Notification Sent:", waMessage);
+            // 3. Trigger Notifications (Exhaustive Mapping)
+            // This covers almost every naming convention for the EmailJS template.
+            const templateParams = {
+                // Order ID Variations
+                order_id: b.orderId || b.id || pendingOrderId,
+                orderId: b.orderId || b.id || pendingOrderId,
+                OrderID: b.orderId || b.id || pendingOrderId,
+                booking_id: b.id || pendingBookingId,
+                bookingId: b.id || pendingBookingId,
 
-        setShowTimer(false);
-        setStatus('success');
-        navigate(`/payment/success?order_id=${pendingOrderId || 'N/A'}`);
+                // Customer Name Variations
+                customer_name: b.userName,
+                customerName: b.userName,
+                user_name: b.userName,
+                userName: b.userName,
+                name: b.userName,
+
+                // Phone Variations
+                phone: b.userPhone,
+                user_phone: b.userPhone,
+                userPhone: b.userPhone,
+                Phone: b.userPhone,
+
+                // Date/Time Variations
+                date: b.date,
+                booking_date: b.date,
+                bookingDate: b.date,
+                starting_time: b.startTime,
+                startTime: b.startTime,
+                start_time: b.startTime,
+                ending_time: endTime,
+                endTime: endTime,
+                end_time: endTime,
+
+                // Duration/Courts Variations
+                duration: `${b.duration} mins`,
+                duration_mins: b.duration,
+                durationMins: b.duration,
+                courts_booked: b.courts.join(', '),
+                court_no: b.courts.join(', '),
+                courts: b.courts.join(', '),
+
+                // Amount Variations
+                amount: b.amount.toFixed(2),
+                total_amount: b.amount.toFixed(2),
+                totalAmount: b.amount.toFixed(2),
+
+                // Contact
+                user_email: b.userEmail,
+                userEmail: b.userEmail,
+                booking_time: `${b.startTime} - ${endTime}`
+            };
+
+            console.log("!!! SENDING ADMIN ALERT EMAIL WITH PARAMS !!!", templateParams);
+
+            emailjs.send(
+                'service_i25io04',
+                'template_bv3pwbr',
+                templateParams,
+                'cmyBcHcHxEP2ggwV3'
+            ).then(() => {
+                console.log('SUCCESS: Admin Booking Alert Sent');
+            }).catch((err) => {
+                console.error('FAILED: Admin Booking Alert', err);
+            });
+
+            // WhatsApp (Admin)
+            const waMessage = `New Review Booking! Order ID: ${b.orderId}, Date: ${b.date}, Time: ${b.startTime}, Courts: ${b.courts.join(', ')}. Please check Admin Panel.`;
+            console.log("WhatsApp Notification Triggered:", waMessage);
+
+            setShowTimer(false);
+            setStatus('success');
+            navigate(`/payment/success?order_id=${pendingOrderId || b.orderId || 'N/A'}`);
+        } catch (error) {
+            console.error("Error in finalizeBooking execution:", error);
+            alert("Something went wrong finalizing your booking, but it has been saved. Please contact support.");
+        }
     };
 
     const handleSubmit = async (e) => {

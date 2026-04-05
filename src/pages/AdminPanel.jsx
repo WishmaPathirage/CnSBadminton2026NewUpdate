@@ -155,14 +155,39 @@ const AdminPanel = () => {
                 const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
 
                 const emailParams = {
+                    // Contact
                     to_email: booking.userEmail,
+                    user_email: booking.userEmail,
+                    userEmail: booking.userEmail,
+
+                    // Customer Name
                     user_name: booking.userName,
+                    userName: booking.userName,
+                    customer_name: booking.userName,
+                    customerName: booking.userName,
+
+                    // Booking Details
                     booking_date: booking.date,
+                    bookingDate: booking.date,
+                    date: booking.date,
                     booking_time: booking.startTime,
+                    startTime: booking.startTime,
+                    start_time: booking.startTime,
                     end_time: endTime,
+                    endTime: endTime,
                     duration_mins: booking.duration,
+                    duration: `${booking.duration} mins`,
                     courts: booking.courts.join(', '),
+                    court_no: booking.courts.join(', '),
+                    
+                    // Phone/IDs/Amount
                     user_phone: booking.userPhone || 'N/A',
+                    phone: booking.userPhone || 'N/A',
+                    order_id: booking.orderId || booking.id,
+                    orderId: booking.orderId || booking.id,
+                    amount: booking.amount ? booking.amount.toFixed(2) : 'N/A',
+                    total_amount: booking.amount ? booking.amount.toFixed(2) : 'N/A',
+
                     reply_to: 'cnsb233@gmail.com'
                 };
 
