@@ -111,6 +111,11 @@ const Footer = () => {
                                     {link.label}
                                 </button>
                             ))}
+                            
+                            {/* Legal Links appended to Useful Links */}
+                            <Link to="/privacy-policy" style={{ color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'var(--text-gray)'}>Privacy Policy</Link>
+                            <Link to="/terms-and-conditions" style={{ color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'var(--text-gray)'}>Terms & Conditions</Link>
+                            <Link to="/refund-policy" style={{ color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'var(--text-gray)'}>Refund Policy</Link>
                         </div>
                     </div>
 
@@ -226,13 +231,6 @@ const Footer = () => {
                             </motion.p>
                         )}
                     </div>
-                </div>
-                
-                {/* Legal Links */}
-                <div style={{ display: 'flex', gap: '25px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '10px' }}>
-                    <Link to="/privacy-policy" style={{ color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'var(--text-gray)'}>Privacy Policy</Link>
-                    <Link to="/terms-and-conditions" style={{ color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'var(--text-gray)'}>Terms & Conditions</Link>
-                    <Link to="/refund-policy" style={{ color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'var(--text-gray)'}>Refund Policy</Link>
                 </div>
             </div>
 
