@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, MessageCircle, Send } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { addSubscriber } from '../services/bookingService';
 
 const Footer = () => {
@@ -236,9 +236,17 @@ const Footer = () => {
                 background: 'rgba(0,0,0,0.3)' 
             }}>
                 <div className="container" style={{ 
-                    textAlign: 'center'
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '15px'
                 }}>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
+                    <div style={{ display: 'flex', gap: '25px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <Link to="/privacy-policy" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.6)'}>Privacy Policy</Link>
+                        <Link to="/terms-and-conditions" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.6)'}>Terms & Conditions</Link>
+                        <Link to="/refund-policy" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.6)'}>Refund Policy</Link>
+                    </div>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', margin: 0 }}>
                         &copy; C & S Badminton Complex (PVT) Ltd - 2026
                     </p>
                 </div>
