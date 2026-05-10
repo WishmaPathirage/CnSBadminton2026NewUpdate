@@ -227,6 +227,13 @@ const Footer = () => {
                         )}
                     </div>
                 </div>
+                
+                {/* Legal Links */}
+                <div style={{ display: 'flex', gap: '25px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '10px' }}>
+                    <Link to="/privacy-policy" style={{ color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'var(--text-gray)'}>Privacy Policy</Link>
+                    <Link to="/terms-and-conditions" style={{ color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'var(--text-gray)'}>Terms & Conditions</Link>
+                    <Link to="/refund-policy" style={{ color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'var(--text-gray)'}>Refund Policy</Link>
+                </div>
             </div>
 
             {/* Bottom Bar */}
@@ -235,17 +242,7 @@ const Footer = () => {
                 padding: '25px 0', 
                 background: 'rgba(0,0,0,0.3)' 
             }}>
-                <div className="container" style={{ 
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '15px'
-                }}>
-                    <div style={{ display: 'flex', gap: '25px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <Link to="/privacy-policy" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.6)'}>Privacy Policy</Link>
-                        <Link to="/terms-and-conditions" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.6)'}>Terms & Conditions</Link>
-                        <Link to="/refund-policy" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.target.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.6)'}>Refund Policy</Link>
-                    </div>
+                <div className="container" style={{ textAlign: 'center' }}>
                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', margin: 0 }}>
                         &copy; C & S Badminton Complex (PVT) Ltd - 2026
                     </p>
