@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { updateDoc, doc, getDoc } from 'firebase/firestore';
-import { getAvailability, subscribeToAvailability, createBooking, checkUserBlacklist } from '../services/bookingService';
+import { getAvailability, subscribeToAvailability, createBooking, checkUserBlacklist, deleteBooking } from '../services/bookingService';
 import { getAuth } from 'firebase/auth'; // Import getAuth
 import { motion } from 'framer-motion';
 import { Calendar, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
