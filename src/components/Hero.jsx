@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import heroBg from '../assets/hero-bg.png';
-import smashImg from '../assets/live-action-smash.png';
+import smashVideo from '../assets/smash-animation.mp4';
 
 const Hero = () => {
     return (
@@ -117,20 +117,32 @@ const Hero = () => {
                         zIndex: 1
                     }}
                 >
-                    <motion.img 
-                        src={smashImg} 
-                        alt="Live Action Badminton Smash"
-                        style={{ 
-                            width: '100%', 
+                    <motion.div 
+                        style={{
+                            width: '100%',
                             maxWidth: '600px',
                             borderRadius: '20px',
+                            overflow: 'hidden',
                             boxShadow: '0 20px 40px rgba(0,0,0,0.5), 0 0 40px rgba(120, 220, 202, 0.2)',
-                            border: '1px solid rgba(255,255,255,0.1)'
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            display: 'flex'
                         }}
-                        animate={{ y: [-15, 15, -15] }}
+                        animate={{ y: [-10, 10, -10] }}
                         transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                        whileHover={{ scale: 1.05, rotate: 2 }}
-                    />
+                    >
+                        <video 
+                            src={smashVideo}
+                            autoPlay 
+                            loop 
+                            muted 
+                            playsInline
+                            style={{ 
+                                width: '100%', 
+                                height: 'auto', 
+                                objectFit: 'cover' 
+                            }}
+                        />
+                    </motion.div>
                 </motion.div>
             </div>
 
