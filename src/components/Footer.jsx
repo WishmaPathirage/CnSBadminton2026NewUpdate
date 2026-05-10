@@ -123,26 +123,26 @@ const Footer = () => {
                     <div>
                         <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem' }}>For More Info</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                            <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
+                            <a href="https://www.google.com/maps/search/?api=1&query=No:38/2+Godaduwa+Rd,+Galle" target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-gray)'}>
                                 <MapPin size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
                                 <span>No:38/2 Godaduwa Rd, Galle</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
+                            </a>
+                            <a href="tel:+94777983264" style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-gray)'}>
                                 <Phone size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
                                 <span>+94 77 798 3264</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
+                            </a>
+                            <a href="mailto:cnsb233@gmail.com" style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-gray)'}>
                                 <Mail size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
                                 <span>cnsb233@gmail.com</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
+                            </a>
+                            <a href="https://facebook.com/cnsbadminton" target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-gray)'}>
                                 <Facebook size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
                                 <span>C & S Badminton Complex</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem' }}>
+                            </a>
+                            <a href="https://instagram.com/cnsbadminton" target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-gray)', fontSize: '0.9rem', textDecoration: 'none', transition: 'color 0.3s' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--brand-teal)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-gray)'}>
                                 <Instagram size={18} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
                                 <span>cnsbadminton</span>
-                            </div>
+                            </a>
                         </div>
                     </div>
 
