@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import heroBg from '../assets/hero-bg.png';
+import smashImg from '../assets/live-action-smash.png';
 
 const Hero = () => {
     return (
@@ -116,30 +117,20 @@ const Hero = () => {
                         zIndex: 1
                     }}
                 >
-                    <div style={{
-                        width: '100%',
-                        maxWidth: '600px',
-                        aspectRatio: '16/9',
-                        borderRadius: '20px',
-                        overflow: 'hidden',
-                        boxShadow: '0 20px 40px rgba(0,0,0,0.5), 0 0 40px rgba(120, 220, 202, 0.2)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        backgroundColor: '#000'
-                    }}>
-                        <iframe
-                            width="100%"
-                            height="100%"
-                            src="https://www.youtube.com/embed/xrMo4zoScCg?autoplay=1&mute=1&loop=1&playlist=xrMo4zoScCg&controls=0&modestbranding=1&showinfo=0&rel=0"
-                            title="Badminton Smash Slow Motion"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            style={{ 
-                                pointerEvents: 'none',
-                                transform: 'scale(1.05)' // Slightly scale up to hide iframe borders/title sometimes shown
-                            }}
-                        ></iframe>
-                    </div>
+                    <motion.img 
+                        src={smashImg} 
+                        alt="Live Action Badminton Smash"
+                        style={{ 
+                            width: '100%', 
+                            maxWidth: '600px',
+                            borderRadius: '20px',
+                            boxShadow: '0 20px 40px rgba(0,0,0,0.5), 0 0 40px rgba(120, 220, 202, 0.2)',
+                            border: '1px solid rgba(255,255,255,0.1)'
+                        }}
+                        animate={{ y: [-15, 15, -15] }}
+                        transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                        whileHover={{ scale: 1.05, rotate: 2 }}
+                    />
                 </motion.div>
             </div>
 
