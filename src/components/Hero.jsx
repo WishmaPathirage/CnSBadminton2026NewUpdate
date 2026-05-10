@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import heroBg from '../assets/hero-bg.png';
-import smashVideo from '../assets/smash-animation.mp4';
 
 const Hero = () => {
     return (
@@ -34,22 +33,11 @@ const Hero = () => {
                 zIndex: 0
             }} />
 
-            <div className="container hero-content-wrapper" style={{ 
-                position: 'relative', 
-                zIndex: 1, 
-                width: '100%', 
-                padding: '0 clamp(1rem, 5vw, 2rem)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap-reverse',
-                gap: '3rem'
-            }}>
+            <div className="container" style={{ position: 'relative', zIndex: 1, width: '100%', padding: '0 clamp(1rem, 5vw, 2rem)' }}>
                 <motion.div
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
-                    style={{ flex: '1 1 500px', zIndex: 2 }}
                 >
                     <h2 className="text-gradient" style={{
                         fontSize: 'clamp(0.8rem, 3vw, 1.2rem)',
@@ -102,47 +90,6 @@ const Hero = () => {
                     >
                         Book A Court
                     </motion.button>
-                </motion.div>
-
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.8, x: 50 }}
-                    animate={{ opacity: 1, scale: 1, x: 0 }}
-                    transition={{ duration: 1, delay: 0.3, type: "spring" }}
-                    style={{ 
-                        flex: '1 1 400px', 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        alignItems: 'center',
-                        position: 'relative',
-                        zIndex: 1
-                    }}
-                >
-                    <motion.div 
-                        style={{
-                            width: '100%',
-                            maxWidth: '600px',
-                            borderRadius: '20px',
-                            overflow: 'hidden',
-                            boxShadow: '0 20px 40px rgba(0,0,0,0.5), 0 0 40px rgba(120, 220, 202, 0.2)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            display: 'flex'
-                        }}
-                        animate={{ y: [-10, 10, -10] }}
-                        transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                    >
-                        <video 
-                            src={smashVideo}
-                            autoPlay 
-                            loop 
-                            muted 
-                            playsInline
-                            style={{ 
-                                width: '100%', 
-                                height: 'auto', 
-                                objectFit: 'cover' 
-                            }}
-                        />
-                    </motion.div>
                 </motion.div>
             </div>
 
