@@ -28,12 +28,12 @@ const StringingBooking = () => {
         }
     ];
 
-    const stringPricing = [
-        { name: 'Hndrd', price: 'Rs. 1,500' },
-        { name: 'Gosen', price: 'Rs. 2,950' },
-        { name: 'MBs 66', price: 'Rs. 2,000' },
-        { name: 'Li-Ning N65/N68', price: 'Rs. 3,200' },
-        { name: 'Yonex BG66 Ultimax', price: 'Rs. 3,200' }
+    const popularStrings = [
+        'Yonex BG 65',
+        'Yonex BG 65 Titanium',
+        'Gosen Ryzonic 65',
+        'Li-Ning N65',
+        'Li-Ning N68'
     ];
 
     return (
@@ -220,14 +220,23 @@ const StringingBooking = () => {
                     {/* Right Column: Popular Strings & Pricing */}
                     <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                         <div>
-                            <h3 style={{ fontSize: '1.5rem', color: 'var(--text-light)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1.5rem' }}>
-                                Popular Strings & Pricing
+                            <h3 style={{ fontSize: '1.5rem', color: 'var(--text-light)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+                                Popular Strings
                             </h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                                {stringPricing.map((item, index) => (
-                                    <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                        <span style={{ color: 'var(--text-gray)', fontSize: '0.9rem' }}>{item.name}</span>
-                                        <span style={{ color: 'var(--brand-yellow)', fontWeight: '700', fontSize: '0.9rem' }}>{item.price}</span>
+                            <p style={{ color: 'var(--brand-yellow)', fontWeight: '600', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+                                Pricing starts from LKR 1,500 upwards
+                            </p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {popularStrings.map((stringName, index) => (
+                                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                        <span style={{
+                                            width: '6px',
+                                            height: '6px',
+                                            borderRadius: '50%',
+                                            background: 'var(--brand-teal)',
+                                            display: 'inline-block'
+                                        }} />
+                                        <span style={{ color: 'var(--text-gray)', fontSize: '0.95rem', fontWeight: '500' }}>{stringName}</span>
                                     </div>
                                 ))}
                             </div>
