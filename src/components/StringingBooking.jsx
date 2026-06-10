@@ -60,7 +60,7 @@ const StringingBooking = () => {
                     viewport={{ once: true }}
                     style={{ textAlign: 'center', marginBottom: '4rem' }}
                 >
-                    <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
+                    <h2 className="stringing-section-title" style={{ marginBottom: '1rem' }}>
                         <span className="text-gradient">Racket Stringing & Customization</span>
                     </h2>
                     <p style={{ color: 'var(--text-gray)', maxWidth: '600px', margin: '0 auto', fontSize: '1.05rem' }}>
@@ -69,16 +69,11 @@ const StringingBooking = () => {
                 </motion.div>
 
                 {/* Content Grid */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '2rem',
-                    alignItems: 'stretch'
-                }}>
+                <div className="stringing-grid">
                     {/* Left Column: Why String With Us */}
                     <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', justifyContent: 'space-between' }}>
                         <div>
-                            <h3 style={{ fontSize: '1.5rem', color: 'var(--text-light)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <h3 className="stringing-card-title" style={{ color: 'var(--text-light)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <Zap size={22} style={{ color: 'var(--brand-teal)' }} /> Why String With Us?
                             </h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -130,7 +125,7 @@ const StringingBooking = () => {
                         }}
                     >
                         <div style={{ width: '100%' }}>
-                            <h3 style={{ fontSize: '1.5rem', color: 'var(--text-light)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1.5rem' }}>
+                            <h3 className="stringing-card-title" style={{ color: 'var(--text-light)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1.5rem' }}>
                                 Book An Appointment
                             </h3>
                             <p style={{ color: 'var(--brand-teal)', fontWeight: '600', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
@@ -220,7 +215,7 @@ const StringingBooking = () => {
                     {/* Right Column: Popular Strings & Pricing */}
                     <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                         <div>
-                            <h3 style={{ fontSize: '1.5rem', color: 'var(--text-light)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+                            <h3 className="stringing-card-title" style={{ color: 'var(--text-light)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
                                 Popular Strings
                             </h3>
                             <p style={{ color: 'var(--brand-yellow)', fontWeight: '600', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
@@ -244,6 +239,29 @@ const StringingBooking = () => {
                     </div>
                 </div>
             </div>
+
+            <style>{`
+                .stringing-section-title {
+                    font-size: clamp(1.8rem, 5vw, 2.5rem);
+                    text-align: center;
+                }
+                .stringing-card-title {
+                    font-size: clamp(1.3rem, 4vw, 1.5rem);
+                }
+                .stringing-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 2rem;
+                    align-items: stretch;
+                }
+                @media (max-width: 1024px) {
+                    .stringing-grid {
+                        grid-template-columns: 1fr;
+                        max-width: 600px;
+                        margin: 0 auto;
+                    }
+                }
+            `}</style>
         </section>
     );
 };
