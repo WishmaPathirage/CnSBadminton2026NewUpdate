@@ -43,7 +43,7 @@ const LandingPage = () => {
   }, [location]);
 
   return (
-    <div className="app-container" style={{ position: 'relative' }}>
+    <div className="app-container" style={{ position: 'relative', width: '100%', overflowX: 'hidden' }}>
       <NotificationBar />
 
       <div id="home"><Hero /></div>

@@ -17,7 +17,9 @@ const NotificationBar = () => {
                 fontWeight: '500',
                 position: 'relative',
                 zIndex: 1001,
-                letterSpacing: '1px'
+                letterSpacing: '1px',
+                width: '100%',
+                overflow: 'hidden'
             }}
         >
             <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', width: '100%' }}>
