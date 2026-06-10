@@ -136,7 +136,7 @@ const Hero = () => {
                 }
                 @media (max-width: 768px) {
                     :root {
-                        --hero-margin-top: -80px;
+                        --hero-margin-top: -120px;
                     }
                 }
             `}</style>
