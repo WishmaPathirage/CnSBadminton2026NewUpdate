@@ -24,7 +24,16 @@ const BookingForm = () => {
         return `${year}-${month}-${day}`;
     };
 
-    const tournamentDates = ['2026-03-01', '2026-03-02', '2026-03-03'];
+    const tournamentSettings = {
+        '2026-03-01': { start: 480, end: 1200 },
+        '2026-03-02': { start: 480, end: 1200 },
+        '2026-03-03': { start: 480, end: 1200 },
+        '2026-05-22': { start: 0, end: 1440 },
+        '2026-05-23': { start: 0, end: 1140 },
+        '2026-05-24': { start: 0, end: 1140 },
+        '2026-05-25': { start: 0, end: 1140 }
+    };
+    const isTournamentDate = (d) => !!tournamentSettings[d];
 
     const [date, setDate] = useState(getLocalDate());
     const [duration, setDuration] = useState(30); // Default 30 minutes
@@ -204,9 +213,8 @@ const BookingForm = () => {
         const proposedEnd = proposedStart + duration;
 
         // Tournament Restriction Logic
-        if (tournamentDates.includes(date)) {
-            const tournamentStart = 480; // 08:00 AM
-            const tournamentEnd = 1200;  // 8:00 PM (20:00)
+        if (tournamentSettings[date]) {
+            const { start: tournamentStart, end: tournamentEnd } = tournamentSettings[date];
             if (proposedStart < tournamentEnd && proposedEnd > tournamentStart) return false;
         }
 
@@ -595,7 +603,7 @@ const BookingForm = () => {
                                             <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(255, 105, 180, 0.2)', border: '1px solid #ff69b4' }}></div>
                                             <span style={{ color: '#aaa' }}>Permanent</span>
                                         </div>
-                                        {tournamentDates.includes(date) && (
+                                        {isTournamentDate(date) && (
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                 <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(255, 165, 0, 0.2)', border: '1px solid #ffa500' }}></div>
                                                 <span style={{ color: '#aaa' }}>Tournament</span>
@@ -656,9 +664,8 @@ const BookingForm = () => {
 
                                                     // Tournament Logic
                                                     let isTournament = false;
-                                                    if (tournamentDates.includes(date)) {
-                                                        const tournamentStart = 480; // 08:00 AM
-                                                        const tournamentEnd = 1200;  // 8:00 PM (20:00)
+                                                    if (tournamentSettings[date]) {
+                                                        const { start: tournamentStart, end: tournamentEnd } = tournamentSettings[date];
                                                         if (Math.max(slotStart, tournamentStart) < Math.min(slotEnd, tournamentEnd)) {
                                                             isTournament = true;
                                                             isOccupied = true; // Force occupied behavior

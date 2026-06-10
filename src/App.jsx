@@ -22,7 +22,7 @@ import DevelopmentProgress from './components/DevelopmentProgress';
 import RefundPolicy from './pages/RefundPolicy';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
-
+import StringingBooking from './components/StringingBooking';
 
 const LandingPage = () => {
   const location = useLocation();
@@ -50,6 +50,7 @@ const LandingPage = () => {
       <div id="booking"><BookingForm /></div>
       <div id="memberships"><Memberships /></div>
       <div id="services"><Services /></div>
+      <div id="stringing"><StringingBooking /></div>
       <div id="events"><Events /></div>
       <Directors />
       <DevelopmentProgress />

@@ -34,6 +34,7 @@ const Navbar = () => {
         { name: 'Book Now', id: 'booking' },
         { name: 'Memberships', id: 'memberships' },
         { name: 'Services', id: 'services' },
+        { name: 'Stringing', id: 'stringing' },
         { name: 'Events', id: 'events' },
         { name: 'Contact', id: 'contact' },
     ];

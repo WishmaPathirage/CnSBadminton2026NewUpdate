@@ -70,11 +70,19 @@ const Services = () => {
                             viewport={{ once: true }}
                             whileHover={{ scale: 1.03 }}
                             className="card-glass"
+                            onClick={() => {
+                                if (service.title === 'Racket Gutting') {
+                                    const element = document.getElementById('stringing');
+                                    if (element) {
+                                        element.scrollIntoView({ behavior: 'smooth' });
+                                    }
+                                }
+                            }}
                             style={{
                                 padding: '2.5rem',
                                 borderRadius: '24px',
                                 textAlign: 'center',
-                                cursor: 'default',
+                                cursor: service.title === 'Racket Gutting' ? 'pointer' : 'default',
                                 position: 'relative',
                                 overflow: 'hidden'
                             }}
