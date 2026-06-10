@@ -1,7 +1,23 @@
-import { motion } from 'framer-motion';
-import heroBg from '../assets/hero-bg.png';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const slideshowImages = [
+    '/hero_slideshow/court1.jpg',
+    '/hero_slideshow/court2.jpg',
+    '/hero_slideshow/court3.jpg',
+    '/hero_slideshow/court4.jpg'
+];
 
 const Hero = () => {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % slideshowImages.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <section id="home" style={{
             height: '100vh',
@@ -11,25 +27,46 @@ const Hero = () => {
             overflow: 'hidden',
             marginTop: 'var(--hero-margin-top, -115px)' 
         }}>
-            {/* Background with overlay */}
+            {/* Background Slideshow */}
             <div style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 width: '100%',
                 height: '100%',
-                backgroundImage: `url(${heroBg})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                zIndex: -1
-            }} />
+                zIndex: -1,
+                overflow: 'hidden'
+            }}>
+                <AnimatePresence initial={false}>
+                    <motion.div
+                        key={currentImageIndex}
+                        initial={{ opacity: 0, scale: 1.08 }}
+                        animate={{ opacity: 1, scale: 1.02 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ 
+                            opacity: { duration: 1.5, ease: 'easeInOut' },
+                            scale: { duration: 6, ease: 'linear' }
+                        }}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            backgroundImage: `url(${slideshowImages[currentImageIndex]})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center'
+                        }}
+                    />
+                </AnimatePresence>
+            </div>
             <div style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 width: '100%',
                 height: '100%',
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.8))',
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.85))',
                 zIndex: 0
             }} />
 
@@ -118,6 +155,34 @@ const Hero = () => {
             >
                 ↓ Scroll Down
             </motion.div>
+
+            {/* Slideshow Indicator Dots */}
+            <div style={{
+                position: 'absolute',
+                bottom: '2.5rem',
+                right: '4%',
+                display: 'flex',
+                gap: '8px',
+                zIndex: 2
+            }}>
+                {slideshowImages.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        style={{
+                            width: '12px',
+                            height: '12px',
+                            borderRadius: '50%',
+                            border: 'none',
+                            background: currentImageIndex === index ? 'var(--brand-teal)' : 'rgba(255, 255, 255, 0.3)',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            padding: 0
+                        }}
+                        title={`Go to slide ${index + 1}`}
+                    />
+                ))}
+            </div>
         </section>
     );
 };
