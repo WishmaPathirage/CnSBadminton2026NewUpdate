@@ -57,12 +57,12 @@ const Navbar = () => {
                 position: 'sticky',
                 top: 0,
                 zIndex: 2000,
-                backgroundColor: scrolled ? 'rgba(10, 10, 10, 0.95)' : 'transparent',
-                backdropFilter: scrolled ? 'blur(10px)' : 'none',
-                borderBottom: scrolled ? '1px solid transparent' : 'none',
-                borderImage: scrolled ? 'linear-gradient(to right, var(--brand-teal), var(--brand-pink), var(--brand-yellow)) 1' : 'none',
+                backgroundColor: scrolled ? 'rgba(10, 10, 10, 0.65)' : 'rgba(10, 10, 10, 0.35)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderBottom: scrolled ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(255, 255, 255, 0.03)',
                 transition: 'all 0.3s ease',
-                padding: '1rem 0'
+                padding: scrolled ? '0.75rem 0' : '1rem 0'
             }}
         >
             <div className="container flex-center" style={{ justifyContent: 'space-between' }}>
