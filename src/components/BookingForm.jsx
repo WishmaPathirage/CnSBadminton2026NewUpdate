@@ -3,7 +3,7 @@ import { db } from '../firebaseConfig';
 import { updateDoc, doc, getDoc } from 'firebase/firestore';
 import { getAvailability, subscribeToAvailability, createBooking, checkUserBlacklist, deleteBooking } from '../services/bookingService';
 import { getAuth } from 'firebase/auth'; // Import getAuth
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
@@ -531,6 +531,10 @@ const BookingForm = () => {
 
 
 
+    const finalTotal = ((900 * (duration / 60)) * selectedCourts.length) +
+        (needRackets ? (racketQty * 150 * (duration / 60)) : 0) +
+        (shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType] ? (shuttleQty * SHUTTLE_OPTIONS[shuttleType].price) : 0);
+
     return (
         <section id="booking" className="section-padding" style={{ position: 'relative' }}>
             <div className="container">
@@ -988,173 +992,280 @@ const BookingForm = () => {
                                     Optional Add-ons
                                 </h3>
 
-                                {/* Rackets Option */}
-                                <div style={{ marginBottom: '1.8rem', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '1.8rem' }}>
-                                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '12px' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={needRackets}
-                                            onChange={e => setNeedRackets(e.target.checked)}
-                                            style={{
-                                                width: '20px',
-                                                height: '20px',
-                                                accentColor: 'var(--brand-teal)',
-                                                cursor: 'pointer'
-                                            }}
-                                        />
-                                        <div>
-                                            <span style={{ color: 'white', fontWeight: '500', fontSize: '1rem' }}>Need Racket Rental?</span>
-                                            <span style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-gray)', marginTop: '2px' }}>
-                                                Rackets for Rent — Rs. 150 per racket per hour
-                                            </span>
-                                        </div>
-                                    </label>
-                                    
-                                    {needRackets && (
-                                        <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            style={{ marginTop: '1.2rem', display: 'flex', alignItems: 'center', gap: '15px', paddingLeft: '32px' }}
-                                        >
-                                            <span style={{ fontSize: '0.9rem', color: 'var(--text-gray)' }}>Quantity:</span>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.4)', borderRadius: '30px', padding: '4px', border: '1px solid rgba(255,255,255,0.15)' }}>
-                                                <button
-                                                    type="button"
-                                                    disabled={racketQty <= 1}
-                                                    onClick={() => setRacketQty(Math.max(1, racketQty - 1))}
-                                                    style={{
-                                                        width: '32px',
-                                                        height: '32px',
-                                                        borderRadius: '50%',
-                                                        border: 'none',
-                                                        background: racketQty <= 1 ? 'transparent' : 'rgba(255,255,255,0.1)',
-                                                        color: racketQty <= 1 ? 'rgba(255,255,255,0.3)' : 'white',
-                                                        cursor: racketQty <= 1 ? 'not-allowed' : 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        fontSize: '1.2rem',
-                                                        fontWeight: 'bold',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                >
-                                                    -
-                                                </button>
-                                                <span style={{ minWidth: '40px', textAlign: 'center', fontWeight: 'bold', fontSize: '1rem', color: 'white' }}>
-                                                    {racketQty}
-                                                </span>
-                                                <button
-                                                    type="button"
-                                                    disabled={racketQty >= 10}
-                                                    onClick={() => setRacketQty(Math.min(10, racketQty + 1))}
-                                                    style={{
-                                                        width: '32px',
-                                                        height: '32px',
-                                                        borderRadius: '50%',
-                                                        border: 'none',
-                                                        background: racketQty >= 10 ? 'transparent' : 'rgba(255,255,255,0.1)',
-                                                        color: racketQty >= 10 ? 'rgba(255,255,255,0.3)' : 'white',
-                                                        cursor: racketQty >= 10 ? 'not-allowed' : 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        fontSize: '1.2rem',
-                                                        fontWeight: 'bold',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                >
-                                                    +
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </div>
-
-                                {/* Shuttles Option */}
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.8rem', color: 'white', fontWeight: '500' }}>
-                                        Purchase Shuttlecocks? <span style={{ fontSize: '0.85rem', color: 'var(--brand-pink)' }}>(For sale — not reusable)</span>
-                                    </label>
-                                    <select
-                                        value={shuttleType}
-                                        onChange={e => setShuttleType(e.target.value)}
-                                        className="glass-input"
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                    gap: '1.5rem'
+                                }}>
+                                    {/* Racket Card */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.01 }}
+                                        onClick={() => setNeedRackets(!needRackets)}
                                         style={{
-                                            width: '100%',
-                                            padding: '0.8rem',
-                                            borderRadius: '12px',
-                                            background: 'rgba(0, 0, 0, 0.4)',
-                                            color: 'white',
-                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            background: needRackets ? 'rgba(120, 220, 202, 0.04)' : 'rgba(255, 255, 255, 0.01)',
+                                            border: needRackets ? '2px solid var(--brand-teal)' : '1px solid rgba(255, 255, 255, 0.08)',
+                                            borderRadius: '16px',
+                                            padding: '1.5rem',
                                             cursor: 'pointer',
-                                            fontSize: '0.95rem'
+                                            transition: 'border-color 0.2s, background-color 0.2s, box-shadow 0.2s',
+                                            boxShadow: needRackets ? '0 0 20px rgba(120, 220, 202, 0.1)' : 'none',
+                                            position: 'relative',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'space-between'
                                         }}
                                     >
-                                        {Object.entries(SHUTTLE_OPTIONS).map(([key, opt]) => (
-                                            <option key={key} value={key}>
-                                                {opt.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        <div style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            borderRadius: '50%',
+                                            border: '2px solid',
+                                            borderColor: needRackets ? 'var(--brand-teal)' : 'rgba(255, 255, 255, 0.2)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: needRackets ? 'var(--brand-teal)' : 'transparent',
+                                            transition: 'all 0.2s',
+                                            position: 'absolute',
+                                            top: '1.2rem',
+                                            right: '1.2rem'
+                                        }}>
+                                            {needRackets && <CheckCircle size={14} color="#000" strokeWidth={3} />}
+                                        </div>
 
-                                    {shuttleType !== 'none' && (
-                                        <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            style={{ marginTop: '1.2rem', display: 'flex', alignItems: 'center', gap: '15px', paddingLeft: '32px' }}
-                                        >
-                                            <span style={{ fontSize: '0.9rem', color: 'var(--text-gray)' }}>Quantity:</span>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.4)', borderRadius: '30px', padding: '4px', border: '1px solid rgba(255,255,255,0.15)' }}>
-                                                <button
-                                                    type="button"
-                                                    disabled={shuttleQty <= 1}
-                                                    onClick={() => setShuttleQty(Math.max(1, shuttleQty - 1))}
-                                                    style={{
-                                                        width: '32px',
-                                                        height: '32px',
-                                                        borderRadius: '50%',
-                                                        border: 'none',
-                                                        background: shuttleQty <= 1 ? 'transparent' : 'rgba(255,255,255,0.1)',
-                                                        color: shuttleQty <= 1 ? 'rgba(255,255,255,0.3)' : 'white',
-                                                        cursor: shuttleQty <= 1 ? 'not-allowed' : 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        fontSize: '1.2rem',
-                                                        fontWeight: 'bold',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                >
-                                                    -
-                                                </button>
-                                                <span style={{ minWidth: '40px', textAlign: 'center', fontWeight: 'bold', fontSize: '1rem', color: 'white' }}>
-                                                    {shuttleQty}
-                                                </span>
-                                                <button
-                                                    type="button"
-                                                    disabled={shuttleQty >= 10}
-                                                    onClick={() => setShuttleQty(Math.min(10, shuttleQty + 1))}
-                                                    style={{
-                                                        width: '32px',
-                                                        height: '32px',
-                                                        borderRadius: '50%',
-                                                        border: 'none',
-                                                        background: shuttleQty >= 10 ? 'transparent' : 'rgba(255,255,255,0.1)',
-                                                        color: shuttleQty >= 10 ? 'rgba(255,255,255,0.3)' : 'white',
-                                                        cursor: shuttleQty >= 10 ? 'not-allowed' : 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        fontSize: '1.2rem',
-                                                        fontWeight: 'bold',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                >
-                                                    +
-                                                </button>
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-teal)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <circle cx="15.5" cy="8.5" r="5.5" />
+                                                    <path d="M11.5 12.5L3 21" />
+                                                    <path d="M15 6v5" />
+                                                    <path d="M13 8h5" />
+                                                </svg>
+                                                <span style={{ color: 'white', fontWeight: '600', fontSize: '1.05rem' }}>Racket Rental</span>
                                             </div>
-                                        </motion.div>
-                                    )}
+                                            <p style={{ fontSize: '0.85rem', color: 'var(--text-gray)', margin: 0, paddingRight: '24px' }}>
+                                                Rent premium rackets for your session. <br /><strong>Rs. 150 per racket per hour.</strong>
+                                            </p>
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {needRackets && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    transition={{ duration: 0.2 }}
+                                                    style={{ marginTop: '1.2rem', display: 'flex', alignItems: 'center', gap: '15px', overflow: 'hidden' }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <span style={{ fontSize: '0.9rem', color: 'var(--text-gray)' }}>Quantity:</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.4)', borderRadius: '30px', padding: '4px', border: '1px solid rgba(255,255,255,0.15)' }}>
+                                                        <button
+                                                            type="button"
+                                                            disabled={racketQty <= 1}
+                                                            onClick={(e) => { e.stopPropagation(); setRacketQty(Math.max(1, racketQty - 1)); }}
+                                                            style={{
+                                                                width: '32px',
+                                                                height: '32px',
+                                                                borderRadius: '50%',
+                                                                border: 'none',
+                                                                background: racketQty <= 1 ? 'transparent' : 'rgba(255,255,255,0.1)',
+                                                                color: racketQty <= 1 ? 'rgba(255,255,255,0.3)' : 'white',
+                                                                cursor: racketQty <= 1 ? 'not-allowed' : 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                fontSize: '1.2rem',
+                                                                fontWeight: 'bold',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                        >
+                                                            -
+                                                        </button>
+                                                        <span style={{ minWidth: '40px', textAlign: 'center', fontWeight: 'bold', fontSize: '1rem', color: 'white' }}>
+                                                            {racketQty}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            disabled={racketQty >= 10}
+                                                            onClick={(e) => { e.stopPropagation(); setRacketQty(Math.min(10, racketQty + 1)); }}
+                                                            style={{
+                                                                width: '32px',
+                                                                height: '32px',
+                                                                borderRadius: '50%',
+                                                                border: 'none',
+                                                                background: racketQty >= 10 ? 'transparent' : 'rgba(255,255,255,0.1)',
+                                                                color: racketQty >= 10 ? 'rgba(255,255,255,0.3)' : 'white',
+                                                                cursor: racketQty >= 10 ? 'not-allowed' : 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                fontSize: '1.2rem',
+                                                                fontWeight: 'bold',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </motion.div>
+
+                                    {/* Shuttlecock Card */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.01 }}
+                                        onClick={() => setShuttleType(shuttleType === 'none' ? 'yonex_mavis_600' : 'none')}
+                                        style={{
+                                            background: shuttleType !== 'none' ? 'rgba(255, 105, 180, 0.04)' : 'rgba(255, 255, 255, 0.01)',
+                                            border: shuttleType !== 'none' ? '2px solid var(--brand-pink)' : '1px solid rgba(255, 255, 255, 0.08)',
+                                            borderRadius: '16px',
+                                            padding: '1.5rem',
+                                            cursor: 'pointer',
+                                            transition: 'border-color 0.2s, background-color 0.2s, box-shadow 0.2s',
+                                            boxShadow: shuttleType !== 'none' ? '0 0 20px rgba(255, 105, 180, 0.1)' : 'none',
+                                            position: 'relative',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'space-between'
+                                        }}
+                                    >
+                                        <div style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            borderRadius: '50%',
+                                            border: '2px solid',
+                                            borderColor: shuttleType !== 'none' ? 'var(--brand-pink)' : 'rgba(255, 255, 255, 0.2)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: shuttleType !== 'none' ? 'var(--brand-pink)' : 'transparent',
+                                            transition: 'all 0.2s',
+                                            position: 'absolute',
+                                            top: '1.2rem',
+                                            right: '1.2rem'
+                                        }}>
+                                            {shuttleType !== 'none' && <CheckCircle size={14} color="#000" strokeWidth={3} />}
+                                        </div>
+
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-pink)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M7 10l5-7 5 7" />
+                                                    <path d="M12 3v17" />
+                                                    <path d="M12 20a4 4 0 0 1-4-4v-6h8v6a4 4 0 0 1-4 4z" />
+                                                </svg>
+                                                <span style={{ color: 'white', fontWeight: '600', fontSize: '1.05rem' }}>Shuttlecocks <span style={{ fontSize: '0.8rem', color: 'var(--brand-pink)' }}>(For Sale)</span></span>
+                                            </div>
+                                            <p style={{ fontSize: '0.85rem', color: 'var(--text-gray)', margin: 0, paddingRight: '24px' }}>
+                                                Purchase non-reusable shuttlecocks for your game.
+                                            </p>
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {shuttleType !== 'none' && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    transition={{ duration: 0.2 }}
+                                                    style={{ marginTop: '1rem', overflow: 'hidden' }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
+                                                        {Object.entries(SHUTTLE_OPTIONS).filter(([key]) => key !== 'none').map(([key, opt]) => {
+                                                            const isSelected = shuttleType === key;
+                                                            return (
+                                                                <motion.div
+                                                                    key={key}
+                                                                    whileHover={{ scale: 1.02 }}
+                                                                    whileTap={{ scale: 0.98 }}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setShuttleType(key);
+                                                                    }}
+                                                                    style={{
+                                                                        background: isSelected ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.3)',
+                                                                        border: isSelected ? '1.5px solid var(--brand-pink)' : '1px solid rgba(255, 255, 255, 0.1)',
+                                                                        borderRadius: '10px',
+                                                                        padding: '0.5rem',
+                                                                        textAlign: 'center',
+                                                                        cursor: 'pointer',
+                                                                        fontSize: '0.8rem',
+                                                                        color: isSelected ? 'white' : 'var(--text-gray)',
+                                                                        transition: 'all 0.2s',
+                                                                        boxShadow: isSelected ? '0 0 10px rgba(255, 105, 180, 0.1)' : 'none',
+                                                                        fontWeight: isSelected ? '600' : 'normal'
+                                                                    }}
+                                                                >
+                                                                    <div style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                                                        {opt.name.replace(' (Nylon)', '').replace(' (Feather)', '')}
+                                                                    </div>
+                                                                    <div style={{ fontSize: '0.7rem', color: isSelected ? 'var(--brand-pink)' : 'var(--text-gray)', marginTop: '2px', fontWeight: 'bold' }}>
+                                                                        Rs. {opt.price}
+                                                                    </div>
+                                                                </motion.div>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: 'var(--text-gray)' }}>Quantity:</span>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.4)', borderRadius: '30px', padding: '4px', border: '1px solid rgba(255,255,255,0.15)' }}>
+                                                            <button
+                                                                type="button"
+                                                                disabled={shuttleQty <= 1}
+                                                                onClick={(e) => { e.stopPropagation(); setShuttleQty(Math.max(1, shuttleQty - 1)); }}
+                                                                style={{
+                                                                    width: '32px',
+                                                                    height: '32px',
+                                                                    borderRadius: '50%',
+                                                                    border: 'none',
+                                                                    background: shuttleQty <= 1 ? 'transparent' : 'rgba(255,255,255,0.1)',
+                                                                    color: shuttleQty <= 1 ? 'rgba(255,255,255,0.3)' : 'white',
+                                                                    cursor: shuttleQty <= 1 ? 'not-allowed' : 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    fontSize: '1.2rem',
+                                                                    fontWeight: 'bold',
+                                                                    transition: 'all 0.2s'
+                                                                }}
+                                                            >
+                                                                -
+                                                            </button>
+                                                            <span style={{ minWidth: '40px', textAlign: 'center', fontWeight: 'bold', fontSize: '1rem', color: 'white' }}>
+                                                                {shuttleQty}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                disabled={shuttleQty >= 10}
+                                                                onClick={(e) => { e.stopPropagation(); setShuttleQty(Math.min(10, shuttleQty + 1)); }}
+                                                                style={{
+                                                                    width: '32px',
+                                                                    height: '32px',
+                                                                    borderRadius: '50%',
+                                                                    border: 'none',
+                                                                    background: shuttleQty >= 10 ? 'transparent' : 'rgba(255,255,255,0.1)',
+                                                                    color: shuttleQty >= 10 ? 'rgba(255,255,255,0.3)' : 'white',
+                                                                    cursor: shuttleQty >= 10 ? 'not-allowed' : 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    fontSize: '1.2rem',
+                                                                    fontWeight: 'bold',
+                                                                    transition: 'all 0.2s'
+                                                                }}
+                                                            >
+                                                                +
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </motion.div>
                                 </div>
                             </div>
 
@@ -1181,28 +1292,44 @@ const BookingForm = () => {
                                 </div>
 
                                 {/* Racket Rent Cost */}
-                                {needRackets && (
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem', fontSize: '0.92rem' }}>
-                                        <span style={{ color: 'var(--text-gray)' }}>
-                                            Racket Rent (Rs. 150/hr × {racketQty} rackets × {duration / 60} hrs)
-                                        </span>
-                                        <span style={{ color: 'white', fontWeight: '500' }}>
-                                            Rs. {(racketQty * 150 * (duration / 60)).toFixed(2)}
-                                        </span>
-                                    </div>
-                                )}
+                                <AnimatePresence>
+                                    {needRackets && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem', fontSize: '0.92rem', overflow: 'hidden' }}
+                                        >
+                                            <span style={{ color: 'var(--text-gray)' }}>
+                                                Racket Rent (Rs. 150/hr × {racketQty} rackets × {duration / 60} hrs)
+                                            </span>
+                                            <span style={{ color: 'white', fontWeight: '500' }}>
+                                                Rs. {(racketQty * 150 * (duration / 60)).toFixed(2)}
+                                            </span>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
 
                                 {/* Shuttlecock Cost */}
-                                {shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType] && (
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem', fontSize: '0.92rem' }}>
-                                        <span style={{ color: 'var(--text-gray)' }}>
-                                            Shuttlecock Purchase ({shuttleQty} × {SHUTTLE_OPTIONS[shuttleType].name} @ Rs. {SHUTTLE_OPTIONS[shuttleType].price} each)
-                                        </span>
-                                        <span style={{ color: 'white', fontWeight: '500' }}>
-                                            Rs. {(shuttleQty * SHUTTLE_OPTIONS[shuttleType].price).toFixed(2)}
-                                        </span>
-                                    </div>
-                                )}
+                                <AnimatePresence>
+                                    {shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType] && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem', fontSize: '0.92rem', overflow: 'hidden' }}
+                                        >
+                                            <span style={{ color: 'var(--text-gray)' }}>
+                                                Shuttlecock Purchase ({shuttleQty} × {SHUTTLE_OPTIONS[shuttleType].name} @ Rs. {SHUTTLE_OPTIONS[shuttleType].price} each)
+                                            </span>
+                                            <span style={{ color: 'white', fontWeight: '500' }}>
+                                                Rs. {(shuttleQty * SHUTTLE_OPTIONS[shuttleType].price).toFixed(2)}
+                                            </span>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
 
                                 <div style={{
                                     borderTop: '1px solid rgba(255, 255, 255, 0.1)',
@@ -1213,13 +1340,15 @@ const BookingForm = () => {
                                     alignItems: 'center'
                                 }}>
                                     <span style={{ color: 'white', fontWeight: 'bold' }}>Total Final Payment</span>
-                                    <span style={{ color: 'var(--brand-teal)', fontSize: '1.5rem', fontWeight: '800' }}>
-                                        Rs. {(
-                                            ((900 * (duration / 60)) * selectedCourts.length) +
-                                            (needRackets ? (racketQty * 150 * (duration / 60)) : 0) +
-                                            (shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType] ? (shuttleQty * SHUTTLE_OPTIONS[shuttleType].price) : 0)
-                                        ).toFixed(2)}
-                                    </span>
+                                    <motion.span
+                                        key={finalTotal}
+                                        initial={{ scale: 0.95, opacity: 0.8 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ duration: 0.2 }}
+                                        style={{ color: 'var(--brand-teal)', fontSize: '1.5rem', fontWeight: '800', display: 'inline-block' }}
+                                    >
+                                        Rs. {finalTotal.toFixed(2)}
+                                    </motion.span>
                                 </div>
                             </div>
 
