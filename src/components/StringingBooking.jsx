@@ -1,28 +1,24 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Phone, MessageCircle, Zap, Shield, Clock, Award } from 'lucide-react';
+import { Phone, MessageCircle } from 'lucide-react';
 
 const StringingBooking = () => {
     const cleanNumber = '+94764160217';
 
     const features = [
         {
-            icon: <Zap size={24} style={{ color: 'var(--brand-yellow)' }} />,
             title: 'Precision Electronic Tensioning',
             desc: 'Calibrated electronic machine tensioning for exact tension consistency across every main and cross.'
         },
         {
-            icon: <Award size={24} style={{ color: 'var(--brand-teal)' }} />,
             title: 'Premium Brand Strings',
             desc: 'Stocked with Yonex, Li-Ning, and Victor strings. Choose from control, durability, or repulsion power.'
         },
         {
-            icon: <Clock size={24} style={{ color: 'var(--brand-pink)' }} />,
             title: '24-Hour Quick Turnaround',
             desc: 'Drop off your racket and have it freshly re-strung and ready for your next session within 24 hours.'
         },
         {
-            icon: <Shield size={24} style={{ color: 'var(--brand-teal)' }} />,
             title: 'Expert Consultation',
             desc: 'Not sure about your tension? Our certified stringers will guide you based on your skill level and playstyle.'
         }
@@ -73,8 +69,8 @@ const StringingBooking = () => {
                     {/* Left Column: Why String With Us */}
                     <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', justifyContent: 'space-between' }}>
                         <div>
-                            <h3 className="stringing-card-title" style={{ color: 'var(--text-light)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <Zap size={22} style={{ color: 'var(--brand-teal)' }} /> Why String With Us?
+                            <h3 className="stringing-card-title" style={{ color: 'var(--text-light)', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1.5rem' }}>
+                                Why String With Us?
                             </h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                                 {features.map((feat, index) => (
@@ -84,20 +80,7 @@ const StringingBooking = () => {
                                         whileInView={{ opacity: 1, x: 0 }}
                                         transition={{ duration: 0.4, delay: index * 0.1 }}
                                         viewport={{ once: true }}
-                                        style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}
                                     >
-                                        <div style={{
-                                            marginTop: '3px',
-                                            padding: '8px',
-                                            borderRadius: '8px',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            flexShrink: 0
-                                        }}>
-                                            {feat.icon}
-                                        </div>
                                         <div>
                                             <h4 style={{ color: 'var(--text-light)', fontWeight: '600', marginBottom: '0.25rem' }}>{feat.title}</h4>
                                             <p style={{ color: 'var(--text-gray)', fontSize: '0.85rem', lineHeight: '1.5' }}>{feat.desc}</p>
