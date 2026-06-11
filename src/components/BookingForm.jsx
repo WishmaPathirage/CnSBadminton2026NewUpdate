@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
+import CryptoJS from 'crypto-js';
 
 const BookingForm = () => {
     // Helper for Local Date (YYYY-MM-DD) - Forced to Sri Lanka Time (UTC+5:30)
@@ -44,29 +45,10 @@ const BookingForm = () => {
     const [status, setStatus] = useState('idle'); // idle, submitting, success, error
     const [step, setStep] = useState(1); // 1: Select Time, 2: Details
 
-    // 5-Second Cancellation Window States
-    const [showTimer, setShowTimer] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(5);
-    const [pendingBookingId, setPendingBookingId] = useState(null);
-    const [pendingOrderId, setPendingOrderId] = useState(null);
-
     // Auth State
     const [currentUser, setCurrentUser] = useState(null);
     const [loadingAuth, setLoadingAuth] = useState(true);
     const navigate = useNavigate();
-
-    // Timer Effect for Cancellation Window
-    useEffect(() => {
-        let timer;
-        if (showTimer && timeLeft > 0) {
-            timer = setInterval(() => {
-                setTimeLeft(prev => prev - 1);
-            }, 1000);
-        } else if (showTimer && timeLeft === 0) {
-            finalizeBooking();
-        }
-        return () => clearInterval(timer);
-    }, [showTimer, timeLeft]);
 
     // Handle Mobile Back Button
     useEffect(() => {
@@ -242,119 +224,127 @@ const BookingForm = () => {
         setStep(2);
     };
 
-    const handleCancelPending = async () => {
-        if (!pendingBookingId) return;
-        setStatus('submitting');
-        try {
-            await deleteBooking(pendingBookingId);
-            setShowTimer(false);
-            setTimeLeft(5);
-            setPendingBookingId(null);
-            setStatus('idle');
-            setStep(1);
-            alert("Booking Cancelled successfully.");
-        } catch (err) {
-            console.error("Failed to cancel booking:", err);
-            alert("Error cancelling booking. Please try again or contact support.");
-        }
-    };
+    const startPayHerePayment = async (bookingId, orderId, totalAmount, userDetails, date, selectedTime, duration, selectedCourts) => {
+        const merchantId = import.meta.env.VITE_PAYHERE_MERCHANT_ID || '252134';
+        const merchantSecret = import.meta.env.VITE_PAYHERE_MERCHANT_SECRET || 'MTU3MzA5NDAxMDMxMTA2NjcyMzMxMjIzNDc5OTIyMTIxNjQ3ODUzNw==';
+        const isSandbox = import.meta.env.VITE_PAYHERE_SANDBOX !== undefined
+            ? import.meta.env.VITE_PAYHERE_SANDBOX === 'true'
+            : false;
 
-    const finalizeBooking = async () => {
-        if (!pendingBookingId) return;
+        const amountFormatted = totalAmount.toFixed(2);
+        const currency = 'LKR';
 
-        try {
-            // 1. Fetch latest booking data directly from Firestore (ensures no stale state)
-            const snap = await getDoc(doc(db, 'bookings', pendingBookingId));
-            if (!snap.exists()) {
-                console.error("Critical Error: Booking doc not found for email send.");
-                return;
+        // Generate the signature hash
+        const hashedSecret = CryptoJS.MD5(merchantSecret).toString().toUpperCase();
+        const concatenatedString = merchantId + orderId + amountFormatted + currency + hashedSecret;
+        const generatedHash = CryptoJS.MD5(concatenatedString).toString().toUpperCase();
+
+        const [startH, startM] = selectedTime.split(':').map(Number);
+        const totalMins = startH * 60 + startM + parseInt(duration);
+        const endH = Math.floor(totalMins / 60);
+        const endM = totalMins % 60;
+        const endTimeStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+        const payment = {
+            sandbox: isSandbox,
+            merchant_id: merchantId,
+            return_url: `${window.location.origin}/#/payment/success?order_id=${orderId}`,
+            cancel_url: `${window.location.origin}/#/payment/cancel?order_id=${orderId}`,
+            notify_url: 'https://cnsbadminton.lk/notify', // placeholder
+            order_id: orderId,
+            items: `Court Booking - ${date} (${selectedTime})`,
+            amount: amountFormatted,
+            currency: currency,
+            first_name: userDetails.name.split(' ')[0] || 'Customer',
+            last_name: userDetails.name.split(' ').slice(1).join(' ') || 'User',
+            email: userDetails.email,
+            phone: userDetails.Phone,
+            address: 'No.1, Galle Road',
+            city: 'Colombo',
+            country: 'Sri Lanka',
+            hash: generatedHash
+        };
+
+        console.log("Starting PayHere payment with object:", payment);
+
+        // Bind SDK handlers
+        window.payhere.onCompleted = async (completedOrderId) => {
+            console.log("PayHere: Payment completed for order", completedOrderId);
+            setStatus('submitting');
+            try {
+                // Update booking status to 'confirmed'
+                await updateDoc(doc(db, 'bookings', bookingId), {
+                    status: 'confirmed'
+                });
+
+                // Trigger EmailJS notifications
+                const templateParams = {
+                    order_id: orderId,
+                    orderId: orderId,
+                    booking_id: bookingId,
+                    bookingId: bookingId,
+                    customer_name: userDetails.name,
+                    user_name: userDetails.name,
+                    userName: userDetails.name,
+                    phone: userDetails.Phone,
+                    userPhone: userDetails.Phone,
+                    date: date,
+                    booking_date: date,
+                    starting_time: selectedTime,
+                    ending_time: endTimeStr,
+                    duration: `${duration} mins`,
+                    courts_booked: selectedCourts.join(', '),
+                    courts: selectedCourts.join(', '),
+                    amount: amountFormatted,
+                    total_amount: amountFormatted,
+                    totalAmount: amountFormatted,
+                    user_email: userDetails.email,
+                    userEmail: userDetails.email,
+                    booking_time: `${selectedTime} - ${endTimeStr}`
+                };
+
+                console.log("Sending Confirmation Emails...", templateParams);
+
+                emailjs.send(
+                    'service_i25io04',
+                    'template_bv3pwbr',
+                    templateParams,
+                    'cmyBcHcHxEP2ggwV3'
+                ).catch(err => console.error("EmailJS alert failed:", err));
+
+                setStatus('success');
+                navigate(`/payment/success?order_id=${orderId}`);
+            } catch (err) {
+                console.error("Failed to update booking status on payment success:", err);
+                alert("Payment was successful, but we encountered an error updating your booking. Please contact support.");
             }
-            const b = snap.data();
+        };
 
-            // 2. Calculate End Time
-            const [hours, minutes] = b.startTime.split(':').map(Number);
-            const totalMinutes = hours * 60 + minutes + parseInt(b.duration);
-            const endHour = Math.floor(totalMinutes / 60);
-            const endMinute = totalMinutes % 60;
-            const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+        window.payhere.onDismissed = async () => {
+            console.log("PayHere: Payment modal dismissed");
+            setStatus('idle');
+            try {
+                // Delete the temporary pending_payment booking to release slots
+                await deleteBooking(bookingId);
+                alert("Payment was cancelled. Your booking has been cancelled and slots released.");
+            } catch (err) {
+                console.error("Failed to delete pending booking on dismiss:", err);
+            }
+        };
 
-            // 3. Trigger Notifications (Exhaustive Mapping)
-            // This covers almost every naming convention for the EmailJS template.
-            const templateParams = {
-                // Order ID Variations
-                order_id: b.orderId || b.id || pendingOrderId,
-                orderId: b.orderId || b.id || pendingOrderId,
-                OrderID: b.orderId || b.id || pendingOrderId,
-                booking_id: b.id || pendingBookingId,
-                bookingId: b.id || pendingBookingId,
+        window.payhere.onError = async (error) => {
+            console.error("PayHere error:", error);
+            setStatus('idle');
+            try {
+                await deleteBooking(bookingId);
+            } catch (err) {
+                console.error("Failed to delete booking on error:", err);
+            }
+            alert(`Payment error occurred: ${error}. Your booking has been cancelled.`);
+        };
 
-                // Customer Name Variations
-                customer_name: b.userName,
-                customerName: b.userName,
-                user_name: b.userName,
-                userName: b.userName,
-                name: b.userName,
-
-                // Phone Variations
-                phone: b.userPhone,
-                user_phone: b.userPhone,
-                userPhone: b.userPhone,
-                Phone: b.userPhone,
-
-                // Date/Time Variations
-                date: b.date,
-                booking_date: b.date,
-                bookingDate: b.date,
-                starting_time: b.startTime,
-                startTime: b.startTime,
-                start_time: b.startTime,
-                ending_time: endTime,
-                endTime: endTime,
-                end_time: endTime,
-
-                // Duration/Courts Variations
-                duration: `${b.duration} mins`,
-                duration_mins: b.duration,
-                durationMins: b.duration,
-                courts_booked: b.courts.join(', '),
-                court_no: b.courts.join(', '),
-                courts: b.courts.join(', '),
-
-                // Amount Variations
-                amount: b.amount.toFixed(2),
-                total_amount: b.amount.toFixed(2),
-                totalAmount: b.amount.toFixed(2),
-
-                // Contact
-                user_email: b.userEmail,
-                userEmail: b.userEmail,
-                booking_time: `${b.startTime} - ${endTime}`
-            };
-
-            console.log("!!! SENDING ADMIN ALERT EMAIL WITH PARAMS !!!", templateParams);
-
-            emailjs.send(
-                'service_i25io04',
-                'template_bv3pwbr',
-                templateParams,
-                'cmyBcHcHxEP2ggwV3'
-            ).then(() => {
-                console.log('SUCCESS: Admin Booking Alert Sent');
-            }).catch((err) => {
-                console.error('FAILED: Admin Booking Alert', err);
-            });
-
-            // WhatsApp (Admin)
-            const waMessage = `New Review Booking! Order ID: ${b.orderId}, Date: ${b.date}, Time: ${b.startTime}, Courts: ${b.courts.join(', ')}. Please check Admin Panel.`;
-            console.log("WhatsApp Notification Triggered:", waMessage);
-
-            setShowTimer(false);
-            setStatus('success');
-            navigate(`/payment/success?order_id=${pendingOrderId || b.orderId || 'N/A'}`);
-        } catch (error) {
-            console.error("Error in finalizeBooking execution:", error);
-            alert("Something went wrong finalizing your booking, but it has been saved. Please contact support.");
-        }
+        // Open the modal
+        window.payhere.startPayment(payment);
     };
 
     const handleSubmit = async (e) => {
@@ -453,7 +443,7 @@ const BookingForm = () => {
                     userEmail: userDetails.email,
                     amount: totalAmount,
                     orderId: orderId,
-                    status: 'pending',
+                    status: 'pending_payment',
 
                     // Snake_Case (Exhaustive fields for Automated Email Triggers)
                     order_id: orderId,
@@ -471,17 +461,13 @@ const BookingForm = () => {
                     booking_time: `${selectedTime} - ${endTimeStr}`
                 });
                 console.log("Booking created with ID:", result.id, "OrderId:", orderId);
-                setPendingBookingId(result.id);
-                setPendingOrderId(orderId);
                 
-                console.log("Starting 5-second timer...");
-                // Trigger 5-second timer instead of immediate success
-                setShowTimer(true);
-                setTimeLeft(5);
-                return; 
+                // Trigger PayHere payment popup
+                startPayHerePayment(result.id, orderId, totalAmount, userDetails, date, selectedTime, duration, selectedCourts);
             } catch (e) {
                 console.error("Booking submission error:", e);
                 alert("Something went wrong with the booking. Please try again.");
+                setStatus('idle');
             }
         } catch (error) {
             console.error("Outer Booking Error:", error);
@@ -980,68 +966,6 @@ const BookingForm = () => {
 
                 </motion.div>
             </div>
-
-            {/* 5-Second Cancellation Overlay */}
-            {showTimer && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0,0,0,0.9)',
-                    zIndex: 10000,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backdropFilter: 'blur(10px)'
-                }}>
-                    <motion.div 
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="glass-panel"
-                        style={{ padding: '3rem', textAlign: 'center', maxWidth: '400px', border: '1px solid var(--brand-teal)', borderRadius: '30px' }}
-                    >
-                        <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Hold on! 🏸</h2>
-                        <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '2rem' }}>
-                            Your booking is being finalized. You can cancel it within the next 5 seconds.
-                        </p>
-                        
-                        <div style={{ 
-                            width: '80px', 
-                            height: '80px', 
-                            borderRadius: '50%', 
-                            border: '4px solid var(--brand-teal)', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            fontSize: '2.5rem',
-                            fontWeight: '800',
-                            margin: '0 auto 2rem',
-                            color: 'var(--brand-teal)'
-                        }}>
-                            {timeLeft}
-                        </div>
-
-                        <button 
-                            onClick={handleCancelPending}
-                            className="btn-gradient"
-                            style={{ 
-                                width: '100%', 
-                                padding: '1rem', 
-                                borderRadius: '30px', 
-                                background: 'linear-gradient(45deg, #ff416c, #ff4b2b)',
-                                border: 'none',
-                                fontWeight: 'bold',
-                                color: 'white',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Cancel Booking
-                        </button>
-                    </motion.div>
-                </div>
-            )}
         </section>
     );
 };
