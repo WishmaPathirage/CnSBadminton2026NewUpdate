@@ -1,8 +1,29 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { X, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getBookingByOrderId, deleteBooking } from '../services/bookingService';
 
 const PaymentCancel = () => {
+    const [searchParams] = useSearchParams();
+    const orderId = searchParams.get('order_id');
+
+    useEffect(() => {
+        const cleanupPendingBooking = async () => {
+            if (orderId) {
+                try {
+                    const booking = await getBookingByOrderId(orderId);
+                    if (booking && booking.status === 'pending_payment') {
+                        console.log("Deleting pending_payment booking on cancel redirect:", booking.id);
+                        await deleteBooking(booking.id);
+                    }
+                } catch (error) {
+                    console.error("Error cleaning up pending booking on cancel:", error);
+                }
+            }
+        };
+        cleanupPendingBooking();
+    }, [orderId]);
     return (
         <div style={{
             minHeight: '100vh',
