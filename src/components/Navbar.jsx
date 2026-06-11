@@ -65,7 +65,7 @@ const Navbar = () => {
                 padding: scrolled ? '0.75rem 0' : '1rem 0'
             }}
         >
-            <div className="container flex-center" style={{ justifyContent: 'space-between' }}>
+            <div className="container flex-center navbar-container" style={{ justifyContent: 'space-between' }}>
                 <Link
                     to="/"
                     onClick={() => {
@@ -88,7 +88,7 @@ const Navbar = () => {
                 </Link>
 
                 {/* Desktop Menu */}
-                <div className="desktop-menu" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                <div className="desktop-menu" style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
                     {links.map((link) => (
                         <button
                             key={link.name}
@@ -211,6 +211,11 @@ const Navbar = () => {
         }
         @media (min-width: 769px) {
           .mobile-toggle { display: none !important; }
+        }
+        @media (min-width: 1025px) {
+          .navbar-container {
+            max-width: 1500px !important;
+          }
         }
         .nav-link:hover { color: var(--primary-green); }
         .nav-link::after {
