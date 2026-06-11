@@ -123,9 +123,25 @@ const PaymentSuccess = () => {
                             <span style={{ color: 'var(--text-gray)' }}>Time:</span>
                             <span>{booking.startTime} - {getEndTime(booking.startTime, booking.duration)}</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: booking.needRackets || (booking.shuttleType && booking.shuttleType !== 'none') ? '0.5rem' : '0' }}>
                             <span style={{ color: 'var(--text-gray)' }}>Court No:</span>
                             <span style={{ color: 'var(--brand-teal)' }}>{booking.courts.map(c => `Court ${c}`).join(', ')}</span>
+                        </div>
+                        {booking.needRackets && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: booking.shuttleType && booking.shuttleType !== 'none' ? '0.5rem' : '0' }}>
+                                <span style={{ color: 'var(--text-gray)' }}>Racket Rental:</span>
+                                <span>{booking.racketQty} {booking.racketQty === 1 ? 'Racket' : 'Rackets'} (Rs. {booking.racketCost ? booking.racketCost.toFixed(2) : (booking.racketQty * 150 * (booking.duration / 60)).toFixed(2)})</span>
+                            </div>
+                        )}
+                        {booking.shuttleType && booking.shuttleType !== 'none' && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: 'var(--text-gray)' }}>Shuttlecocks:</span>
+                                <span>{booking.shuttleQty} × {booking.shuttleType === 'nylon' ? 'Nylon' : 'Feather'} (Rs. {booking.shuttleCost ? booking.shuttleCost.toFixed(2) : (booking.shuttleQty * (booking.shuttleType === 'nylon' ? 800 : 900)).toFixed(2)})</span>
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.8rem', marginTop: '0.8rem' }}>
+                            <span style={{ color: 'white', fontWeight: 'bold' }}>Total Paid:</span>
+                            <span style={{ color: 'var(--brand-teal)', fontWeight: 'bold' }}>Rs. {booking.amount ? booking.amount.toFixed(2) : '0.00'}</span>
                         </div>
                     </div>
                 )}

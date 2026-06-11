@@ -42,6 +42,13 @@ const BookingForm = () => {
     const [selectedCourts, setSelectedCourts] = useState([]);
     const [slots, setSlots] = useState([]);
     const [userDetails, setUserDetails] = useState({ name: '', email: '', Phone: '' });
+    
+    // Add-on options
+    const [needRackets, setNeedRackets] = useState(false);
+    const [racketQty, setRacketQty] = useState(1);
+    const [shuttleType, setShuttleType] = useState('none'); // 'none', 'nylon', 'feather'
+    const [shuttleQty, setShuttleQty] = useState(1);
+
     const [status, setStatus] = useState('idle'); // idle, submitting, success, error
     const [step, setStep] = useState(1); // 1: Select Time, 2: Details
 
@@ -224,7 +231,7 @@ const BookingForm = () => {
         setStep(2);
     };
 
-    const startPayHerePayment = async (bookingId, orderId, totalAmount, userDetails, date, selectedTime, duration, selectedCourts) => {
+    const startPayHerePayment = async (bookingId, orderId, totalAmount, courtCost, racketCost, shuttleCost, needRackets, racketQty, shuttleType, shuttleQty, userDetails, date, selectedTime, duration, selectedCourts) => {
         const merchantId = import.meta.env.VITE_PAYHERE_MERCHANT_ID || '252134';
         const merchantSecret = import.meta.env.VITE_PAYHERE_MERCHANT_SECRET || 'MTU3MzA5NDAxMDMxMTA2NjcyMzMxMjIzNDc5OTIyMTIxNjQ3ODUzNw==';
         const isSandbox = import.meta.env.VITE_PAYHERE_SANDBOX !== undefined
@@ -245,6 +252,11 @@ const BookingForm = () => {
         const endM = totalMins % 60;
         const endTimeStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 
+        // Construct dynamic list of items for the checkout dialog
+        let itemDescription = `Court Booking`;
+        if (needRackets) itemDescription += ` + ${racketQty} Rackets Rent`;
+        if (shuttleType !== 'none') itemDescription += ` + ${shuttleQty} ${shuttleType === 'nylon' ? 'Nylon' : 'Feather'} Shuttles`;
+
         const payment = {
             sandbox: isSandbox,
             merchant_id: merchantId,
@@ -252,7 +264,7 @@ const BookingForm = () => {
             cancel_url: `${window.location.origin}/#/payment/cancel?order_id=${orderId}`,
             notify_url: 'https://cnsbadminton.lk/notify', // placeholder
             order_id: orderId,
-            items: `Court Booking - ${date} (${selectedTime})`,
+            items: itemDescription,
             amount: amountFormatted,
             currency: currency,
             first_name: userDetails.name.split(' ')[0] || 'Customer',
@@ -300,7 +312,12 @@ const BookingForm = () => {
                     totalAmount: amountFormatted,
                     user_email: userDetails.email,
                     userEmail: userDetails.email,
-                    booking_time: `${selectedTime} - ${endTimeStr}`
+                    booking_time: `${selectedTime} - ${endTimeStr}`,
+                    
+                    // Details about equipment/shuttle attachments
+                    court_cost: `Rs. ${courtCost.toFixed(2)}`,
+                    rackets_info: needRackets ? `${racketQty} Rackets (Rs. ${racketCost.toFixed(2)})` : 'None',
+                    shuttles_info: shuttleType !== 'none' ? `${shuttleQty} ${shuttleType === 'nylon' ? 'Nylon' : 'Feather'} Shuttle(s) (Rs. ${shuttleCost.toFixed(2)})` : 'None'
                 };
 
                 console.log("Sending Confirmation Emails...", templateParams);
@@ -385,9 +402,14 @@ const BookingForm = () => {
         setStatus('submitting');
 
         // Calculate Amount: Rs. 900 per hour per court
-        // Duration is in minutes (30, 60, 90, 120)
-        const pricePerHour = 900;
-        const totalAmount = (pricePerHour * (duration / 60)) * selectedCourts.length;
+        const courtCost = (900 * (duration / 60)) * selectedCourts.length;
+        const racketCost = needRackets ? (racketQty * 150 * (duration / 60)) : 0;
+        const shuttleCost = shuttleType === 'nylon' 
+            ? (shuttleQty * 800) 
+            : shuttleType === 'feather' 
+                ? (shuttleQty * 900) 
+                : 0;
+        const totalAmount = courtCost + racketCost + shuttleCost;
         const amountFormatted = totalAmount.toFixed(2); // Ensure 2 decimal places string
 
         // 1. Create Booking in Firestore as 'PENDING_PAYMENT' (or 'CONFIRMED' if you trust the flow)
@@ -444,6 +466,15 @@ const BookingForm = () => {
                     amount: totalAmount,
                     orderId: orderId,
                     status: 'pending_payment',
+                    
+                    // Add-on Selections
+                    needRackets,
+                    racketQty: needRackets ? racketQty : 0,
+                    shuttleType,
+                    shuttleQty: shuttleType !== 'none' ? shuttleQty : 0,
+                    courtCost,
+                    racketCost,
+                    shuttleCost,
 
                     // Snake_Case (Exhaustive fields for Automated Email Triggers)
                     order_id: orderId,
@@ -463,7 +494,23 @@ const BookingForm = () => {
                 console.log("Booking created with ID:", result.id, "OrderId:", orderId);
                 
                 // Trigger PayHere payment popup
-                startPayHerePayment(result.id, orderId, totalAmount, userDetails, date, selectedTime, duration, selectedCourts);
+                startPayHerePayment(
+                    result.id, 
+                    orderId, 
+                    totalAmount, 
+                    courtCost, 
+                    racketCost, 
+                    shuttleCost, 
+                    needRackets, 
+                    racketQty, 
+                    shuttleType, 
+                    shuttleQty, 
+                    userDetails, 
+                    date, 
+                    selectedTime, 
+                    duration, 
+                    selectedCourts
+                );
             } catch (e) {
                 console.error("Booking submission error:", e);
                 alert("Something went wrong with the booking. Please try again.");
@@ -921,6 +968,187 @@ const BookingForm = () => {
                                         </a>
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Equipment & Shuttlecock Options */}
+                            <div style={{
+                                background: 'rgba(255, 255, 255, 0.03)',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                borderRadius: '20px',
+                                padding: '1.8rem',
+                                marginBottom: '2.5rem'
+                            }}>
+                                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', color: 'var(--brand-teal)', fontWeight: '600' }}>
+                                    Optional Add-ons
+                                </h3>
+
+                                {/* Rackets Option */}
+                                <div style={{ marginBottom: '1.8rem', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '1.8rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '12px' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={needRackets}
+                                            onChange={e => setNeedRackets(e.target.checked)}
+                                            style={{
+                                                width: '20px',
+                                                height: '20px',
+                                                accentColor: 'var(--brand-teal)',
+                                                cursor: 'pointer'
+                                            }}
+                                        />
+                                        <div>
+                                            <span style={{ color: 'white', fontWeight: '500', fontSize: '1rem' }}>Need Racket Rental?</span>
+                                            <span style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-gray)', marginTop: '2px' }}>
+                                                Rackets for Rent — Rs. 150 per racket per hour
+                                            </span>
+                                        </div>
+                                    </label>
+                                    
+                                    {needRackets && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            style={{ marginTop: '1.2rem', display: 'flex', alignItems: 'center', gap: '15px', paddingLeft: '32px' }}
+                                        >
+                                            <span style={{ fontSize: '0.9rem', color: 'var(--text-gray)' }}>How many rackets?</span>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="10"
+                                                value={racketQty}
+                                                onChange={e => setRacketQty(Math.max(1, parseInt(e.target.value) || 1))}
+                                                style={{
+                                                    width: '70px',
+                                                    padding: '0.5rem',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid rgba(255,255,255,0.15)',
+                                                    background: 'rgba(0,0,0,0.4)',
+                                                    color: 'white',
+                                                    textAlign: 'center',
+                                                    fontWeight: '600'
+                                                }}
+                                            />
+                                        </motion.div>
+                                    )}
+                                </div>
+
+                                {/* Shuttles Option */}
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.8rem', color: 'white', fontWeight: '500' }}>
+                                        Purchase Shuttlecocks? <span style={{ fontSize: '0.85rem', color: 'var(--brand-pink)' }}>(For sale — not reusable)</span>
+                                    </label>
+                                    <select
+                                        value={shuttleType}
+                                        onChange={e => setShuttleType(e.target.value)}
+                                        className="glass-input"
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.8rem',
+                                            borderRadius: '12px',
+                                            background: 'rgba(0, 0, 0, 0.4)',
+                                            color: 'white',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            cursor: 'pointer',
+                                            fontSize: '0.95rem'
+                                        }}
+                                    >
+                                        <option value="none">No, thank you</option>
+                                        <option value="nylon">Nylon Shuttlecocks — Rs. 800 per shuttle</option>
+                                        <option value="feather">Feather Shuttlecocks — Rs. 900 per shuttle</option>
+                                    </select>
+
+                                    {shuttleType !== 'none' && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            style={{ marginTop: '1.2rem', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                        >
+                                            <span style={{ fontSize: '0.9rem', color: 'var(--text-gray)' }}>Quantity needed?</span>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="24"
+                                                value={shuttleQty}
+                                                onChange={e => setShuttleQty(Math.max(1, parseInt(e.target.value) || 1))}
+                                                style={{
+                                                    width: '70px',
+                                                    padding: '0.5rem',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid rgba(255,255,255,0.15)',
+                                                    background: 'rgba(0,0,0,0.4)',
+                                                    color: 'white',
+                                                    textAlign: 'center',
+                                                    fontWeight: '600'
+                                                }}
+                                            />
+                                        </motion.div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Detailed Price Summary Box */}
+                            <div style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                borderRadius: '20px',
+                                padding: '1.8rem',
+                                marginBottom: '2.5rem',
+                                border: '1px solid rgba(255,255,255,0.05)'
+                            }}>
+                                <h4 style={{ fontSize: '1.05rem', color: 'white', marginBottom: '1.2rem', fontWeight: '600' }}>
+                                    Payment Summary
+                                </h4>
+                                
+                                {/* Court Cost */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem', fontSize: '0.92rem' }}>
+                                    <span style={{ color: 'var(--text-gray)' }}>
+                                        Court Rental (Rs. 900/hr × {duration / 60} hrs × {selectedCourts.length} {selectedCourts.length === 1 ? 'court' : 'courts'})
+                                    </span>
+                                    <span style={{ color: 'white', fontWeight: '500' }}>
+                                        Rs. {((900 * (duration / 60)) * selectedCourts.length).toFixed(2)}
+                                    </span>
+                                </div>
+
+                                {/* Racket Rent Cost */}
+                                {needRackets && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem', fontSize: '0.92rem' }}>
+                                        <span style={{ color: 'var(--text-gray)' }}>
+                                            Racket Rent (Rs. 150/hr × {racketQty} rackets × {duration / 60} hrs)
+                                        </span>
+                                        <span style={{ color: 'white', fontWeight: '500' }}>
+                                            Rs. {(racketQty * 150 * (duration / 60)).toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Shuttlecock Cost */}
+                                {shuttleType !== 'none' && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem', fontSize: '0.92rem' }}>
+                                        <span style={{ color: 'var(--text-gray)' }}>
+                                            Shuttlecock Purchase ({shuttleQty} × {shuttleType === 'nylon' ? 'Nylon' : 'Feather'} @ Rs. {shuttleType === 'nylon' ? 800 : 900} each)
+                                        </span>
+                                        <span style={{ color: 'white', fontWeight: '500' }}>
+                                            Rs. {(shuttleQty * (shuttleType === 'nylon' ? 800 : 900)).toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div style={{
+                                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                                    marginTop: '1.2rem',
+                                    paddingTop: '1.2rem',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}>
+                                    <span style={{ color: 'white', fontWeight: 'bold' }}>Total Final Payment</span>
+                                    <span style={{ color: 'var(--brand-teal)', fontSize: '1.5rem', fontWeight: '800' }}>
+                                        Rs. {(
+                                            ((900 * (duration / 60)) * selectedCourts.length) +
+                                            (needRackets ? (racketQty * 150 * (duration / 60)) : 0) +
+                                            (shuttleType === 'nylon' ? (shuttleQty * 800) : shuttleType === 'feather' ? (shuttleQty * 900) : 0)
+                                        ).toFixed(2)}
+                                    </span>
+                                </div>
                             </div>
 
                             <div style={{ display: 'flex', gap: '1.5rem' }}>
