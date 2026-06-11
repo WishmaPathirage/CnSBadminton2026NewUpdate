@@ -1159,7 +1159,7 @@ const BookingForm = () => {
                                                 <span style={{ color: 'white', fontWeight: '600', fontSize: '1.05rem' }}>Shuttlecocks <span style={{ fontSize: '0.8rem', color: 'var(--brand-pink)' }}>(For Sale)</span></span>
                                             </div>
                                             <p style={{ fontSize: '0.85rem', color: 'var(--text-gray)', margin: 0, paddingRight: '24px' }}>
-                                                Purchase non-reusable shuttlecocks for your game.
+                                                You need to purchase shuttlecocks as they are not reusable.
                                             </p>
                                         </div>
 
