@@ -133,12 +133,36 @@ const PaymentSuccess = () => {
                                 <span>{booking.racketQty} {booking.racketQty === 1 ? 'Racket' : 'Rackets'} (Rs. {booking.racketCost ? booking.racketCost.toFixed(2) : (booking.racketQty * 150 * (booking.duration / 60)).toFixed(2)})</span>
                             </div>
                         )}
-                        {booking.shuttleType && booking.shuttleType !== 'none' && (
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: 'var(--text-gray)' }}>Shuttlecocks:</span>
-                                <span>{booking.shuttleQty} × {booking.shuttleType === 'nylon' ? 'Nylon' : 'Feather'} (Rs. {booking.shuttleCost ? booking.shuttleCost.toFixed(2) : (booking.shuttleQty * (booking.shuttleType === 'nylon' ? 800 : 900)).toFixed(2)})</span>
-                            </div>
-                        )}
+                        {booking.shuttleType && booking.shuttleType !== 'none' && (() => {
+                            const getShuttleDisplayName = (type) => {
+                                const SHUTTLE_NAMES = {
+                                    nylon: 'Nylon Shuttlecock',
+                                    feather: 'Feather Shuttlecock',
+                                    yonex_mavis_600: 'Yonex Mavis 600 (Nylon)',
+                                    lining_future_10: 'Li-ning Future 10 (Nylon)',
+                                    lining_champ: 'Li-ning Champ (Nylon)',
+                                    lining_d8: 'Li-ning Feather D8 (Feather)'
+                                };
+                                return SHUTTLE_NAMES[type] || type;
+                            };
+                            const getShuttleDefaultPrice = (type) => {
+                                const SHUTTLE_PRICES = {
+                                    yonex_mavis_600: 900,
+                                    lining_future_10: 700,
+                                    lining_champ: 700,
+                                    lining_d8: 900,
+                                    nylon: 800,
+                                    feather: 900
+                                };
+                                return SHUTTLE_PRICES[type] || 0;
+                            };
+                            return (
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ color: 'var(--text-gray)' }}>Shuttlecocks:</span>
+                                    <span>{booking.shuttleQty} × {getShuttleDisplayName(booking.shuttleType)} (Rs. {booking.shuttleCost ? booking.shuttleCost.toFixed(2) : (booking.shuttleQty * getShuttleDefaultPrice(booking.shuttleType)).toFixed(2)})</span>
+                                </div>
+                            );
+                        })()}
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.8rem', marginTop: '0.8rem' }}>
                             <span style={{ color: 'white', fontWeight: 'bold' }}>Total Paid:</span>
                             <span style={{ color: 'var(--brand-teal)', fontWeight: 'bold' }}>Rs. {booking.amount ? booking.amount.toFixed(2) : '0.00'}</span>

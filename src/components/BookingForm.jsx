@@ -9,6 +9,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
 import CryptoJS from 'crypto-js';
 
+const SHUTTLE_OPTIONS = {
+    none: { name: 'No, thank you', price: 0, label: 'No, thank you' },
+    yonex_mavis_600: { name: 'Yonex Mavis 600 (Nylon)', price: 900, label: 'Yonex Mavis 600 (Nylon) — Rs. 900 per shuttle' },
+    lining_future_10: { name: 'Li-ning Future 10 (Nylon)', price: 700, label: 'Li-ning Future 10 (Nylon) — Rs. 700 per shuttle' },
+    lining_champ: { name: 'Li-ning Champ (Nylon)', price: 700, label: 'Li-ning Champ (Nylon) — Rs. 700 per shuttle' },
+    lining_d8: { name: 'Li-ning Feather D8 (Feather)', price: 900, label: 'Li-ning Feather D8 (Feather) — Rs. 900 per shuttle' }
+};
+
 const BookingForm = () => {
     // Helper for Local Date (YYYY-MM-DD) - Forced to Sri Lanka Time (UTC+5:30)
     const getSLTime = () => {
@@ -255,7 +263,7 @@ const BookingForm = () => {
         // Construct dynamic list of items for the checkout dialog
         let itemDescription = `Court Booking`;
         if (needRackets) itemDescription += ` + ${racketQty} Rackets Rent`;
-        if (shuttleType !== 'none') itemDescription += ` + ${shuttleQty} ${shuttleType === 'nylon' ? 'Nylon' : 'Feather'} Shuttles`;
+        if (shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType]) itemDescription += ` + ${shuttleQty} ${SHUTTLE_OPTIONS[shuttleType].name}`;
 
         const payment = {
             sandbox: isSandbox,
@@ -317,7 +325,7 @@ const BookingForm = () => {
                     // Details about equipment/shuttle attachments
                     court_cost: `Rs. ${courtCost.toFixed(2)}`,
                     rackets_info: needRackets ? `${racketQty} Rackets (Rs. ${racketCost.toFixed(2)})` : 'None',
-                    shuttles_info: shuttleType !== 'none' ? `${shuttleQty} ${shuttleType === 'nylon' ? 'Nylon' : 'Feather'} Shuttle(s) (Rs. ${shuttleCost.toFixed(2)})` : 'None'
+                    shuttles_info: shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType] ? `${shuttleQty} ${SHUTTLE_OPTIONS[shuttleType].name} (Rs. ${shuttleCost.toFixed(2)})` : 'None'
                 };
 
                 console.log("Sending Confirmation Emails...", templateParams);
@@ -404,11 +412,9 @@ const BookingForm = () => {
         // Calculate Amount: Rs. 900 per hour per court
         const courtCost = (900 * (duration / 60)) * selectedCourts.length;
         const racketCost = needRackets ? (Math.min(10, Math.max(1, racketQty)) * 150 * (duration / 60)) : 0;
-        const shuttleCost = shuttleType === 'nylon' 
-            ? (Math.min(10, Math.max(1, shuttleQty)) * 800) 
-            : shuttleType === 'feather' 
-                ? (Math.min(10, Math.max(1, shuttleQty)) * 900) 
-                : 0;
+        const shuttleCost = shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType]
+            ? (Math.min(10, Math.max(1, shuttleQty)) * SHUTTLE_OPTIONS[shuttleType].price)
+            : 0;
         const totalAmount = courtCost + racketCost + shuttleCost;
         const amountFormatted = totalAmount.toFixed(2); // Ensure 2 decimal places string
 
@@ -1084,9 +1090,11 @@ const BookingForm = () => {
                                             fontSize: '0.95rem'
                                         }}
                                     >
-                                        <option value="none">No, thank you</option>
-                                        <option value="nylon">Nylon Shuttlecocks — Rs. 800 per shuttle</option>
-                                        <option value="feather">Feather Shuttlecocks — Rs. 900 per shuttle</option>
+                                        {Object.entries(SHUTTLE_OPTIONS).map(([key, opt]) => (
+                                            <option key={key} value={key}>
+                                                {opt.label}
+                                            </option>
+                                        ))}
                                     </select>
 
                                     {shuttleType !== 'none' && (
@@ -1185,13 +1193,13 @@ const BookingForm = () => {
                                 )}
 
                                 {/* Shuttlecock Cost */}
-                                {shuttleType !== 'none' && (
+                                {shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType] && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem', fontSize: '0.92rem' }}>
                                         <span style={{ color: 'var(--text-gray)' }}>
-                                            Shuttlecock Purchase ({shuttleQty} × {shuttleType === 'nylon' ? 'Nylon' : 'Feather'} @ Rs. {shuttleType === 'nylon' ? 800 : 900} each)
+                                            Shuttlecock Purchase ({shuttleQty} × {SHUTTLE_OPTIONS[shuttleType].name} @ Rs. {SHUTTLE_OPTIONS[shuttleType].price} each)
                                         </span>
                                         <span style={{ color: 'white', fontWeight: '500' }}>
-                                            Rs. {(shuttleQty * (shuttleType === 'nylon' ? 800 : 900)).toFixed(2)}
+                                            Rs. {(shuttleQty * SHUTTLE_OPTIONS[shuttleType].price).toFixed(2)}
                                         </span>
                                     </div>
                                 )}
@@ -1209,7 +1217,7 @@ const BookingForm = () => {
                                         Rs. {(
                                             ((900 * (duration / 60)) * selectedCourts.length) +
                                             (needRackets ? (racketQty * 150 * (duration / 60)) : 0) +
-                                            (shuttleType === 'nylon' ? (shuttleQty * 800) : shuttleType === 'feather' ? (shuttleQty * 900) : 0)
+                                            (shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType] ? (shuttleQty * SHUTTLE_OPTIONS[shuttleType].price) : 0)
                                         ).toFixed(2)}
                                     </span>
                                 </div>
