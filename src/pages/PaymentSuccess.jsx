@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Check, Star, ShieldCheck } from 'lucide-react'; // Added ShieldCheck for Admin
 import { motion } from 'framer-motion';
 import { getBookingByOrderId } from '../services/bookingService';
+import { jsPDF } from 'jspdf';
 
 const PaymentSuccess = () => {
     const [searchParams] = useSearchParams();
@@ -10,6 +11,195 @@ const PaymentSuccess = () => {
     const [booking, setBooking] = useState(null);
 
     const navigate = useNavigate(); // Add useNavigate
+
+    const handleDownloadPDF = () => {
+        if (!booking) return;
+
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        // 1. Draw "PAID" Watermark in the background
+        doc.setTextColor(255, 225, 230); // Very light red/pink for the watermark stamp
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(80);
+        doc.text('PAID', 105, 150, { angle: 315, align: 'center' });
+
+        // 2. Header and Logo area
+        // Draw a dark header banner
+        doc.setFillColor(18, 18, 18);
+        doc.rect(0, 0, 210, 40, 'F');
+
+        // Brand Title
+        doc.setTextColor(120, 220, 202); // Teal color
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('C & S BADMINTON COMPLEX', 15, 22);
+
+        doc.setTextColor(150, 150, 150);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Court Booking Confirmation Receipt', 15, 30);
+
+        // Date & Order ID on the top right
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.text(`Receipt Date: ${new Date().toLocaleDateString()}`, 195, 20, { align: 'right' });
+        doc.text(`Booking Ref: ${orderId}`, 195, 26, { align: 'right' });
+
+        // Reset styles for text details
+        doc.setTextColor(30, 30, 30);
+
+        // 3. Document Content
+        let yPos = 55;
+
+        // Section Title: Booking Details
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text('Booking Details', 15, yPos);
+        yPos += 3;
+        
+        // Horizontal divider line
+        doc.setDrawColor(220, 220, 220);
+        doc.setLineWidth(0.5);
+        doc.line(15, yPos, 195, yPos);
+        yPos += 8;
+
+        // Details grid helper function
+        const drawDetailRow = (label, value) => {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(80, 80, 80);
+            doc.text(label, 15, yPos);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(30, 30, 30);
+            doc.text(String(value), 65, yPos);
+            yPos += 8;
+        };
+
+        const getShuttleDisplayName = (type) => {
+            const SHUTTLE_NAMES = {
+                nylon: 'Nylon Shuttlecock',
+                feather: 'Feather Shuttlecock',
+                yonex_mavis_600: 'Yonex Mavis 600 (Nylon)',
+                lining_future_10: 'Li-ning Future 10 (Nylon)',
+                lining_champ: 'Li-ning Champ (Nylon)',
+                lining_d8: 'Li-ning Feather D8 (Feather)'
+            };
+            return SHUTTLE_NAMES[type] || type;
+        };
+
+        const getShuttleDefaultPrice = (type) => {
+            const SHUTTLE_PRICES = {
+                yonex_mavis_600: 900,
+                lining_future_10: 700,
+                lining_champ: 700,
+                lining_d8: 900,
+                nylon: 800,
+                feather: 900
+            };
+            return SHUTTLE_PRICES[type] || 0;
+        };
+
+        // Name
+        drawDetailRow('Customer Name:', booking.userName || 'Valued Customer');
+        
+        // No of Courts
+        drawDetailRow('No of Courts:', booking.courts ? booking.courts.length : 1);
+        
+        // Court No
+        drawDetailRow('Court No:', booking.courts ? booking.courts.map(c => `Court ${c}`).join(', ') : 'N/A');
+        
+        // Date
+        drawDetailRow('Booking Date:', booking.date || 'N/A');
+        
+        // Time
+        const timeVal = booking.startTime ? `${booking.startTime} - ${getEndTime(booking.startTime, booking.duration)}` : 'N/A';
+        drawDetailRow('Booking Time:', timeVal);
+
+        // Additional Requirements
+        let additionalReqs = [];
+        if (booking.needRackets) {
+            additionalReqs.push(`${booking.racketQty} x Rackets Rent`);
+        }
+        if (booking.shuttleType && booking.shuttleType !== 'none') {
+            additionalReqs.push(`${booking.shuttleQty} x ${getShuttleDisplayName(booking.shuttleType)} Purchase`);
+        }
+        
+        drawDetailRow('Additional Reqs:', additionalReqs.length > 0 ? additionalReqs.join(', ') : 'None');
+
+        yPos += 5;
+
+        // Section Title: Payment Summary
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(30, 30, 30);
+        doc.text('Payment Summary', 15, yPos);
+        yPos += 3;
+        doc.line(15, yPos, 195, yPos);
+        yPos += 8;
+
+        // Draw Cost Row helper
+        const drawCostRow = (label, value) => {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(80, 80, 80);
+            doc.text(label, 15, yPos);
+            doc.text(value, 195, yPos, { align: 'right' });
+            yPos += 7;
+        };
+
+        // Court Rental Cost
+        const courtCostVal = booking.courtCost || (900 * ((booking.duration || 60) / 60)) * (booking.courts ? booking.courts.length : 1);
+        drawCostRow(`Court Rental Fee (Rs. 900/hr x ${(booking.duration || 60) / 60} hrs)`, `Rs. ${courtCostVal.toFixed(2)}`);
+
+        // Rackets
+        if (booking.needRackets) {
+            const racketCostVal = booking.racketCost || (booking.racketQty * 150 * ((booking.duration || 60) / 60));
+            drawCostRow(`Racket Rental (${booking.racketQty} rackets x Rs. 150/hr x ${(booking.duration || 60) / 60} hrs)`, `Rs. ${racketCostVal.toFixed(2)}`);
+        }
+
+        // Shuttles
+        if (booking.shuttleType && booking.shuttleType !== 'none') {
+            const shuttleCostVal = booking.shuttleCost || (booking.shuttleQty * getShuttleDefaultPrice(booking.shuttleType));
+            drawCostRow(`Shuttlecock Purchase (${booking.shuttleQty} x ${getShuttleDisplayName(booking.shuttleType)})`, `Rs. ${shuttleCostVal.toFixed(2)}`);
+        }
+
+        yPos += 3;
+        doc.setDrawColor(200, 200, 200);
+        doc.line(15, yPos, 195, yPos);
+        yPos += 8;
+
+        // Total Paid
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(18, 18, 18);
+        doc.text('Total Paid (LKR):', 15, yPos);
+        doc.setTextColor(12, 168, 140); // Teal color for amount
+        doc.setFontSize(14);
+        const totalAmountStr = `Rs. ${booking.amount ? booking.amount.toFixed(2) : '0.00'}`;
+        doc.text(totalAmountStr, 195, yPos, { align: 'right' });
+
+        yPos += 25;
+
+        // Footer block
+        doc.setDrawColor(230, 230, 230);
+        doc.line(15, yPos, 195, yPos);
+        yPos += 6;
+        
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(9);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Thank you for booking with C & S Badminton Complex!', 105, yPos, { align: 'center' });
+        yPos += 5;
+        doc.text('Please present this receipt at the counter upon arrival.', 105, yPos, { align: 'center' });
+
+        // Save PDF
+        doc.save(`CNS_Booking_${orderId}.pdf`);
+    };
 
     useEffect(() => {
         // Redirect if no order ID provided (prevent ghost view)
@@ -184,6 +374,40 @@ const PaymentSuccess = () => {
                     >
                         Back to Home
                     </Link>
+                    <button
+                        onClick={handleDownloadPDF}
+                        style={{
+                            padding: '1rem 2rem',
+                            borderRadius: '50px',
+                            fontWeight: '600',
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: 'var(--brand-pink)',
+                            color: '#000',
+                            boxShadow: '0 4px 15px rgba(255, 105, 180, 0.3)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 105, 180, 0.5)';
+                            e.currentTarget.style.background = '#ff80bf';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 105, 180, 0.3)';
+                            e.currentTarget.style.background = 'var(--brand-pink)';
+                        }}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Download Receipt (PDF)
+                    </button>
                 </div>
             </motion.div>
         </div>
