@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Check, Star, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { subscribeToBookingByOrderId } from '../services/bookingService';
+import { subscribeToBookingByOrderId, updateBookingStatus } from '../services/bookingService';
 import { jsPDF } from 'jspdf';
 import emailjs from '@emailjs/browser';
 
@@ -251,6 +251,15 @@ const PaymentSuccess = () => {
             }
 
             setBooking(data);
+
+            if (data.status === 'pending_payment') {
+                // Since the user successfully paid and returned to the Success URL, confirm it immediately!
+                console.log("Returned to success page. Confirming booking in Firestore...");
+                updateBookingStatus(data.id, 'confirmed').catch(err => {
+                    console.error("Failed to confirm booking client-side:", err);
+                });
+                return;
+            }
 
             if (data.status === 'confirmed') {
                 setStatus('confirmed');

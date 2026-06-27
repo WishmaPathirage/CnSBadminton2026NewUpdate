@@ -239,6 +239,8 @@ const BookingForm = () => {
         setStep(2);
     };
 
+
+
     const startPayHerePayment = async (bookingId, orderId, totalAmount, courtCost, racketCost, shuttleCost, needRackets, racketQty, shuttleType, shuttleQty, userDetails, date, selectedTime, duration, selectedCourts) => {
         const merchantId = import.meta.env.VITE_PAYHERE_MERCHANT_ID || '252134';
         const merchantSecret = import.meta.env.VITE_PAYHERE_MERCHANT_SECRET || 'MTU3MzA5NDAxMDMxMTA2NjcyMzMxMjIzNDc5OTIyMTIxNjQ3ODUzNw==';
@@ -254,27 +256,26 @@ const BookingForm = () => {
         const concatenatedString = merchantId + orderId + amountFormatted + currency + hashedSecret;
         const generatedHash = CryptoJS.MD5(concatenatedString).toString().toUpperCase();
 
-        const [startH, startM] = selectedTime.split(':').map(Number);
-        const totalMins = startH * 60 + startM + parseInt(duration);
-        const endH = Math.floor(totalMins / 60);
-        const endM = totalMins % 60;
-        const endTimeStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
-
         // Construct dynamic list of items for the checkout dialog
         let itemDescription = `Court Booking`;
         if (needRackets) itemDescription += ` + ${racketQty} Rackets Rent`;
         if (shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType]) itemDescription += ` + ${shuttleQty} ${SHUTTLE_OPTIONS[shuttleType].name}`;
 
-        const origin = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'https://cnsbadminton.lk' // Fallback to live site domain for sandbox testing webhooks
-            : window.location.origin;
+        const checkoutUrl = isSandbox 
+            ? 'https://sandbox.payhere.lk/pay/checkout' 
+            : 'https://www.payhere.lk/pay/checkout';
 
-        const payment = {
-            sandbox: isSandbox,
+        console.log("Redirecting to PayHere checkout via standard form POST...", checkoutUrl);
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = checkoutUrl;
+
+        const fields = {
             merchant_id: merchantId,
             return_url: `${window.location.origin}/#/payment/success?order_id=${orderId}`,
             cancel_url: `${window.location.origin}/#/payment/cancel?order_id=${orderId}`,
-            notify_url: `${origin}/api/notify`,
+            notify_url: 'https://cnsbadminton.lk/notify', // Placeholder notify URL
             order_id: orderId,
             items: itemDescription,
             amount: amountFormatted,
@@ -289,40 +290,16 @@ const BookingForm = () => {
             hash: generatedHash
         };
 
-        console.log("Starting PayHere payment with object:", payment);
+        for (const [key, value] of Object.entries(fields)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
 
-        // Bind SDK handlers
-        window.payhere.onCompleted = (completedOrderId) => {
-            console.log("PayHere: Checkout completed for order", completedOrderId);
-            setStatus('success');
-            navigate(`/payment/success?order_id=${orderId}`);
-        };
-
-        window.payhere.onDismissed = async () => {
-            console.log("PayHere: Payment modal dismissed");
-            setStatus('idle');
-            try {
-                // Delete the temporary pending_payment booking to release slots
-                await deleteBooking(bookingId);
-                alert("Payment was cancelled. Your booking has been cancelled and slots released.");
-            } catch (err) {
-                console.error("Failed to delete pending booking on dismiss:", err);
-            }
-        };
-
-        window.payhere.onError = async (error) => {
-            console.error("PayHere error:", error);
-            setStatus('idle');
-            try {
-                await deleteBooking(bookingId);
-            } catch (err) {
-                console.error("Failed to delete booking on error:", err);
-            }
-            alert(`Payment error occurred: ${error}. Your booking has been cancelled.`);
-        };
-
-        // Open the modal
-        window.payhere.startPayment(payment);
+        document.body.appendChild(form);
+        form.submit();
     };
 
     const handleSubmit = async (e) => {
