@@ -135,6 +135,17 @@ export const getAvailability = async (date) => {
             .filter(b => {
                 const status = (b.status || '').toLowerCase();
                 if (status === 'rejected' || status === 'cancelled') return false;
+                
+                // If pending payment and has been unpaid for over 60 seconds, free the slot & delete it
+                if (status === 'pending_payment' && b.createdAt) {
+                    const created = new Date(b.createdAt);
+                    const ageInSeconds = (new Date() - created) / 1000;
+                    if (ageInSeconds > 60) {
+                        deleteBooking(b.id).catch(err => console.error("Error cleaning up expired booking:", err));
+                        return false;
+                    }
+                }
+
                 // If held, check if it's expired
                 if (status === 'held' && b.holdExpiry) {
                     const expiry = new Date(b.holdExpiry);
@@ -196,6 +207,17 @@ export const subscribeToAvailability = (date, callback) => {
             .filter(b => {
                 const status = (b.status || '').toLowerCase();
                 if (status === 'rejected' || status === 'cancelled') return false;
+
+                // If pending payment and has been unpaid for over 60 seconds, free the slot & delete it
+                if (status === 'pending_payment' && b.createdAt) {
+                    const created = new Date(b.createdAt);
+                    const ageInSeconds = (new Date() - created) / 1000;
+                    if (ageInSeconds > 60) {
+                        deleteBooking(b.id).catch(err => console.error("Error cleaning up expired booking:", err));
+                        return false;
+                    }
+                }
+
                 // If held, only ignore if explicitly expired
                 if (status === 'held' && b.holdExpiry) {
                     const expiry = new Date(b.holdExpiry);
