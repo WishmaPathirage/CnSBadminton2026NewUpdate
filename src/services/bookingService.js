@@ -134,7 +134,7 @@ export const getAvailability = async (date) => {
             .map(doc => ({ id: doc.id, ...doc.data() }))
             .filter(b => {
                 const status = (b.status || '').toLowerCase();
-                if (status === 'rejected' || status === 'cancelled') return false;
+                if (status === 'rejected' || status === 'cancelled' || status === 'failed') return false;
                 
                 // If pending payment and has been unpaid for over 60 seconds, free the slot & delete it
                 if (status === 'pending_payment' && b.createdAt) {
@@ -206,7 +206,7 @@ export const subscribeToAvailability = (date, callback) => {
         const bookedSlots = regularBookings
             .filter(b => {
                 const status = (b.status || '').toLowerCase();
-                if (status === 'rejected' || status === 'cancelled') return false;
+                if (status === 'rejected' || status === 'cancelled' || status === 'failed') return false;
 
                 // If pending payment and has been unpaid for over 60 seconds, free the slot & delete it
                 if (status === 'pending_payment' && b.createdAt) {
