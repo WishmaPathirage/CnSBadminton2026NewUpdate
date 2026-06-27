@@ -336,3 +336,22 @@ export const checkUserBlacklist = async (uid) => {
         return false;
     }
 };
+
+// Real-time subscription by order ID
+export const subscribeToBookingByOrderId = (orderId, callback) => {
+    const q = query(
+        collection(db, BOOKINGS_COL),
+        where("orderId", "==", orderId)
+    );
+    return onSnapshot(q, (snapshot) => {
+        if (snapshot.empty) {
+            callback(null);
+        } else {
+            const doc = snapshot.docs[0];
+            callback({ id: doc.id, ...doc.data() });
+        }
+    }, (error) => {
+        console.error("Error subscribing to booking by order ID:", error);
+        callback(null);
+    });
+};

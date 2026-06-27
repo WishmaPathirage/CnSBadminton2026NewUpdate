@@ -265,12 +265,16 @@ const BookingForm = () => {
         if (needRackets) itemDescription += ` + ${racketQty} Rackets Rent`;
         if (shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType]) itemDescription += ` + ${shuttleQty} ${SHUTTLE_OPTIONS[shuttleType].name}`;
 
+        const origin = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'https://cnsbadminton.lk' // Fallback to live site domain for sandbox testing webhooks
+            : window.location.origin;
+
         const payment = {
             sandbox: isSandbox,
             merchant_id: merchantId,
             return_url: `${window.location.origin}/#/payment/success?order_id=${orderId}`,
             cancel_url: `${window.location.origin}/#/payment/cancel?order_id=${orderId}`,
-            notify_url: 'https://cnsbadminton.lk/notify', // placeholder
+            notify_url: `${origin}/api/notify`,
             order_id: orderId,
             items: itemDescription,
             amount: amountFormatted,
@@ -288,61 +292,10 @@ const BookingForm = () => {
         console.log("Starting PayHere payment with object:", payment);
 
         // Bind SDK handlers
-        window.payhere.onCompleted = async (completedOrderId) => {
-            console.log("PayHere: Payment completed for order", completedOrderId);
-            setStatus('submitting');
-            try {
-                // Update booking status to 'confirmed'
-                await updateDoc(doc(db, 'bookings', bookingId), {
-                    status: 'confirmed'
-                });
-
-                // Trigger EmailJS notifications
-                const templateParams = {
-                    order_id: orderId,
-                    orderId: orderId,
-                    booking_id: bookingId,
-                    bookingId: bookingId,
-                    customer_name: userDetails.name,
-                    user_name: userDetails.name,
-                    userName: userDetails.name,
-                    phone: userDetails.Phone,
-                    userPhone: userDetails.Phone,
-                    date: date,
-                    booking_date: date,
-                    starting_time: selectedTime,
-                    ending_time: endTimeStr,
-                    duration: `${duration} mins`,
-                    courts_booked: selectedCourts.join(', '),
-                    courts: selectedCourts.join(', '),
-                    amount: amountFormatted,
-                    total_amount: amountFormatted,
-                    totalAmount: amountFormatted,
-                    user_email: userDetails.email,
-                    userEmail: userDetails.email,
-                    booking_time: `${selectedTime} - ${endTimeStr}`,
-                    
-                    // Details about equipment/shuttle attachments
-                    court_cost: `Rs. ${courtCost.toFixed(2)}`,
-                    rackets_info: needRackets ? `${racketQty} Rackets (Rs. ${racketCost.toFixed(2)})` : 'None',
-                    shuttles_info: shuttleType !== 'none' && SHUTTLE_OPTIONS[shuttleType] ? `${shuttleQty} ${SHUTTLE_OPTIONS[shuttleType].name} (Rs. ${shuttleCost.toFixed(2)})` : 'None'
-                };
-
-                console.log("Sending Confirmation Emails...", templateParams);
-
-                emailjs.send(
-                    'service_i25io04',
-                    'template_bv3pwbr',
-                    templateParams,
-                    'cmyBcHcHxEP2ggwV3'
-                ).catch(err => console.error("EmailJS alert failed:", err));
-
-                setStatus('success');
-                navigate(`/payment/success?order_id=${orderId}`);
-            } catch (err) {
-                console.error("Failed to update booking status on payment success:", err);
-                alert("Payment was successful, but we encountered an error updating your booking. Please contact support.");
-            }
+        window.payhere.onCompleted = (completedOrderId) => {
+            console.log("PayHere: Checkout completed for order", completedOrderId);
+            setStatus('success');
+            navigate(`/payment/success?order_id=${orderId}`);
         };
 
         window.payhere.onDismissed = async () => {

@@ -15,6 +15,7 @@
     "@emailjs/browser": "^4.4.1",
     "crypto-js": "^4.2.0",
     "firebase": "^12.7.0",
+    "firebase-admin": "^14.1.0",
     "framer-motion": "^12.23.26",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.562.0",
