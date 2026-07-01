@@ -251,6 +251,31 @@ const PaymentSuccess = () => {
             return SHUTTLE_PRICES[type] || 0;
         };
 
+        // Debug PDF layout override
+        if (orderId === 'TEST_PDF') {
+            const mockData = {
+                id: 'TEST_PDF',
+                orderId: 'TEST_PDF',
+                userName: 'Test Premium Customer',
+                courts: [1, 2],
+                date: '2026-07-05',
+                startTime: '08:00',
+                duration: 120,
+                needRackets: true,
+                racketQty: 4,
+                racketCost: 1200,
+                shuttleType: 'yonex_mavis_600',
+                shuttleQty: 2,
+                shuttleCost: 1800,
+                courtCost: 3600,
+                amount: 6600,
+                status: 'confirmed'
+            };
+            setBooking(mockData);
+            setStatus('confirmed');
+            return () => {};
+        }
+
         // Subscribe to real-time status of the booking in Firestore
         const unsubscribe = subscribeToBookingByOrderId(orderId, (data) => {
             if (!data) {
