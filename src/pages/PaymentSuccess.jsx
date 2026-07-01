@@ -53,9 +53,9 @@ const PaymentSuccess = () => {
 
         // Brand Title
         doc.setTextColor(120, 220, 202); // Teal color
-        doc.setFontSize(18);
+        doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
-        doc.text('C & S BADMINTON COMPLEX', 44, 21);
+        doc.text('C & S Badminton Complex (PVT) Ltd', 44, 21);
 
         doc.setTextColor(150, 150, 150);
         doc.setFontSize(9);
@@ -212,7 +212,7 @@ const PaymentSuccess = () => {
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(9);
         doc.setTextColor(150, 150, 150);
-        doc.text('Thank you for booking with C & S Badminton Complex!', 105, yPos, { align: 'center' });
+        doc.text('Thank you for booking with C & S Badminton Complex (PVT) Ltd!', 105, yPos, { align: 'center' });
         yPos += 5;
         doc.text('Please present this receipt at the counter upon arrival.', 105, yPos, { align: 'center' });
 
