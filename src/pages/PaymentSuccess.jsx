@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { subscribeToBookingByOrderId, updateBookingStatus } from '../services/bookingService';
 import { jsPDF } from 'jspdf';
 import emailjs from '@emailjs/browser';
+import { logoBase64 } from '../assets/logoBase64';
 
 // Helper to calculate End Time
 const getEndTime = (startTime, duration) => {
@@ -43,16 +44,23 @@ const PaymentSuccess = () => {
         doc.setFillColor(18, 18, 18);
         doc.rect(0, 0, 210, 40, 'F');
 
+        // Draw company logo
+        try {
+            doc.addImage(logoBase64, 'PNG', 15, 8, 24, 24);
+        } catch (e) {
+            console.error("Failed to add company logo to PDF:", e);
+        }
+
         // Brand Title
         doc.setTextColor(120, 220, 202); // Teal color
-        doc.setFontSize(22);
+        doc.setFontSize(18);
         doc.setFont('helvetica', 'bold');
-        doc.text('C & S BADMINTON COMPLEX', 15, 22);
+        doc.text('C & S BADMINTON COMPLEX', 44, 21);
 
         doc.setTextColor(150, 150, 150);
-        doc.setFontSize(10);
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.text('Court Booking Confirmation Receipt', 15, 30);
+        doc.text('Court Booking Confirmation Receipt', 44, 28);
 
         // Date & Order ID on the top right
         doc.setTextColor(255, 255, 255);
