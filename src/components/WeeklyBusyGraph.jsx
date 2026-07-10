@@ -269,10 +269,10 @@ const WeeklyBusyGraph = () => {
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={weekOffset}
-                                initial={{ rotateY: 90, opacity: 0 }}
+                                initial={{ rotateY: 180, opacity: 0 }}
                                 animate={{ rotateY: 0, opacity: 1 }}
-                                exit={{ rotateY: -90, opacity: 0 }}
-                                transition={{ duration: 0.4, ease: "easeInOut" }}
+                                exit={{ rotateY: -180, opacity: 0 }}
+                                transition={{ duration: 0.5, ease: "easeInOut" }}
                                 style={{
                                     display: 'flex',
                                     justifyContent: 'space-between',
@@ -288,151 +288,151 @@ const WeeklyBusyGraph = () => {
                                     WebkitBackfaceVisibility: 'hidden'
                                 }}
                             >
-                        {/* Horizontal Helper Grid Lines */}
-                        <div style={{ position: 'absolute', left: 0, right: 0, top: '25%', borderTop: '1px dashed rgba(255, 255, 255, 0.03)' }}></div>
-                        <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px dashed rgba(255, 255, 255, 0.03)' }}></div>
-                        <div style={{ position: 'absolute', left: 0, right: 0, top: '75%', borderTop: '1px dashed rgba(255, 255, 255, 0.03)' }}></div>
+                                {/* Horizontal Helper Grid Lines */}
+                                <div style={{ position: 'absolute', left: 0, right: 0, top: '25%', borderTop: '1px dashed rgba(255, 255, 255, 0.03)' }}></div>
+                                <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px dashed rgba(255, 255, 255, 0.03)' }}></div>
+                                <div style={{ position: 'absolute', left: 0, right: 0, top: '75%', borderTop: '1px dashed rgba(255, 255, 255, 0.03)' }}></div>
 
-                        {stats.daysData.map((day, idx) => {
-                            const isHovered = hoveredDay === idx;
-                            
-                            return (
-                                <div
-                                    key={day.dateString}
-                                    onMouseEnter={() => setHoveredDay(idx)}
-                                    onMouseLeave={() => setHoveredDay(null)}
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        width: '12%',
-                                        height: '100%',
-                                        justifyContent: 'flex-end',
-                                        cursor: 'pointer',
-                                        position: 'relative',
-                                        zIndex: 10
-                                    }}
-                                >
-                                    {/* Tooltip on Hover */}
-                                    <AnimatePresence>
-                                        {isHovered && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                animate={{ opacity: 1, y: -8, scale: 1 }}
-                                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                style={{
-                                                    position: 'absolute',
-                                                    bottom: '85%',
-                                                    background: 'rgba(20, 20, 20, 0.95)',
-                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                    borderRadius: '8px',
-                                                    padding: '0.6rem 0.8rem',
-                                                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                                                    zIndex: 100,
-                                                    width: '180px',
-                                                    textAlign: 'left',
-                                                    pointerEvents: 'none'
-                                                }}
-                                            >
-                                                <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: 'white', marginBottom: '6px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '3px' }}>
-                                                    {day.dayName} ({day.displayDate})
-                                                </div>
-                                                <div style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                                    <span style={{ color: 'var(--text-gray)', display: 'flex', alignItems: 'center', gap: '4px' }}><Sun size={12} /> Daytime:</span>
-                                                    <span style={{ color: getOccupancyColor(day.daytimePercentage), fontWeight: '700' }}>{day.daytimePercentage}% Busy</span>
-                                                </div>
-                                                <div style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span style={{ color: 'var(--text-gray)', display: 'flex', alignItems: 'center', gap: '4px' }}><Moon size={12} /> Evening:</span>
-                                                    <span style={{ color: getOccupancyColor(day.eveningPercentage), fontWeight: '700' }}>{day.eveningPercentage}% Busy</span>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                {stats.daysData.map((day, idx) => {
+                                    const isHovered = hoveredDay === idx;
+                                    
+                                    return (
+                                        <div
+                                            key={day.dateString}
+                                            onMouseEnter={() => setHoveredDay(idx)}
+                                            onMouseLeave={() => setHoveredDay(null)}
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                width: '12%',
+                                                height: '100%',
+                                                justifyContent: 'flex-end',
+                                                cursor: 'pointer',
+                                                position: 'relative',
+                                                zIndex: 10
+                                            }}
+                                        >
+                                            {/* Tooltip on Hover */}
+                                            <AnimatePresence>
+                                                {isHovered && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                        animate={{ opacity: 1, y: -8, scale: 1 }}
+                                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            bottom: '85%',
+                                                            background: 'rgba(20, 20, 20, 0.95)',
+                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                            borderRadius: '8px',
+                                                            padding: '0.6rem 0.8rem',
+                                                            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                                                            zIndex: 100,
+                                                            width: '180px',
+                                                            textAlign: 'left',
+                                                            pointerEvents: 'none'
+                                                        }}
+                                                    >
+                                                        <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: 'white', marginBottom: '6px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '3px' }}>
+                                                            {day.dayName} ({day.displayDate})
+                                                        </div>
+                                                        <div style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                                            <span style={{ color: 'var(--text-gray)', display: 'flex', alignItems: 'center', gap: '4px' }}><Sun size={12} /> Daytime:</span>
+                                                            <span style={{ color: getOccupancyColor(day.daytimePercentage), fontWeight: '700' }}>{day.daytimePercentage}% Busy</span>
+                                                        </div>
+                                                        <div style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                                                            <span style={{ color: 'var(--text-gray)', display: 'flex', alignItems: 'center', gap: '4px' }}><Moon size={12} /> Evening:</span>
+                                                            <span style={{ color: getOccupancyColor(day.eveningPercentage), fontWeight: '700' }}>{day.eveningPercentage}% Busy</span>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
 
-                                    {/* Double Column Container */}
-                                    <div style={{
-                                        display: 'flex',
-                                        gap: '6px',
-                                        width: '100%',
-                                        height: '80%',
-                                        justifyContent: 'center',
-                                        alignItems: 'flex-end',
-                                        position: 'relative'
-                                    }}>
-                                        {/* Daytime Bar (Before 6 PM) */}
-                                        <div style={{
-                                            width: '18px',
-                                            height: '100%',
-                                            background: 'rgba(255,255,255,0.03)',
-                                            borderRadius: '10px',
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            border: '1px solid rgba(255,255,255,0.02)'
-                                        }}>
-                                            <motion.div
-                                                initial={{ height: '0%' }}
-                                                animate={{ height: `${day.daytimePercentage}%` }}
-                                                transition={{ duration: 0.8, type: "spring", stiffness: 60, delay: idx * 0.05 }}
-                                                style={{
-                                                    width: '100%',
-                                                    background: `linear-gradient(to top, ${getOccupancyColor(day.daytimePercentage)}44, ${getOccupancyColor(day.daytimePercentage)})`,
-                                                    position: 'absolute',
-                                                    bottom: 0,
-                                                    left: 0,
+                                            {/* Double Column Container */}
+                                            <div style={{
+                                                display: 'flex',
+                                                gap: '6px',
+                                                width: '100%',
+                                                height: '80%',
+                                                justifyContent: 'center',
+                                                alignItems: 'flex-end',
+                                                position: 'relative'
+                                            }}>
+                                                {/* Daytime Bar (Before 6 PM) */}
+                                                <div style={{
+                                                    width: '18px',
+                                                    height: '100%',
+                                                    background: 'rgba(255,255,255,0.03)',
                                                     borderRadius: '10px',
-                                                    boxShadow: `0 0 10px ${getOccupancyColor(day.daytimePercentage)}33`
-                                                }}
-                                            ></motion.div>
-                                        </div>
+                                                    overflow: 'hidden',
+                                                    position: 'relative',
+                                                    border: '1px solid rgba(255,255,255,0.02)'
+                                                }}>
+                                                    <motion.div
+                                                        initial={{ height: '0%' }}
+                                                        animate={{ height: `${day.daytimePercentage}%` }}
+                                                        transition={{ duration: 0.8, type: "spring", stiffness: 60, delay: idx * 0.05 }}
+                                                        style={{
+                                                            width: '100%',
+                                                            background: `linear-gradient(to top, ${getOccupancyColor(day.daytimePercentage)}44, ${getOccupancyColor(day.daytimePercentage)})`,
+                                                            position: 'absolute',
+                                                            bottom: 0,
+                                                            left: 0,
+                                                            borderRadius: '10px',
+                                                            boxShadow: `0 0 10px ${getOccupancyColor(day.daytimePercentage)}33`
+                                                        }}
+                                                    ></motion.div>
+                                                </div>
 
-                                        {/* Evening Bar (After 6 PM) */}
-                                        <div style={{
-                                            width: '18px',
-                                            height: '100%',
-                                            background: 'rgba(255,255,255,0.03)',
-                                            borderRadius: '10px',
-                                            overflow: 'hidden',
-                                            position: 'relative',
-                                            border: '1px solid rgba(255,255,255,0.02)'
-                                        }}>
-                                            <motion.div
-                                                initial={{ height: '0%' }}
-                                                animate={{ height: `${day.eveningPercentage}%` }}
-                                                transition={{ duration: 0.8, type: "spring", stiffness: 60, delay: (idx * 0.05) + 0.1 }}
-                                                style={{
-                                                    width: '100%',
-                                                    background: `linear-gradient(to top, ${getOccupancyColor(day.eveningPercentage)}44, ${getOccupancyColor(day.eveningPercentage)})`,
-                                                    position: 'absolute',
-                                                    bottom: 0,
-                                                    left: 0,
+                                                {/* Evening Bar (After 6 PM) */}
+                                                <div style={{
+                                                    width: '18px',
+                                                    height: '100%',
+                                                    background: 'rgba(255,255,255,0.03)',
                                                     borderRadius: '10px',
-                                                    boxShadow: `0 0 10px ${getOccupancyColor(day.eveningPercentage)}33`
-                                                }}
-                                            ></motion.div>
-                                        </div>
-                                    </div>
+                                                    overflow: 'hidden',
+                                                    position: 'relative',
+                                                    border: '1px solid rgba(255,255,255,0.02)'
+                                                }}>
+                                                    <motion.div
+                                                        initial={{ height: '0%' }}
+                                                        animate={{ height: `${day.eveningPercentage}%` }}
+                                                        transition={{ duration: 0.8, type: "spring", stiffness: 60, delay: (idx * 0.05) + 0.1 }}
+                                                        style={{
+                                                            width: '100%',
+                                                            background: `linear-gradient(to top, ${getOccupancyColor(day.eveningPercentage)}44, ${getOccupancyColor(day.eveningPercentage)})`,
+                                                            position: 'absolute',
+                                                            bottom: 0,
+                                                            left: 0,
+                                                            borderRadius: '10px',
+                                                            boxShadow: `0 0 10px ${getOccupancyColor(day.eveningPercentage)}33`
+                                                        }}
+                                                    ></motion.div>
+                                                </div>
+                                            </div>
 
-                                    {/* Labels */}
-                                    <div style={{ marginTop: '0.8rem', textAlign: 'center' }}>
-                                        <div style={{
-                                            fontSize: '0.85rem',
-                                            fontWeight: '700',
-                                            color: isHovered ? 'white' : 'rgba(255,255,255,0.8)',
-                                            transition: 'color 0.2s ease'
-                                        }}>
-                                            {day.shortName}
+                                            {/* Labels */}
+                                            <div style={{ marginTop: '0.8rem', textAlign: 'center' }}>
+                                                <div style={{
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: '700',
+                                                    color: isHovered ? 'white' : 'rgba(255,255,255,0.8)',
+                                                    transition: 'color 0.2s ease'
+                                                }}>
+                                                    {day.shortName}
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '0.65rem',
+                                                    color: 'var(--text-gray)',
+                                                    marginTop: '1px'
+                                                }}>
+                                                    {day.displayDate}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div style={{
-                                            fontSize: '0.65rem',
-                                            color: 'var(--text-gray)',
-                                            marginTop: '1px'
-                                        }}>
-                                            {day.displayDate}
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                                    );
+                                })}
                             </motion.div>
                         </AnimatePresence>
                     </div>
