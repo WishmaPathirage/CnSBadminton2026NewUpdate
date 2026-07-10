@@ -143,9 +143,9 @@ const WeeklyBusyGraph = () => {
 
     // Color code helper based on occupancy percentage
     const getOccupancyColor = (pct) => {
-        if (pct < 30) return 'var(--brand-teal)'; // Neon Teal (#78DCCA)
-        if (pct <= 65) return 'var(--brand-yellow)'; // Neon/Golden Yellow (#f1c40f)
-        return 'var(--brand-pink)'; // Neon Pink (#ff69b4)
+        if (pct < 30) return '#78DCCA'; // Neon Teal
+        if (pct <= 65) return '#FBCA3F'; // Neon/Golden Yellow
+        return '#E94E8F'; // Neon Pink
     };
 
     return (
@@ -353,17 +353,17 @@ const WeeklyBusyGraph = () => {
                                             border: '1px solid rgba(255,255,255,0.02)'
                                         }}>
                                             <motion.div
-                                                initial={{ height: 0 }}
+                                                initial={{ height: '0%' }}
                                                 animate={{ height: `${day.daytimePercentage}%` }}
                                                 transition={{ duration: 0.8, type: "spring", stiffness: 60, delay: idx * 0.05 }}
                                                 style={{
                                                     width: '100%',
-                                                    background: `linear-gradient(to top, ${getOccupancyColor(day.daytimePercentage)}aa, ${getOccupancyColor(day.daytimePercentage)})`,
+                                                    background: `linear-gradient(to top, ${getOccupancyColor(day.daytimePercentage)}44, ${getOccupancyColor(day.daytimePercentage)})`,
                                                     position: 'absolute',
                                                     bottom: 0,
                                                     left: 0,
                                                     borderRadius: '10px',
-                                                    boxShadow: `0 0 10px ${getOccupancyColor(day.daytimePercentage)}22`
+                                                    boxShadow: `0 0 10px ${getOccupancyColor(day.daytimePercentage)}33`
                                                 }}
                                             ></motion.div>
                                         </div>
@@ -379,17 +379,17 @@ const WeeklyBusyGraph = () => {
                                             border: '1px solid rgba(255,255,255,0.02)'
                                         }}>
                                             <motion.div
-                                                initial={{ height: 0 }}
+                                                initial={{ height: '0%' }}
                                                 animate={{ height: `${day.eveningPercentage}%` }}
                                                 transition={{ duration: 0.8, type: "spring", stiffness: 60, delay: (idx * 0.05) + 0.1 }}
                                                 style={{
                                                     width: '100%',
-                                                    background: `linear-gradient(to top, ${getOccupancyColor(day.eveningPercentage)}aa, ${getOccupancyColor(day.eveningPercentage)})`,
+                                                    background: `linear-gradient(to top, ${getOccupancyColor(day.eveningPercentage)}44, ${getOccupancyColor(day.eveningPercentage)})`,
                                                     position: 'absolute',
                                                     bottom: 0,
                                                     left: 0,
                                                     borderRadius: '10px',
-                                                    boxShadow: `0 0 10px ${getOccupancyColor(day.eveningPercentage)}22`
+                                                    boxShadow: `0 0 10px ${getOccupancyColor(day.eveningPercentage)}33`
                                                 }}
                                             ></motion.div>
                                         </div>
