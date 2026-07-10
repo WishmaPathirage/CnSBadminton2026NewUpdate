@@ -259,18 +259,35 @@ const WeeklyBusyGraph = () => {
                     alignItems: 'center'
                 }} className="busy-graph-grid">
                     
-                    {/* Columns Diagram */}
+                    {/* Columns Diagram Container with 3D Flip perspective */}
                     <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-end',
                         height: '240px',
-                        padding: '1.5rem 0.5rem 0.5rem 0.5rem',
                         position: 'relative',
-                        background: 'rgba(255, 255, 255, 0.01)',
-                        borderBottom: '1px solid rgba(255,255,255,0.1)',
-                        boxSizing: 'border-box'
+                        perspective: '1000px',
+                        width: '100%'
                     }}>
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={weekOffset}
+                                initial={{ rotateY: 90, opacity: 0 }}
+                                animate={{ rotateY: 0, opacity: 1 }}
+                                exit={{ rotateY: -90, opacity: 0 }}
+                                transition={{ duration: 0.4, ease: "easeInOut" }}
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'flex-end',
+                                    height: '100%',
+                                    width: '100%',
+                                    padding: '1.5rem 0.5rem 0.5rem 0.5rem',
+                                    background: 'rgba(255, 255, 255, 0.01)',
+                                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                    boxSizing: 'border-box',
+                                    transformOrigin: 'center',
+                                    backfaceVisibility: 'hidden',
+                                    WebkitBackfaceVisibility: 'hidden'
+                                }}
+                            >
                         {/* Horizontal Helper Grid Lines */}
                         <div style={{ position: 'absolute', left: 0, right: 0, top: '25%', borderTop: '1px dashed rgba(255, 255, 255, 0.03)' }}></div>
                         <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px dashed rgba(255, 255, 255, 0.03)' }}></div>
@@ -416,6 +433,8 @@ const WeeklyBusyGraph = () => {
                                 </div>
                             );
                         })}
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
 
                     {/* Stats Panel */}
