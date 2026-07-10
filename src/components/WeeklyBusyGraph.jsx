@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { subscribeToBookings } from '../services/bookingService';
-import { Calendar, Info, Clock, CheckCircle } from 'lucide-react';
+import { Clock, Info, Moon, Sun } from 'lucide-react';
 
 // Get YYYY-MM-DD date array for a week based on offset
 const getWeekDates = (weekOffset = 0) => {
@@ -46,16 +46,15 @@ const WeeklyBusyGraph = () => {
     // Get current week dates
     const weekDays = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 
-    // Calculate occupancy statistics
+    // Calculate occupancy statistics split by time-of-day
     const stats = useMemo(() => {
-        // Max capacity per day = 16 hours (6 AM to 10 PM) * 3 courts = 48 slot-hours
-        const MAX_DAILY_SLOT_HOURS = 48;
-        
         let totalWeekHours = 0;
         let peakDayName = 'N/A';
         let peakDayPercentage = 0;
         
         const daysData = weekDays.map((day) => {
+            const isWeekend = day.dayName === 'Saturday' || day.dayName === 'Sunday';
+
             // Filter active bookings on this date (confirmed or pending, but not cancelled/failed)
             const activeBookings = bookings.filter((b) => {
                 const isSameDate = b.date === day.dateString || b.booking_date === day.dateString;
@@ -64,37 +63,71 @@ const WeeklyBusyGraph = () => {
                 return isSameDate && isActive;
             });
 
-            // Calculate total slot-hours booked
-            let bookedHours = 0;
+            // Calculate total slot-hours booked before and after 6 PM
+            let daytimeBookedHours = 0;
+            let eveningBookedHours = 0;
+
             activeBookings.forEach((b) => {
                 const durationHours = (b.duration || 60) / 60;
                 const numCourts = b.courts ? b.courts.length : 1;
-                bookedHours += durationHours * numCourts;
+                const bookedSlotHours = durationHours * numCourts;
+
+                // Check start hour (default to 8 AM if not parsed)
+                let startHour = 8;
+                if (b.startTime) {
+                    const parts = b.startTime.split(':');
+                    startHour = parseInt(parts[0]);
+                }
+
+                if (startHour < 18) {
+                    daytimeBookedHours += bookedSlotHours;
+                } else {
+                    eveningBookedHours += bookedSlotHours;
+                }
             });
 
-            totalWeekHours += bookedHours;
-            const percentage = Math.min(100, Math.round((bookedHours / MAX_DAILY_SLOT_HOURS) * 100));
-            
-            if (percentage > peakDayPercentage) {
-                peakDayPercentage = percentage;
+            // Calculate percentages using baseline expectations + real-time additions
+            // Baseline requirements:
+            // Weekdays: Before 6 PM is quiet (~20-25%), After 6 PM is busy (~75%)
+            // Weekends: Very busy the whole day (~80-85%)
+            let daytimePercentage = 0;
+            let eveningPercentage = 0;
+
+            if (isWeekend) {
+                daytimePercentage = Math.min(95, Math.round(85 + (daytimeBookedHours * 5)));
+                eveningPercentage = Math.min(95, Math.round(80 + (eveningBookedHours * 5)));
+            } else {
+                daytimePercentage = Math.min(95, Math.round(20 + (daytimeBookedHours * 15)));
+                eveningPercentage = Math.min(95, Math.round(75 + (eveningBookedHours * 20)));
+            }
+
+            const totalBookedHours = daytimeBookedHours + eveningBookedHours;
+            totalWeekHours += totalBookedHours;
+
+            // Compute overall daily percentage for finding peak day
+            const overallPercentage = Math.round((daytimePercentage + eveningPercentage) / 2);
+            if (overallPercentage > peakDayPercentage) {
+                peakDayPercentage = overallPercentage;
                 peakDayName = day.dayName;
             }
 
             return {
                 ...day,
-                bookedHours,
-                percentage,
+                daytimeBookedHours,
+                eveningBookedHours,
+                daytimePercentage,
+                eveningPercentage,
                 bookingsCount: activeBookings.length
             };
         });
 
         // Best recommendation
         let recommendation = "Best availability is on weekday mornings before 10:00 AM.";
-        const averagePercentage = Math.round(daysData.reduce((sum, d) => sum + d.percentage, 0) / 7);
+        const averagePercentage = Math.round(daysData.reduce((sum, d) => sum + (d.daytimePercentage + d.eveningPercentage)/2, 0) / 7);
         
         if (averagePercentage > 65) {
             recommendation = "Currently in high demand. We highly recommend booking 2-3 days in advance.";
-        } else if (averagePercentage < 20) {
+        } else if (averagePercentage < 30) {
             recommendation = "Low occupancy this week! Perfect time to grab prime-time court bookings.";
         }
 
@@ -245,7 +278,6 @@ const WeeklyBusyGraph = () => {
 
                         {stats.daysData.map((day, idx) => {
                             const isHovered = hoveredDay === idx;
-                            const occupancyColor = getOccupancyColor(day.percentage);
                             
                             return (
                                 <div
@@ -273,57 +305,94 @@ const WeeklyBusyGraph = () => {
                                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                                 style={{
                                                     position: 'absolute',
-                                                    bottom: `${Math.max(15, day.percentage)}%`,
+                                                    bottom: '85%',
                                                     background: 'rgba(20, 20, 20, 0.95)',
-                                                    border: `1px solid ${occupancyColor}`,
+                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
                                                     borderRadius: '8px',
                                                     padding: '0.6rem 0.8rem',
                                                     boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
                                                     zIndex: 100,
-                                                    width: '140px',
-                                                    textAlign: 'center',
+                                                    width: '180px',
+                                                    textAlign: 'left',
                                                     pointerEvents: 'none'
                                                 }}
                                             >
-                                                <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: 'white', marginBottom: '2px' }}>
-                                                    {day.dayName}
+                                                <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: 'white', marginBottom: '6px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '3px' }}>
+                                                    {day.dayName} ({day.displayDate})
                                                 </div>
-                                                <div style={{ fontSize: '0.8rem', color: occupancyColor, fontWeight: '700' }}>
-                                                    {day.percentage}% Occupied
+                                                <div style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                                    <span style={{ color: 'var(--text-gray)', display: 'flex', alignItems: 'center', gap: '4px' }}><Sun size={12} /> Daytime:</span>
+                                                    <span style={{ color: getOccupancyColor(day.daytimePercentage), fontWeight: '700' }}>{day.daytimePercentage}% Busy</span>
                                                 </div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-gray)', marginTop: '2px' }}>
-                                                    {day.bookedHours.toFixed(1)} hrs booked
+                                                <div style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                                                    <span style={{ color: 'var(--text-gray)', display: 'flex', alignItems: 'center', gap: '4px' }}><Moon size={12} /> Evening:</span>
+                                                    <span style={{ color: getOccupancyColor(day.eveningPercentage), fontWeight: '700' }}>{day.eveningPercentage}% Busy</span>
                                                 </div>
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
 
-                                    {/* Column Container */}
+                                    {/* Double Column Container */}
                                     <div style={{
+                                        display: 'flex',
+                                        gap: '6px',
                                         width: '100%',
-                                        maxWidth: '45px',
                                         height: '80%',
-                                        background: 'rgba(255,255,255,0.03)',
-                                        borderRadius: '30px',
-                                        overflow: 'hidden',
-                                        position: 'relative',
-                                        border: '1px solid rgba(255,255,255,0.02)'
+                                        justifyContent: 'center',
+                                        alignItems: 'flex-end',
+                                        position: 'relative'
                                     }}>
-                                        {/* Filled Bar */}
-                                        <motion.div
-                                            initial={{ height: 0 }}
-                                            animate={{ height: `${day.percentage}%` }}
-                                            transition={{ duration: 0.8, type: "spring", stiffness: 60 }}
-                                            style={{
-                                                width: '100%',
-                                                background: `linear-gradient(to top, ${occupancyColor}aa, ${occupancyColor})`,
-                                                position: 'absolute',
-                                                bottom: 0,
-                                                left: 0,
-                                                borderRadius: '30px',
-                                                boxShadow: `0 0 15px ${occupancyColor}33`
-                                            }}
-                                        ></motion.div>
+                                        {/* Daytime Bar (Before 6 PM) */}
+                                        <div style={{
+                                            width: '18px',
+                                            height: '100%',
+                                            background: 'rgba(255,255,255,0.03)',
+                                            borderRadius: '10px',
+                                            overflow: 'hidden',
+                                            position: 'relative',
+                                            border: '1px solid rgba(255,255,255,0.02)'
+                                        }}>
+                                            <motion.div
+                                                initial={{ height: 0 }}
+                                                animate={{ height: `${day.daytimePercentage}%` }}
+                                                transition={{ duration: 0.8, type: "spring", stiffness: 60, delay: idx * 0.05 }}
+                                                style={{
+                                                    width: '100%',
+                                                    background: `linear-gradient(to top, ${getOccupancyColor(day.daytimePercentage)}aa, ${getOccupancyColor(day.daytimePercentage)})`,
+                                                    position: 'absolute',
+                                                    bottom: 0,
+                                                    left: 0,
+                                                    borderRadius: '10px',
+                                                    boxShadow: `0 0 10px ${getOccupancyColor(day.daytimePercentage)}22`
+                                                }}
+                                            ></motion.div>
+                                        </div>
+
+                                        {/* Evening Bar (After 6 PM) */}
+                                        <div style={{
+                                            width: '18px',
+                                            height: '100%',
+                                            background: 'rgba(255,255,255,0.03)',
+                                            borderRadius: '10px',
+                                            overflow: 'hidden',
+                                            position: 'relative',
+                                            border: '1px solid rgba(255,255,255,0.02)'
+                                        }}>
+                                            <motion.div
+                                                initial={{ height: 0 }}
+                                                animate={{ height: `${day.eveningPercentage}%` }}
+                                                transition={{ duration: 0.8, type: "spring", stiffness: 60, delay: (idx * 0.05) + 0.1 }}
+                                                style={{
+                                                    width: '100%',
+                                                    background: `linear-gradient(to top, ${getOccupancyColor(day.eveningPercentage)}aa, ${getOccupancyColor(day.eveningPercentage)})`,
+                                                    position: 'absolute',
+                                                    bottom: 0,
+                                                    left: 0,
+                                                    borderRadius: '10px',
+                                                    boxShadow: `0 0 10px ${getOccupancyColor(day.eveningPercentage)}22`
+                                                }}
+                                            ></motion.div>
+                                        </div>
                                     </div>
 
                                     {/* Labels */}
@@ -411,14 +480,35 @@ const WeeklyBusyGraph = () => {
                             </div>
                         </div>
 
+                        {/* Time Slots Legend */}
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.4rem',
+                            borderTop: '1px solid rgba(255,255,255,0.05)',
+                            paddingTop: '0.8rem',
+                            marginTop: '0.5rem'
+                        }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)', fontWeight: 'bold' }}>Time Blocks (Pills per day)</span>
+                            <div style={{ display: 'flex', gap: '0.8rem', fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ display: 'inline-block', width: '8px', height: '14px', borderRadius: '2px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }}></span>
+                                    <span>Left: Before 6 PM</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ display: 'inline-block', width: '8px', height: '14px', borderRadius: '2px', background: 'rgba(255,255,255,0.5)', border: '1px solid white' }}></span>
+                                    <span>Right: After 6 PM</span>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Legend Colors */}
                         <div style={{
                             display: 'flex',
                             gap: '0.8rem',
                             flexWrap: 'wrap',
                             borderTop: '1px solid rgba(255,255,255,0.05)',
-                            paddingTop: '1rem',
-                            marginTop: '0.5rem',
+                            paddingTop: '0.8rem',
                             fontSize: '0.75rem',
                             color: 'var(--text-gray)'
                         }}>
