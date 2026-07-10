@@ -375,12 +375,14 @@ const WeeklyBusyGraph = () => {
                                                         transition={{ duration: 0.8, type: "spring", stiffness: 60, delay: idx * 0.05 }}
                                                         style={{
                                                             width: '100%',
-                                                            background: `linear-gradient(to top, ${getOccupancyColor(day.daytimePercentage)}44, ${getOccupancyColor(day.daytimePercentage)})`,
+                                                            background: `linear-gradient(to top, ${getOccupancyColor(day.daytimePercentage)}44, ${getOccupancyColor(day.daytimePercentage)}, rgba(255, 255, 255, 0.4), ${getOccupancyColor(day.daytimePercentage)}, ${getOccupancyColor(day.daytimePercentage)}44)`,
+                                                            backgroundSize: '100% 300%',
+                                                            animation: 'live-fill-flow 4s linear infinite',
                                                             position: 'absolute',
                                                             bottom: 0,
                                                             left: 0,
                                                             borderRadius: '10px',
-                                                            boxShadow: `0 0 10px ${getOccupancyColor(day.daytimePercentage)}33`
+                                                            boxShadow: `0 0 12px ${getOccupancyColor(day.daytimePercentage)}44`
                                                         }}
                                                     ></motion.div>
                                                 </div>
@@ -401,12 +403,14 @@ const WeeklyBusyGraph = () => {
                                                         transition={{ duration: 0.8, type: "spring", stiffness: 60, delay: (idx * 0.05) + 0.1 }}
                                                         style={{
                                                             width: '100%',
-                                                            background: `linear-gradient(to top, ${getOccupancyColor(day.eveningPercentage)}44, ${getOccupancyColor(day.eveningPercentage)})`,
+                                                            background: `linear-gradient(to top, ${getOccupancyColor(day.eveningPercentage)}44, ${getOccupancyColor(day.eveningPercentage)}, rgba(255, 255, 255, 0.4), ${getOccupancyColor(day.eveningPercentage)}, ${getOccupancyColor(day.eveningPercentage)}44)`,
+                                                            backgroundSize: '100% 300%',
+                                                            animation: 'live-fill-flow 4s linear infinite',
                                                             position: 'absolute',
                                                             bottom: 0,
                                                             left: 0,
                                                             borderRadius: '10px',
-                                                            boxShadow: `0 0 10px ${getOccupancyColor(day.eveningPercentage)}33`
+                                                            boxShadow: `0 0 12px ${getOccupancyColor(day.eveningPercentage)}44`
                                                         }}
                                                     ></motion.div>
                                                 </div>
@@ -550,6 +554,11 @@ const WeeklyBusyGraph = () => {
             </div>
 
             <style>{`
+                @keyframes live-fill-flow {
+                    0% { background-position: 0% 0%; }
+                    100% { background-position: 0% -300%; }
+                }
+
                 @keyframes pulse-live {
                     0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
                     70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(46, 204, 113, 0); }
