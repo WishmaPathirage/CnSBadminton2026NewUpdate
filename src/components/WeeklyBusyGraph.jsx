@@ -212,7 +212,9 @@ const WeeklyBusyGraph = () => {
                         background: 'rgba(255, 255, 255, 0.04)',
                         padding: '0.3rem',
                         borderRadius: '30px',
-                        border: '1px solid rgba(255, 255, 255, 0.05)'
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        position: 'relative',
+                        zIndex: 50
                     }}>
                         <button
                             onClick={() => setWeekOffset(0)}
@@ -226,7 +228,9 @@ const WeeklyBusyGraph = () => {
                                 borderRadius: '25px',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease',
-                                boxShadow: weekOffset === 0 ? '0 4px 12px rgba(120, 220, 202, 0.3)' : 'none'
+                                boxShadow: weekOffset === 0 ? '0 4px 12px rgba(120, 220, 202, 0.3)' : 'none',
+                                position: 'relative',
+                                zIndex: 60
                             }}
                         >
                             This Week
@@ -243,7 +247,9 @@ const WeeklyBusyGraph = () => {
                                 borderRadius: '25px',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease',
-                                boxShadow: weekOffset === 1 ? '0 4px 12px rgba(120, 220, 202, 0.3)' : 'none'
+                                boxShadow: weekOffset === 1 ? '0 4px 12px rgba(120, 220, 202, 0.3)' : 'none',
+                                position: 'relative',
+                                zIndex: 60
                             }}
                         >
                             Next Week
