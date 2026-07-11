@@ -20,11 +20,9 @@ const Hero = () => {
     }, []);
 
     return (
-        <section id="home" style={{
+        <section id="home" className="hero-section" style={{
             minHeight: '100vh',
             position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
             overflow: 'hidden',
             marginTop: 'var(--hero-margin-top, -115px)',
             boxSizing: 'border-box'
@@ -143,6 +141,10 @@ const Hero = () => {
             </div>
 
             <style>{`
+                .hero-section {
+                    display: flex;
+                    align-items: flex-start; /* Align content to top on mobile so spacing sits snug under ticker */
+                }
                 :root {
                     --hero-margin-top: -115px;
                 }
@@ -156,7 +158,7 @@ const Hero = () => {
                     grid-template-columns: 1fr;
                     gap: 2rem;
                     align-items: center;
-                    padding-top: 175px; /* Shift content snug below the navbar */
+                    padding-top: 130px; /* Snug directly below the notification bar ticker */
                     padding-bottom: 60px;
                     padding-left: clamp(1rem, 5vw, 2rem);
                     padding-right: clamp(1rem, 5vw, 2rem);
@@ -168,10 +170,13 @@ const Hero = () => {
                     width: 100%;
                 }
                 @media (min-width: 992px) {
+                    .hero-section {
+                        align-items: center; /* Vertically center content on desktop */
+                    }
                     .hero-grid {
                         grid-template-columns: 1.1fr 0.9fr;
                         gap: 3rem;
-                        padding-top: 175px; /* Shift content closer to the navbar on desktop */
+                        padding-top: 130px; /* Snug below notification bar on desktop */
                         padding-bottom: 80px;
                     }
                     .hero-graph-wrapper {
