@@ -87,9 +87,6 @@ const WeeklyBusyGraph = () => {
             });
 
             // Calculate percentages using baseline expectations + real-time additions
-            // Baseline requirements:
-            // Weekdays: Before 6 PM is quiet (~20-25%), After 6 PM is busy (~75%)
-            // Weekends: Very busy the whole day (~80-85%)
             let daytimePercentage = 0;
             let eveningPercentage = 0;
 
@@ -122,13 +119,13 @@ const WeeklyBusyGraph = () => {
         });
 
         // Best recommendation
-        let recommendation = "Best availability is on weekday mornings before 10:00 AM.";
+        let recommendation = "Best availability is weekday mornings before 10:00 AM.";
         const averagePercentage = Math.round(daysData.reduce((sum, d) => sum + (d.daytimePercentage + d.eveningPercentage)/2, 0) / 7);
         
         if (averagePercentage > 65) {
-            recommendation = "Currently in high demand. We highly recommend booking 2-3 days in advance.";
+            recommendation = "High demand. We recommend booking 2-3 days in advance.";
         } else if (averagePercentage < 30) {
-            recommendation = "Low occupancy this week! Perfect time to grab prime-time court bookings.";
+            recommendation = "Low occupancy! Perfect time to grab court bookings.";
         }
 
         return {
@@ -151,14 +148,14 @@ const WeeklyBusyGraph = () => {
     return (
         <div style={{
             width: '100%',
-            maxWidth: '820px',
+            maxWidth: '720px',
             margin: '0 auto',
-            padding: '0.5rem',
+            padding: '0.25rem',
             boxSizing: 'border-box'
         }}>
             <div className="glass-panel" style={{
-                padding: '2.5rem',
-                borderRadius: '24px',
+                padding: '1.5rem', // Reduced padding from 2.5rem to 1.5rem for compact size
+                borderRadius: '20px',
                 position: 'relative',
                 overflow: 'hidden',
                 border: '1px solid rgba(255,255,255,0.06)',
@@ -168,32 +165,32 @@ const WeeklyBusyGraph = () => {
                 boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)'
             }}>
                 {/* Glowing Background Spots */}
-                <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '250px', height: '250px', background: 'var(--brand-teal)', filter: 'blur(130px)', opacity: 0.1, borderRadius: '50%' }}></div>
-                <div style={{ position: 'absolute', bottom: '-10%', left: '-10%', width: '250px', height: '250px', background: 'var(--brand-pink)', filter: 'blur(130px)', opacity: 0.1, borderRadius: '50%' }}></div>
+                <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '150px', height: '150px', background: 'var(--brand-teal)', filter: 'blur(100px)', opacity: 0.08, borderRadius: '50%' }}></div>
+                <div style={{ position: 'absolute', bottom: '-10%', left: '-10%', width: '150px', height: '150px', background: 'var(--brand-pink)', filter: 'blur(100px)', opacity: 0.08, borderRadius: '50%' }}></div>
 
                 {/* Header Row */}
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'flex-start',
+                    alignItems: 'center', // Centered to save vertical space
                     flexWrap: 'wrap',
-                    gap: '1.5rem',
-                    marginBottom: '2.5rem'
+                    gap: '1rem',
+                    marginBottom: '1.25rem'
                 }}>
                     <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.2rem' }}>
                             <span style={{
                                 display: 'inline-block',
-                                width: '8px',
-                                height: '8px',
+                                width: '6px',
+                                height: '6px',
                                 borderRadius: '50%',
                                 background: '#2ecc71',
                                 animation: 'pulse-live 2s infinite'
                             }}></span>
-                            <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#2ecc71', letterSpacing: '1px' }}>REAL-TIME OCCUPANCY</span>
+                            <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#2ecc71', letterSpacing: '1px' }}>REAL-TIME OCCUPANCY</span>
                         </div>
                         <h2 style={{
-                            fontSize: 'clamp(1.6rem, 4vw, 2.2rem)',
+                            fontSize: '1.35rem', // Shortened title size
                             fontWeight: '800',
                             color: 'white',
                             lineHeight: '1.1',
@@ -202,16 +199,13 @@ const WeeklyBusyGraph = () => {
                         }}>
                             Weekly Court Activity
                         </h2>
-                        <p style={{ color: 'var(--text-gray)', marginTop: '0.5rem', fontSize: '0.95rem' }}>
-                            Live activity statistics calculated from admin reservations and user checkouts.
-                        </p>
                     </div>
 
                     {/* Week Selector Toggle */}
                     <div style={{
                         display: 'inline-flex',
                         background: 'rgba(255, 255, 255, 0.04)',
-                        padding: '0.3rem',
+                        padding: '0.2rem',
                         borderRadius: '30px',
                         border: '1px solid rgba(255, 255, 255, 0.05)',
                         position: 'relative',
@@ -220,16 +214,16 @@ const WeeklyBusyGraph = () => {
                         <button
                             onClick={() => setWeekOffset(0)}
                             style={{
-                                padding: '0.6rem 1.25rem',
+                                padding: '0.45rem 1rem', // Compact padding
                                 border: 'none',
                                 background: weekOffset === 0 ? 'var(--brand-teal)' : 'transparent',
                                 color: weekOffset === 0 ? '#000' : 'white',
                                 fontWeight: '700',
-                                fontSize: '0.9rem',
+                                fontSize: '0.8rem',
                                 borderRadius: '25px',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease',
-                                boxShadow: weekOffset === 0 ? '0 4px 12px rgba(120, 220, 202, 0.3)' : 'none',
+                                boxShadow: weekOffset === 0 ? '0 4px 10px rgba(120, 220, 202, 0.3)' : 'none',
                                 position: 'relative',
                                 zIndex: 60
                             }}
@@ -239,16 +233,16 @@ const WeeklyBusyGraph = () => {
                         <button
                             onClick={() => setWeekOffset(1)}
                             style={{
-                                padding: '0.6rem 1.25rem',
+                                padding: '0.45rem 1rem',
                                 border: 'none',
                                 background: weekOffset === 1 ? 'var(--brand-teal)' : 'transparent',
                                 color: weekOffset === 1 ? '#000' : 'white',
                                 fontWeight: '700',
-                                fontSize: '0.9rem',
+                                fontSize: '0.8rem',
                                 borderRadius: '25px',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease',
-                                boxShadow: weekOffset === 1 ? '0 4px 12px rgba(120, 220, 202, 0.3)' : 'none',
+                                boxShadow: weekOffset === 1 ? '0 4px 10px rgba(120, 220, 202, 0.3)' : 'none',
                                 position: 'relative',
                                 zIndex: 60
                             }}
@@ -258,17 +252,16 @@ const WeeklyBusyGraph = () => {
                     </div>
                 </div>
 
-                {/* Grid Content */}
+                {/* Grid Content - Flex Column Layout for Horizontal Stretch */}
                 <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '3fr 1.2fr',
-                    gap: '2.5rem',
-                    alignItems: 'center'
-                }} className="busy-graph-grid">
+                    display: 'flex',
+                    flexDirection: 'column',
+                    width: '100%'
+                }}>
                     
-                    {/* Columns Diagram Container with 3D Flip perspective */}
+                    {/* Columns Diagram Container - Shrunk height to 150px */}
                     <div style={{
-                        height: '240px',
+                        height: '150px',
                         position: 'relative',
                         perspective: '1000px',
                         width: '100%'
@@ -286,7 +279,7 @@ const WeeklyBusyGraph = () => {
                                     alignItems: 'flex-end',
                                     height: '100%',
                                     width: '100%',
-                                    padding: '1.5rem 0.5rem 0.5rem 0.5rem',
+                                    padding: '1rem 0.25rem 0.25rem 0.25rem',
                                     background: 'rgba(255, 255, 255, 0.01)',
                                     borderBottom: '1px solid rgba(255,255,255,0.1)',
                                     boxSizing: 'border-box',
@@ -296,9 +289,9 @@ const WeeklyBusyGraph = () => {
                                 }}
                             >
                                 {/* Horizontal Helper Grid Lines */}
-                                <div style={{ position: 'absolute', left: 0, right: 0, top: '25%', borderTop: '1px dashed rgba(255, 255, 255, 0.03)' }}></div>
-                                <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px dashed rgba(255, 255, 255, 0.03)' }}></div>
-                                <div style={{ position: 'absolute', left: 0, right: 0, top: '75%', borderTop: '1px dashed rgba(255, 255, 255, 0.03)' }}></div>
+                                <div style={{ position: 'absolute', left: 0, right: 0, top: '25%', borderTop: '1px dashed rgba(255, 255, 255, 0.02)' }}></div>
+                                <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: '1px dashed rgba(255, 255, 255, 0.02)' }}></div>
+                                <div style={{ position: 'absolute', left: 0, right: 0, top: '75%', borderTop: '1px dashed rgba(255, 255, 255, 0.02)' }}></div>
 
                                 {stats.daysData.map((day, idx) => {
                                     const isHovered = hoveredDay === idx;
@@ -324,33 +317,33 @@ const WeeklyBusyGraph = () => {
                                             <AnimatePresence>
                                                 {isHovered && (
                                                     <motion.div
-                                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                        animate={{ opacity: 1, y: -8, scale: 1 }}
-                                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                        initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                                                        animate={{ opacity: 1, y: -5, scale: 1 }}
+                                                        exit={{ opacity: 0, y: 5, scale: 0.95 }}
                                                         style={{
                                                             position: 'absolute',
-                                                            bottom: '85%',
+                                                            bottom: '90%',
                                                             background: 'rgba(20, 20, 20, 0.95)',
                                                             border: '1px solid rgba(255, 255, 255, 0.1)',
                                                             borderRadius: '8px',
-                                                            padding: '0.6rem 0.8rem',
+                                                            padding: '0.45rem 0.65rem',
                                                             boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
                                                             zIndex: 100,
-                                                            width: '180px',
+                                                            width: '160px',
                                                             textAlign: 'left',
                                                             pointerEvents: 'none'
                                                         }}
                                                     >
-                                                        <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: 'white', marginBottom: '6px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '3px' }}>
-                                                            {day.dayName} ({day.displayDate})
+                                                        <div style={{ fontWeight: 'bold', fontSize: '0.8rem', color: 'white', marginBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '2px' }}>
+                                                            {day.dayName}
                                                         </div>
-                                                        <div style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                                            <span style={{ color: 'var(--text-gray)', display: 'flex', alignItems: 'center', gap: '4px' }}><Sun size={12} /> Daytime:</span>
-                                                            <span style={{ color: getOccupancyColor(day.daytimePercentage), fontWeight: '700' }}>{day.daytimePercentage}% Busy</span>
+                                                        <div style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                                            <span style={{ color: 'var(--text-gray)', display: 'flex', alignItems: 'center', gap: '3px' }}><Sun size={10} /> Day:</span>
+                                                            <span style={{ color: getOccupancyColor(day.daytimePercentage), fontWeight: '700' }}>{day.daytimePercentage}%</span>
                                                         </div>
-                                                        <div style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
-                                                            <span style={{ color: 'var(--text-gray)', display: 'flex', alignItems: 'center', gap: '4px' }}><Moon size={12} /> Evening:</span>
-                                                            <span style={{ color: getOccupancyColor(day.eveningPercentage), fontWeight: '700' }}>{day.eveningPercentage}% Busy</span>
+                                                        <div style={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between' }}>
+                                                            <span style={{ color: 'var(--text-gray)', display: 'flex', alignItems: 'center', gap: '3px' }}><Moon size={10} /> Night:</span>
+                                                            <span style={{ color: getOccupancyColor(day.eveningPercentage), fontWeight: '700' }}>{day.eveningPercentage}%</span>
                                                         </div>
                                                     </motion.div>
                                                 )}
@@ -359,19 +352,19 @@ const WeeklyBusyGraph = () => {
                                             {/* Double Column Container */}
                                             <div style={{
                                                 display: 'flex',
-                                                gap: '6px',
+                                                gap: '4px',
                                                 width: '100%',
-                                                height: '80%',
+                                                height: '75%',
                                                 justifyContent: 'center',
                                                 alignItems: 'flex-end',
                                                 position: 'relative'
                                             }}>
                                                 {/* Daytime Bar (Before 6 PM) */}
                                                 <div style={{
-                                                    width: '18px',
+                                                    width: '14px', // Slightly thinner bars for compact view
                                                     height: '100%',
                                                     background: 'rgba(255,255,255,0.03)',
-                                                    borderRadius: '10px',
+                                                    borderRadius: '8px',
                                                     overflow: 'hidden',
                                                     position: 'relative',
                                                     border: '1px solid rgba(255,255,255,0.02)'
@@ -387,8 +380,8 @@ const WeeklyBusyGraph = () => {
                                                             width: '100%',
                                                             overflow: 'hidden',
                                                             background: 'transparent',
-                                                            borderRadius: '0 0 10px 10px',
-                                                            boxShadow: `0 0 12px ${getOccupancyColor(day.daytimePercentage)}44`
+                                                            borderRadius: '0 0 8px 8px',
+                                                            boxShadow: `0 0 10px ${getOccupancyColor(day.daytimePercentage)}33`
                                                         }}
                                                     >
                                                         {day.daytimePercentage > 0 && (
@@ -417,10 +410,10 @@ const WeeklyBusyGraph = () => {
 
                                                 {/* Evening Bar (After 6 PM) */}
                                                 <div style={{
-                                                    width: '18px',
+                                                    width: '14px',
                                                     height: '100%',
                                                     background: 'rgba(255,255,255,0.03)',
-                                                    borderRadius: '10px',
+                                                    borderRadius: '8px',
                                                     overflow: 'hidden',
                                                     position: 'relative',
                                                     border: '1px solid rgba(255,255,255,0.02)'
@@ -436,8 +429,8 @@ const WeeklyBusyGraph = () => {
                                                             width: '100%',
                                                             overflow: 'hidden',
                                                             background: 'transparent',
-                                                            borderRadius: '0 0 10px 10px',
-                                                            boxShadow: `0 0 12px ${getOccupancyColor(day.eveningPercentage)}44`
+                                                            borderRadius: '0 0 8px 8px',
+                                                            boxShadow: `0 0 10px ${getOccupancyColor(day.eveningPercentage)}33`
                                                         }}
                                                     >
                                                         {day.eveningPercentage > 0 && (
@@ -466,9 +459,9 @@ const WeeklyBusyGraph = () => {
                                             </div>
 
                                             {/* Labels */}
-                                            <div style={{ marginTop: '0.8rem', textAlign: 'center' }}>
+                                            <div style={{ marginTop: '0.4rem', textAlign: 'center' }}>
                                                 <div style={{
-                                                    fontSize: '0.85rem',
+                                                    fontSize: '0.75rem',
                                                     fontWeight: '700',
                                                     color: isHovered ? 'white' : 'rgba(255,255,255,0.8)',
                                                     transition: 'color 0.2s ease'
@@ -476,7 +469,7 @@ const WeeklyBusyGraph = () => {
                                                     {day.shortName}
                                                 </div>
                                                 <div style={{
-                                                    fontSize: '0.65rem',
+                                                    fontSize: '0.6rem',
                                                     color: 'var(--text-gray)',
                                                     marginTop: '1px'
                                                 }}>
@@ -490,113 +483,98 @@ const WeeklyBusyGraph = () => {
                         </AnimatePresence>
                     </div>
 
-                    {/* Stats Panel */}
+                    {/* Stats Panel - Horizontal Flex Row for Shorter height */}
                     <div style={{
                         display: 'flex',
-                        flexDirection: 'column',
-                        gap: '1.25rem',
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '1rem',
                         background: 'rgba(255,255,255,0.02)',
-                        borderRadius: '20px',
-                        padding: '1.5rem',
+                        borderRadius: '12px',
+                        padding: '0.75rem 1.25rem',
                         border: '1px solid rgba(255,255,255,0.04)',
-                        boxSizing: 'border-box'
-                    }}>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                            <Clock size={20} color="var(--brand-teal)" />
-                            <span style={{ fontWeight: '700', fontSize: '1rem', color: 'white' }}>Quick Insights</span>
-                        </div>
-
-                        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.8rem' }}>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>Busiest Day</span>
-                            <div style={{
-                                fontSize: '1.25rem',
+                        boxSizing: 'border-box',
+                        marginTop: '1rem',
+                        width: '100%'
+                    }} className="busy-graph-stats-row">
+                        
+                        {/* Busiest Day */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>Busiest Day</span>
+                            <span style={{
+                                fontSize: '0.9rem',
                                 fontWeight: '800',
                                 color: 'white',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '6px',
-                                marginTop: '2px'
+                                gap: '6px'
                             }}>
                                 {stats.peakDayPercentage > 0 ? (
                                     <>
                                         <span>{stats.peakDayName}</span>
                                         <span style={{
-                                            fontSize: '0.85rem',
+                                            fontSize: '0.75rem',
                                             color: getOccupancyColor(stats.peakDayPercentage),
-                                            background: `${getOccupancyColor(stats.peakDayPercentage)}22`,
-                                            padding: '2px 8px',
-                                            borderRadius: '20px'
+                                            fontWeight: 'bold'
                                         }}>
                                             {stats.peakDayPercentage}% Peak
                                         </span>
                                     </>
                                 ) : (
-                                    <span>No Bookings Yet</span>
+                                    <span>N/A</span>
                                 )}
-                            </div>
+                            </span>
                         </div>
 
-                        <div>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>Smart Suggestion</span>
-                            <div style={{
-                                fontSize: '0.85rem',
+                        {/* Recommendation */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', maxWidth: '280px' }}>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-gray)' }}>Smart Tip</span>
+                            <span style={{
+                                fontSize: '0.75rem',
                                 color: 'rgba(255,255,255,0.9)',
-                                lineHeight: '1.4',
-                                marginTop: '4px',
                                 display: 'flex',
-                                gap: '8px',
-                                alignItems: 'flex-start'
+                                gap: '4px',
+                                alignItems: 'center',
+                                lineHeight: '1.2'
                             }}>
-                                <Info size={16} color="var(--brand-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                <Info size={12} color="var(--brand-teal)" style={{ flexShrink: 0 }} />
                                 <span>{stats.recommendation}</span>
+                            </span>
+                        </div>
+
+                        {/* Combined Legends (Colors & Time Blocks) */}
+                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {/* Color indicators */}
+                            <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.65rem', color: 'var(--text-gray)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#78DCCA' }}></span>
+                                    <span>Quiet</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#FBCA3F' }}></span>
+                                    <span>Mod</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#E94E8F' }}></span>
+                                    <span>Busy</span>
+                                </div>
+                            </div>
+
+                            {/* AM/PM Column indicators */}
+                            <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <span style={{ display: 'inline-block', width: '5px', height: '8px', borderRadius: '1px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }}></span>
+                                    <span>Left: AM</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <span style={{ display: 'inline-block', width: '5px', height: '8px', borderRadius: '1px', background: 'rgba(255,255,255,0.5)', border: '1px solid white' }}></span>
+                                    <span>Right: PM</span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Time Slots Legend */}
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '0.4rem',
-                            borderTop: '1px solid rgba(255,255,255,0.05)',
-                            paddingTop: '0.8rem',
-                            marginTop: '0.5rem'
-                        }}>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-gray)', fontWeight: 'bold' }}>Time Blocks (Pills per day)</span>
-                            <div style={{ display: 'flex', gap: '0.8rem', fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span style={{ display: 'inline-block', width: '8px', height: '14px', borderRadius: '2px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }}></span>
-                                    <span>Left: Before 6 PM</span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span style={{ display: 'inline-block', width: '8px', height: '14px', borderRadius: '2px', background: 'rgba(255,255,255,0.5)', border: '1px solid white' }}></span>
-                                    <span>Right: After 6 PM</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Legend Colors */}
-                        <div style={{
-                            display: 'flex',
-                            gap: '0.8rem',
-                            flexWrap: 'wrap',
-                            borderTop: '1px solid rgba(255,255,255,0.05)',
-                            paddingTop: '0.8rem',
-                            fontSize: '0.75rem',
-                            color: 'var(--text-gray)'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#78DCCA' }}></span>
-                                <span>Quiet</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FBCA3F' }}></span>
-                                <span>Moderate</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#E94E8F' }}></span>
-                                <span>Busy</span>
-                            </div>
-                        </div>
                     </div>
 
                 </div>
@@ -608,16 +586,16 @@ const WeeklyBusyGraph = () => {
                     bottom: 0;
                     left: 0;
                     width: 100%;
-                    height: calc(100% - 8px);
-                    border-radius: 0 0 10px 10px;
+                    height: calc(100% - 6px);
+                    border-radius: 0 0 8px 8px;
                 }
 
                 .water-wave {
                     position: absolute;
-                    width: 80px;
-                    height: 80px;
-                    left: -31px;
-                    top: -76px;
+                    width: 60px;
+                    height: 60px;
+                    left: -23px; /* Center of 14px bar: (60-14)/2 = 23 */
+                    top: -56px;
                     pointer-events: none;
                     transform-origin: 50% 48%;
                 }
@@ -651,10 +629,11 @@ const WeeklyBusyGraph = () => {
                     100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
                 }
 
-                @media (max-width: 768px) {
-                    .busy-graph-grid {
-                        grid-template-columns: 1fr !important;
-                        gap: 2rem !important;
+                @media (max-width: 580px) {
+                    .busy-graph-stats-row {
+                        flex-direction: column !important;
+                        align-items: flex-start !important;
+                        gap: 0.8rem !important;
                     }
                 }
             `}</style>
