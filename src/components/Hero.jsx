@@ -74,7 +74,7 @@ const Hero = () => {
                 zIndex: 0
             }} />
 
-            <div className="container hero-grid" style={{ position: 'relative', zIndex: 1, width: '100%', padding: '0 clamp(1rem, 5vw, 2rem)' }}>
+            <div className="container hero-grid" style={{ position: 'relative', zIndex: 1, width: '100%' }}>
                 <motion.div
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -160,6 +160,9 @@ const Hero = () => {
                     align-items: center;
                     padding-top: 180px; /* Shift content down so company name is fully visible on mobile */
                     padding-bottom: 60px;
+                    padding-left: clamp(1rem, 5vw, 2rem);
+                    padding-right: clamp(1rem, 5vw, 2rem);
+                    box-sizing: border-box;
                 }
                 .hero-graph-wrapper {
                     display: flex;
