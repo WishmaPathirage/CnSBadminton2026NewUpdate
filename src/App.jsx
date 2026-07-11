@@ -23,7 +23,6 @@ import RefundPolicy from './pages/RefundPolicy';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import StringingBooking from './components/StringingBooking';
-import WeeklyBusyGraph from './components/WeeklyBusyGraph';
 
 const LandingPage = () => {
   const location = useLocation();
@@ -48,10 +47,7 @@ const LandingPage = () => {
       <NotificationBar />
 
       <div id="home"><Hero /></div>
-      <div id="booking">
-        <WeeklyBusyGraph />
-        <BookingForm />
-      </div>
+      <div id="booking"><BookingForm /></div>
       <div id="memberships"><Memberships /></div>
       <div id="services"><Services /></div>
       <div id="stringing"><StringingBooking /></div>

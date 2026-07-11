@@ -150,9 +150,10 @@ const WeeklyBusyGraph = () => {
 
     return (
         <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto 3rem auto',
-            padding: '1.5rem',
+            width: '100%',
+            maxWidth: '820px',
+            margin: '0 auto',
+            padding: '0.5rem',
             boxSizing: 'border-box'
         }}>
             <div className="glass-panel" style={{

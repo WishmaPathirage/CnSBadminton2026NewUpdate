@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import WeeklyBusyGraph from './WeeklyBusyGraph';
 
 const slideshowImages = [
     '/hero_slideshow/court1.jpg',
@@ -20,12 +21,15 @@ const Hero = () => {
 
     return (
         <section id="home" style={{
-            height: '100vh',
+            minHeight: '100vh',
             position: 'relative',
             display: 'flex',
             alignItems: 'center',
             overflow: 'hidden',
-            marginTop: 'var(--hero-margin-top, -115px)' 
+            marginTop: 'var(--hero-margin-top, -115px)',
+            paddingTop: '100px',
+            paddingBottom: '80px',
+            boxSizing: 'border-box'
         }}>
             {/* Background Slideshow */}
             <div style={{
@@ -70,7 +74,7 @@ const Hero = () => {
                 zIndex: 0
             }} />
 
-            <div className="container" style={{ position: 'relative', zIndex: 1, width: '100%', padding: '0 clamp(1rem, 5vw, 2rem)' }}>
+            <div className="container hero-grid" style={{ position: 'relative', zIndex: 1, width: '100%', padding: '0 clamp(1rem, 5vw, 2rem)' }}>
                 <motion.div
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -128,6 +132,16 @@ const Hero = () => {
                         Book A Court
                     </motion.button>
                 </motion.div>
+
+                {/* Shipped Real-time Weekly Busy Graph Widget */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    style={{ width: '100%' }}
+                >
+                    <WeeklyBusyGraph />
+                </motion.div>
             </div>
 
             <style>{`
@@ -137,6 +151,17 @@ const Hero = () => {
                 @media (max-width: 768px) {
                     :root {
                         --hero-margin-top: -120px;
+                    }
+                }
+                .hero-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 3rem;
+                    align-items: center;
+                }
+                @media (min-width: 992px) {
+                    .hero-grid {
+                        grid-template-columns: 1.1fr 0.9fr;
                     }
                 }
             `}</style>
