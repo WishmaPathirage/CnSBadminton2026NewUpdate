@@ -374,21 +374,35 @@ const WeeklyBusyGraph = () => {
                                                         animate={{ height: `${day.daytimePercentage}%` }}
                                                         transition={{ duration: 1.5, ease: "easeInOut", delay: idx * 0.05 }}
                                                         style={{
-                                                            width: '100%',
-                                                            background: getOccupancyColor(day.daytimePercentage),
                                                             position: 'absolute',
                                                             bottom: 0,
                                                             left: 0,
-                                                            borderRadius: '10px',
-                                                            boxShadow: `0 0 12px ${getOccupancyColor(day.daytimePercentage)}44`,
-                                                            overflow: 'hidden'
+                                                            width: '100%',
+                                                            overflow: 'hidden',
+                                                            background: 'transparent',
+                                                            borderRadius: '0 0 10px 10px',
+                                                            boxShadow: `0 0 12px ${getOccupancyColor(day.daytimePercentage)}44`
                                                         }}
                                                     >
-                                                        {/* Animated Water Wave Ripples */}
                                                         {day.daytimePercentage > 0 && (
                                                             <>
-                                                                <div className="water-wave wave-1" />
-                                                                <div className="water-wave wave-2" />
+                                                                {/* Water Liquid Body */}
+                                                                <div 
+                                                                    className="water-body"
+                                                                    style={{ background: getOccupancyColor(day.daytimePercentage) }}
+                                                                />
+                                                                {/* Wavy Sloshing Top Contour */}
+                                                                <div 
+                                                                    className="water-wave wave-back"
+                                                                    style={{ background: getOccupancyColor(day.daytimePercentage), opacity: 0.6 }}
+                                                                />
+                                                                <div 
+                                                                    className="water-wave wave-glow"
+                                                                />
+                                                                <div 
+                                                                    className="water-wave wave-front"
+                                                                    style={{ background: getOccupancyColor(day.daytimePercentage) }}
+                                                                />
                                                             </>
                                                         )}
                                                     </motion.div>
@@ -409,21 +423,35 @@ const WeeklyBusyGraph = () => {
                                                         animate={{ height: `${day.eveningPercentage}%` }}
                                                         transition={{ duration: 1.5, ease: "easeInOut", delay: (idx * 0.05) + 0.1 }}
                                                         style={{
-                                                            width: '100%',
-                                                            background: getOccupancyColor(day.eveningPercentage),
                                                             position: 'absolute',
                                                             bottom: 0,
                                                             left: 0,
-                                                            borderRadius: '10px',
-                                                            boxShadow: `0 0 12px ${getOccupancyColor(day.eveningPercentage)}44`,
-                                                            overflow: 'hidden'
+                                                            width: '100%',
+                                                            overflow: 'hidden',
+                                                            background: 'transparent',
+                                                            borderRadius: '0 0 10px 10px',
+                                                            boxShadow: `0 0 12px ${getOccupancyColor(day.eveningPercentage)}44`
                                                         }}
                                                     >
-                                                        {/* Animated Water Wave Ripples */}
                                                         {day.eveningPercentage > 0 && (
                                                             <>
-                                                                <div className="water-wave wave-1" />
-                                                                <div className="water-wave wave-2" />
+                                                                {/* Water Liquid Body */}
+                                                                <div 
+                                                                    className="water-body"
+                                                                    style={{ background: getOccupancyColor(day.eveningPercentage) }}
+                                                                />
+                                                                {/* Wavy Sloshing Top Contour */}
+                                                                <div 
+                                                                    className="water-wave wave-back"
+                                                                    style={{ background: getOccupancyColor(day.eveningPercentage), opacity: 0.6 }}
+                                                                />
+                                                                <div 
+                                                                    className="water-wave wave-glow"
+                                                                />
+                                                                <div 
+                                                                    className="water-wave wave-front"
+                                                                    style={{ background: getOccupancyColor(day.eveningPercentage) }}
+                                                                />
                                                             </>
                                                         )}
                                                     </motion.div>
@@ -568,29 +596,41 @@ const WeeklyBusyGraph = () => {
             </div>
 
             <style>{`
+                .water-body {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 100%;
+                    height: calc(100% - 8px);
+                    border-radius: 0 0 10px 10px;
+                }
+
                 .water-wave {
                     position: absolute;
-                    left: -150%;
-                    width: 400%;
+                    width: 80px;
                     height: 80px;
-                    top: -65px;
+                    left: -31px;
+                    top: -76px;
                     pointer-events: none;
                     transform-origin: 50% 48%;
                 }
 
-                .wave-1 {
-                    background: rgba(255, 255, 255, 0.25);
+                .wave-back {
                     border-radius: 43%;
-                    animation: water-wave-spin 5s linear infinite;
-                    z-index: 10;
+                    animation: water-wave-spin 6s linear infinite;
                 }
 
-                .wave-2 {
-                    background: rgba(255, 255, 255, 0.15);
+                .wave-front {
                     border-radius: 40%;
-                    animation: water-wave-spin 8s linear infinite;
-                    animation-delay: 1.5s;
-                    z-index: 5;
+                    animation: water-wave-spin 4s linear infinite;
+                }
+
+                .wave-glow {
+                    background: rgba(255, 255, 255, 0.45);
+                    border-radius: 42%;
+                    animation: water-wave-spin 5s linear infinite;
+                    animation-delay: 1s;
+                    z-index: 8;
                 }
 
                 @keyframes water-wave-spin {
