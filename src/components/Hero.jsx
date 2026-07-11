@@ -158,7 +158,7 @@ const Hero = () => {
                     grid-template-columns: 1fr;
                     gap: 2rem;
                     align-items: center;
-                    padding-top: 110px;
+                    padding-top: 180px; /* Shift content down so company name is fully visible on mobile */
                     padding-bottom: 60px;
                 }
                 .hero-graph-wrapper {
@@ -170,7 +170,7 @@ const Hero = () => {
                     .hero-grid {
                         grid-template-columns: 1.1fr 0.9fr;
                         gap: 3rem;
-                        padding-top: 120px;
+                        padding-top: 180px; /* Shift content down on desktop */
                         padding-bottom: 80px;
                     }
                     .hero-graph-wrapper {
