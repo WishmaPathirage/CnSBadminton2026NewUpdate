@@ -27,8 +27,6 @@ const Hero = () => {
             alignItems: 'center',
             overflow: 'hidden',
             marginTop: 'var(--hero-margin-top, -115px)',
-            paddingTop: '100px',
-            paddingBottom: '80px',
             boxSizing: 'border-box'
         }}>
             {/* Background Slideshow */}
@@ -158,7 +156,7 @@ const Hero = () => {
                     grid-template-columns: 1fr;
                     gap: 2rem;
                     align-items: center;
-                    padding-top: 120px; /* Shift content closer to the navbar ticker */
+                    padding-top: 175px; /* Shift content snug below the navbar */
                     padding-bottom: 60px;
                     padding-left: clamp(1rem, 5vw, 2rem);
                     padding-right: clamp(1rem, 5vw, 2rem);
@@ -173,7 +171,7 @@ const Hero = () => {
                     .hero-grid {
                         grid-template-columns: 1.1fr 0.9fr;
                         gap: 3rem;
-                        padding-top: 120px; /* Shift content closer to the navbar on desktop */
+                        padding-top: 175px; /* Shift content closer to the navbar on desktop */
                         padding-bottom: 80px;
                     }
                     .hero-graph-wrapper {
