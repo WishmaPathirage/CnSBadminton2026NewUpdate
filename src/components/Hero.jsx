@@ -138,7 +138,7 @@ const Hero = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
-                    style={{ width: '100%' }}
+                    className="hero-graph-wrapper"
                 >
                     <WeeklyBusyGraph />
                 </motion.div>
@@ -156,12 +156,25 @@ const Hero = () => {
                 .hero-grid {
                     display: grid;
                     grid-template-columns: 1fr;
-                    gap: 3rem;
+                    gap: 2rem;
                     align-items: center;
+                    padding-top: 110px;
+                    padding-bottom: 60px;
+                }
+                .hero-graph-wrapper {
+                    display: flex;
+                    justify-content: center;
+                    width: 100%;
                 }
                 @media (min-width: 992px) {
                     .hero-grid {
                         grid-template-columns: 1.1fr 0.9fr;
+                        gap: 3rem;
+                        padding-top: 120px;
+                        padding-bottom: 80px;
+                    }
+                    .hero-graph-wrapper {
+                        justify-content: flex-end;
                     }
                 }
             `}</style>

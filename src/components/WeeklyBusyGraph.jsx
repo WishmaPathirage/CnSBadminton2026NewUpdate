@@ -360,15 +360,7 @@ const WeeklyBusyGraph = () => {
                                                 position: 'relative'
                                             }}>
                                                 {/* Daytime Bar (Before 6 PM) */}
-                                                <div style={{
-                                                    width: '14px', // Slightly thinner bars for compact view
-                                                    height: '100%',
-                                                    background: 'rgba(255,255,255,0.03)',
-                                                    borderRadius: '8px',
-                                                    overflow: 'hidden',
-                                                    position: 'relative',
-                                                    border: '1px solid rgba(255,255,255,0.02)'
-                                                }}>
+                                                <div className="occupancy-bar-wrapper">
                                                     <motion.div
                                                         initial={{ height: '0%' }}
                                                         animate={{ height: `${day.daytimePercentage}%` }}
@@ -409,15 +401,7 @@ const WeeklyBusyGraph = () => {
                                                 </div>
 
                                                 {/* Evening Bar (After 6 PM) */}
-                                                <div style={{
-                                                    width: '14px',
-                                                    height: '100%',
-                                                    background: 'rgba(255,255,255,0.03)',
-                                                    borderRadius: '8px',
-                                                    overflow: 'hidden',
-                                                    position: 'relative',
-                                                    border: '1px solid rgba(255,255,255,0.02)'
-                                                }}>
+                                                <div className="occupancy-bar-wrapper">
                                                     <motion.div
                                                         initial={{ height: '0%' }}
                                                         animate={{ height: `${day.eveningPercentage}%` }}
@@ -581,6 +565,16 @@ const WeeklyBusyGraph = () => {
             </div>
 
             <style>{`
+                .occupancy-bar-wrapper {
+                    width: 14px;
+                    height: 100%;
+                    background: rgba(255,255,255,0.03);
+                    border-radius: 8px;
+                    overflow: hidden;
+                    position: relative;
+                    border: 1px solid rgba(255,255,255,0.02);
+                }
+
                 .water-body {
                     position: absolute;
                     bottom: 0;
@@ -634,6 +628,18 @@ const WeeklyBusyGraph = () => {
                         flex-direction: column !important;
                         align-items: flex-start !important;
                         gap: 0.8rem !important;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .occupancy-bar-wrapper {
+                        width: 10px;
+                    }
+                    .water-wave {
+                        width: 50px;
+                        height: 50px;
+                        left: -20px; /* Center on 10px bar: (50-10)/2 = 20 */
+                        top: -46px;
                     }
                 }
             `}</style>
