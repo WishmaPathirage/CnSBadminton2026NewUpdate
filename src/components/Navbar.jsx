@@ -11,25 +11,6 @@ const Navbar = () => {
     const { currentUser } = useAuth(); // Use AuthContext
     const navigate = useNavigate();
 
-    const [time, setTime] = useState(new Date());
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setTime(new Date());
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    const formatTime = (date) => {
-        let hours = date.getHours();
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        const hoursStr = String(hours).padStart(2, '0');
-        return `${hoursStr}:${minutes}:${seconds} ${ampm}`;
-    };
 
     useEffect(() => {
         const handleScroll = () => {
@@ -133,28 +114,6 @@ const Navbar = () => {
                         </button>
                     ))}
 
-                    {/* Digital Clock */}
-                    <div className="desktop-clock" style={{
-                        fontFamily: 'monospace',
-                        fontSize: '0.9rem',
-                        fontWeight: '700',
-                        color: 'var(--brand-teal)',
-                        padding: '0.4rem 0.8rem',
-                        borderRadius: '20px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(120, 220, 202, 0.2)',
-                        boxShadow: '0 0 10px rgba(120, 220, 202, 0.1)',
-                        textShadow: '0 0 5px rgba(120, 220, 202, 0.3)',
-                        letterSpacing: '0.5px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        marginLeft: '0.5rem',
-                        marginRight: '0.5rem'
-                    }}>
-                        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--brand-teal)', animation: 'pulse 2s infinite' }}></span>
-                        {formatTime(time)}
-                    </div>
 
                     {/* Auth Section */}
                     {currentUser ? (
@@ -191,22 +150,7 @@ const Navbar = () => {
 
                 {/* Mobile Toggle & Clock */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div className="mobile-clock" style={{
-                        fontFamily: 'monospace',
-                        fontSize: '0.8rem',
-                        fontWeight: '700',
-                        color: 'var(--brand-teal)',
-                        padding: '0.3rem 0.6rem',
-                        borderRadius: '15px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(120, 220, 202, 0.2)',
-                        textShadow: '0 0 5px rgba(120, 220, 202, 0.3)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                    }}>
-                        {formatTime(time)}
-                    </div>
+
                     <button
                         className="mobile-toggle"
                         onClick={() => setIsOpen(!isOpen)}
