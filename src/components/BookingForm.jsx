@@ -40,7 +40,10 @@ const BookingForm = () => {
         '2026-05-22': { start: 0, end: 1440 },
         '2026-05-23': { start: 0, end: 1140 },
         '2026-05-24': { start: 0, end: 1140 },
-        '2026-05-25': { start: 0, end: 1140 }
+        '2026-05-25': { start: 0, end: 1140 },
+        '2026-08-04': { start: 480, end: 1140 },
+        '2026-08-05': { start: 480, end: 1140 },
+        '2026-08-06': { start: 480, end: 1140 }
     };
     const isTournamentDate = (d) => !!tournamentSettings[d];
 

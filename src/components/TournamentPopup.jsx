@@ -6,14 +6,14 @@ const TournamentPopup = () => {
 
     useEffect(() => {
         // Only show if haven't seen it yet
-        const hasSeenPopup = localStorage.getItem('tournament_popup_2026_seen');
+        const hasSeenPopup = localStorage.getItem('tournament_popup_aug_2026_seen');
         if (!hasSeenPopup) {
             setShowPopup(true);
         }
     }, []);
 
     const handleClose = () => {
-        localStorage.setItem('tournament_popup_2026_seen', 'true');
+        localStorage.setItem('tournament_popup_aug_2026_seen', 'true');
         setShowPopup(false);
     };
 
@@ -106,8 +106,8 @@ const TournamentPopup = () => {
                                 <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>⚠️</span> Important Booking Info
                             </h3>
                             <ul style={{ color: '#E0E0E0', fontSize: '1rem', lineHeight: '2', margin: 0, paddingLeft: '1.8rem', marginBottom: '1.5rem' }}>
-                                <li><strong>Dates:</strong> March 1, 2, and 3, 2026</li>
-                                <li><strong>Affected Time:</strong> 8:00 AM to 8:00 PM</li>
+                                <li><strong>Dates:</strong> August 4, 5, and 6, 2026</li>
+                                <li><strong>Affected Time:</strong> 8:00 AM to 7:00 PM</li>
                             </ul>
                             <p style={{ color: '#A0A0A0', fontSize: '0.95rem', fontStyle: 'italic', marginBottom: 0, lineHeight: '1.5' }}>
                                 Courts will be unavailable for public booking during<br />these hours. Bookings outside these hours remain open!
