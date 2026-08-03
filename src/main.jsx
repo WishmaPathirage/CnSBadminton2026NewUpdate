@@ -5,7 +5,7 @@ import App from './App.jsx'
 
 import { AuthProvider } from './context/AuthContext'
 
-// Clear any stale Service Workers that might have cached old domain redirects
+// Clear any stale Service Workers & CacheStorage that might have cached old domain redirects
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then((registrations) => {
     for (const registration of registrations) {
@@ -13,7 +13,14 @@ if ('serviceWorker' in navigator) {
     }
   })
 }
-
+if ('caches' in window) {
+  caches.keys().then((names) => {
+    for (const name of names) {
+      caches.delete(name)
+    }
+  })
+}
+//upto here
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
