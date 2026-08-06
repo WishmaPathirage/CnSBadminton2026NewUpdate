@@ -5,6 +5,21 @@ const TournamentPopup = () => {
     const [showPopup, setShowPopup] = useState(false);
 
     useEffect(() => {
+        // Calculate SL Time date string YYYY-MM-DD
+        const now = new Date();
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const slTime = new Date(utc + (3600000 * 5.5));
+        const year = slTime.getFullYear();
+        const month = String(slTime.getMonth() + 1).padStart(2, '0');
+        const day = String(slTime.getDate()).padStart(2, '0');
+        const todayStr = `${year}-${month}-${day}`;
+
+        // Stop showing popup starting tomorrow (August 7, 2026 onwards)
+        if (todayStr > '2026-08-06') {
+            setShowPopup(false);
+            return;
+        }
+
         // Only show if haven't seen it yet
         const hasSeenPopup = localStorage.getItem('tournament_popup_aug_2026_seen');
         if (!hasSeenPopup) {
