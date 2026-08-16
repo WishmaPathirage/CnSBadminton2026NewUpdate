@@ -5,30 +5,15 @@ const TournamentPopup = () => {
     const [showPopup, setShowPopup] = useState(false);
 
     useEffect(() => {
-        // Calculate SL Time date string YYYY-MM-DD
-        const now = new Date();
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const slTime = new Date(utc + (3600000 * 5.5));
-        const year = slTime.getFullYear();
-        const month = String(slTime.getMonth() + 1).padStart(2, '0');
-        const day = String(slTime.getDate()).padStart(2, '0');
-        const todayStr = `${year}-${month}-${day}`;
-
-        // Stop showing popup starting tomorrow (August 7, 2026 onwards)
-        if (todayStr > '2026-08-06') {
-            setShowPopup(false);
-            return;
-        }
-
-        // Only show if haven't seen it yet
-        const hasSeenPopup = localStorage.getItem('tournament_popup_aug_2026_seen');
+        // Only show if haven't seen this notice yet
+        const hasSeenPopup = localStorage.getItem('road_maintenance_popup_seen');
         if (!hasSeenPopup) {
             setShowPopup(true);
         }
     }, []);
 
     const handleClose = () => {
-        localStorage.setItem('tournament_popup_aug_2026_seen', 'true');
+        localStorage.setItem('road_maintenance_popup_seen', 'true');
         setShowPopup(false);
     };
 
@@ -95,37 +80,36 @@ const TournamentPopup = () => {
 
                         <motion.h2
                             style={{
-                                fontSize: '2.5rem',
+                                fontSize: '2.2rem',
                                 marginBottom: '1.5rem',
                                 color: '#FFA500', // Orange text
                                 fontWeight: '800',
                                 lineHeight: '1.2'
                             }}
                         >
-                            Event Notice
+                            Important Notice
                         </motion.h2>
 
-                        <p style={{ fontSize: '1.1rem', color: '#FFFFFF', lineHeight: '1.6', marginBottom: '2rem' }}>
-                            We are excited to host the <strong>SPBA All Island Open<br />Badminton Championships 2026</strong>!
+                        <p style={{ fontSize: '1.15rem', color: '#FFFFFF', lineHeight: '1.6', marginBottom: '2rem' }}>
+                            Dear players, our <strong>normal access road to our complex is temporarily closed</strong> due to maintenance.
                         </p>
 
                         <div style={{
-                            background: '#332D24', // Brown-ish background from screenshot
+                            background: '#332D24', // Brown-ish background
                             border: '1px solid #5A4A30',
                             borderRadius: '12px',
                             padding: '1.5rem',
                             marginBottom: '2rem',
                             textAlign: 'left'
                         }}>
-                            <h3 style={{ color: '#FFFFFF', fontSize: '1.2rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem', fontWeight: 'bold' }}>
-                                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>⚠️</span> Important Booking Info
+                            <h3 style={{ color: '#FFFFFF', fontSize: '1.2rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.8rem', fontWeight: 'bold' }}>
+                                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>⚠️</span> Temporary Access Road Closure
                             </h3>
-                            <ul style={{ color: '#E0E0E0', fontSize: '1rem', lineHeight: '2', margin: 0, paddingLeft: '1.8rem', marginBottom: '1.5rem' }}>
-                                <li><strong>Dates:</strong> August 4, 5, and 6, 2026</li>
-                                <li><strong>Affected Time:</strong> 8:00 AM to 7:00 PM</li>
-                            </ul>
+                            <p style={{ color: '#E0E0E0', fontSize: '1rem', lineHeight: '1.6', margin: 0, marginBottom: '1rem' }}>
+                                Please be aware of the road maintenance and ensure you <strong>use alternative access roads</strong> to reach the badminton complex.
+                            </p>
                             <p style={{ color: '#A0A0A0', fontSize: '0.95rem', fontStyle: 'italic', marginBottom: 0, lineHeight: '1.5' }}>
-                                Courts will be unavailable for public booking during<br />these hours. Bookings outside these hours remain open!
+                                We appreciate your understanding and cooperation!
                             </p>
                         </div>
 
