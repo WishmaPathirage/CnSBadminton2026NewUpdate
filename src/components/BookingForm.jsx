@@ -502,7 +502,7 @@ const BookingForm = () => {
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-gray)', fontWeight: '500' }}>Date</label>
                                     <div style={{ position: 'relative' }}>
-                                        <Calendar size={20} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-gray)' }} />
+                                        <Calendar size={20} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#ffffff' }} />
                                         <input
                                             type="date"
                                             min={getLocalDate()}
