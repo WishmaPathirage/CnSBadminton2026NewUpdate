@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import mapImg from '../assets/alternative_route_map.jpg';
 
 const TournamentPopup = () => {
     const [showPopup, setShowPopup] = useState(false);
 
     useEffect(() => {
-        // Only show if haven't seen this notice yet
-        const hasSeenPopup = localStorage.getItem('road_maintenance_popup_seen');
+        // Show for users who haven't seen this updated road map notice
+        const hasSeenPopup = localStorage.getItem('road_maintenance_map_popup_seen');
         if (!hasSeenPopup) {
             setShowPopup(true);
         }
     }, []);
 
     const handleClose = () => {
-        localStorage.setItem('road_maintenance_popup_seen', 'true');
+        localStorage.setItem('road_maintenance_map_popup_seen', 'true');
         setShowPopup(false);
     };
 
@@ -31,11 +32,12 @@ const TournamentPopup = () => {
                         right: 0,
                         bottom: 0,
                         background: 'rgba(0,0,0,0.85)',
-                        zIndex: 10000, // Higher than other popups
+                        zIndex: 10000,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backdropFilter: 'blur(10px)'
+                        backdropFilter: 'blur(10px)',
+                        padding: '1rem'
                     }}
                     onClick={handleClose}
                 >
@@ -43,14 +45,16 @@ const TournamentPopup = () => {
                         initial={{ scale: 0.8, y: 50 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.8, y: 50 }}
-                        onClick={e => e.stopPropagation()} // Prevent closing when clicking inside
+                        onClick={e => e.stopPropagation()}
                         style={{
-                            background: '#222222', // Darker background
+                            background: '#222222',
                             border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '12px',
-                            padding: '3rem',
-                            maxWidth: '550px',
-                            width: '90%',
+                            borderRadius: '16px',
+                            padding: '2rem',
+                            maxWidth: '650px',
+                            width: '100%',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
                             textAlign: 'center',
                             boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
                             position: 'relative'
@@ -61,62 +65,104 @@ const TournamentPopup = () => {
                             onClick={handleClose}
                             style={{
                                 position: 'absolute',
-                                top: '20px',
-                                right: '20px',
-                                background: 'none',
+                                top: '15px',
+                                right: '15px',
+                                background: 'rgba(255,255,255,0.1)',
                                 border: 'none',
+                                borderRadius: '50%',
+                                width: '36px',
+                                height: '36px',
                                 color: 'white',
-                                fontSize: '1.5rem',
+                                fontSize: '1.3rem',
                                 cursor: 'pointer',
-                                opacity: 0.7,
-                                transition: 'opacity 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s',
                                 zIndex: 2
                             }}
-                            onMouseOver={(e) => e.target.style.opacity = 1}
-                            onMouseOut={(e) => e.target.style.opacity = 0.7}
+                            onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.25)'}
+                            onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
                         >
                             ×
                         </button>
 
                         <motion.h2
                             style={{
-                                fontSize: '2.2rem',
-                                marginBottom: '1.5rem',
-                                color: '#FFA500', // Orange text
+                                fontSize: '2rem',
+                                marginBottom: '1.2rem',
+                                color: '#FFA500',
                                 fontWeight: '800',
                                 lineHeight: '1.2'
                             }}
                         >
-                            Important Notice
+                            ⚠️ Temporary Access Road Closure Notice
                         </motion.h2>
 
-                        <p style={{ fontSize: '1.15rem', color: '#FFFFFF', lineHeight: '1.6', marginBottom: '2rem' }}>
-                            Dear players, our <strong>normal access road to our complex is temporarily closed</strong> due to maintenance.
+                        <p style={{ fontSize: '1.1rem', color: '#FFFFFF', lineHeight: '1.6', marginBottom: '1.5rem' }}>
+                            Dear players, our <strong>normal access road to our complex is temporarily closed</strong> due to road maintenance. Please be aware and <strong>use alternative access roads</strong> to reach the complex.
                         </p>
 
+                        {/* Alternative Route Map */}
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <div style={{
+                                position: 'relative',
+                                borderRadius: '12px',
+                                overflow: 'hidden',
+                                border: '1px solid rgba(255, 165, 0, 0.3)',
+                                background: '#111'
+                            }}>
+                                <img
+                                    src={mapImg}
+                                    alt="Alternative Access Routes Map"
+                                    style={{
+                                        width: '100%',
+                                        maxHeight: '320px',
+                                        objectFit: 'contain',
+                                        display: 'block',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => window.open(mapImg, '_blank')}
+                                />
+                            </div>
+                            <span style={{ fontSize: '0.85rem', color: '#A0A0A0', fontStyle: 'italic', display: 'block', marginTop: '0.4rem' }}>
+                                💡 Click on the map image to view in full resolution
+                            </span>
+                        </div>
+
+                        {/* Contact & Signature Box */}
                         <div style={{
-                            background: '#332D24', // Brown-ish background
-                            border: '1px solid #5A4A30',
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
                             borderRadius: '12px',
-                            padding: '1.5rem',
-                            marginBottom: '2rem',
+                            padding: '1.2rem 1.5rem',
+                            marginBottom: '1.5rem',
                             textAlign: 'left'
                         }}>
-                            <h3 style={{ color: '#FFFFFF', fontSize: '1.2rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.8rem', fontWeight: 'bold' }}>
-                                <span style={{ color: '#FFD700', fontSize: '1.4rem' }}>⚠️</span> Temporary Access Road Closure
-                            </h3>
-                            <p style={{ color: '#E0E0E0', fontSize: '1rem', lineHeight: '1.6', margin: 0, marginBottom: '1rem' }}>
-                                Please be aware of the road maintenance and ensure you <strong>use alternative access roads</strong> to reach the badminton complex.
+                            <p style={{ margin: 0, fontWeight: 'bold', color: '#FFFFFF', fontSize: '1rem' }}>
+                                Best Regards,
                             </p>
-                            <p style={{ color: '#A0A0A0', fontSize: '0.95rem', fontStyle: 'italic', marginBottom: 0, lineHeight: '1.5' }}>
-                                We appreciate your understanding and cooperation!
+                            <p style={{ margin: '0.2rem 0 0.8rem 0', fontWeight: 'bold', color: '#70D6C1', fontSize: '1.05rem' }}>
+                                C & S Badminton Complex (PVT) Ltd
                             </p>
+                            
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                                gap: '0.5rem',
+                                fontSize: '0.9rem',
+                                color: '#D0D0D0'
+                            }}>
+                                <div>📞 <strong>Phone:</strong> <a href="tel:+94777983264" style={{ color: '#70D6C1', textDecoration: 'none' }}>+94 777 98 32 64</a></div>
+                                <div>✉️ <strong>Email:</strong> <a href="mailto:cnsb233@gmail.com" style={{ color: '#70D6C1', textDecoration: 'none' }}>cnsb233@gmail.com</a></div>
+                                <div>🌐 <strong>Website:</strong> <a href="https://www.cnsbadminton.lk" target="_blank" rel="noopener noreferrer" style={{ color: '#70D6C1', textDecoration: 'none' }}>www.cnsbadminton.lk</a></div>
+                            </div>
                         </div>
 
                         <button
                             onClick={handleClose}
                             style={{
-                                background: '#70D6C1', // Mint green button
+                                background: '#70D6C1',
                                 color: '#000000',
                                 padding: '0.8rem 3rem',
                                 borderRadius: '50px',
