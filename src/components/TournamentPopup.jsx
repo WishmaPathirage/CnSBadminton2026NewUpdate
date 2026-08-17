@@ -130,34 +130,7 @@ const TournamentPopup = () => {
                             </span>
                         </div>
 
-                        {/* Contact & Signature Box */}
-                        <div style={{
-                            background: 'rgba(255, 255, 255, 0.04)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '12px',
-                            padding: '1.2rem 1.5rem',
-                            marginBottom: '1.5rem',
-                            textAlign: 'left'
-                        }}>
-                            <p style={{ margin: 0, fontWeight: 'bold', color: '#FFFFFF', fontSize: '1rem' }}>
-                                Best Regards,
-                            </p>
-                            <p style={{ margin: '0.2rem 0 0.8rem 0', fontWeight: 'bold', color: '#70D6C1', fontSize: '1.05rem' }}>
-                                C & S Badminton Complex (PVT) Ltd
-                            </p>
-                            
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                                gap: '0.5rem',
-                                fontSize: '0.9rem',
-                                color: '#D0D0D0'
-                            }}>
-                                <div>📞 <strong>Phone:</strong> <a href="tel:+94777983264" style={{ color: '#70D6C1', textDecoration: 'none' }}>+94 777 98 32 64</a></div>
-                                <div>✉️ <strong>Email:</strong> <a href="mailto:cnsb233@gmail.com" style={{ color: '#70D6C1', textDecoration: 'none' }}>cnsb233@gmail.com</a></div>
-                                <div>🌐 <strong>Website:</strong> <a href="https://www.cnsbadminton.lk" target="_blank" rel="noopener noreferrer" style={{ color: '#70D6C1', textDecoration: 'none' }}>www.cnsbadminton.lk</a></div>
-                            </div>
-                        </div>
+
 
                         <button
                             onClick={handleClose}
