@@ -601,8 +601,8 @@ const BookingForm = () => {
                                         </div>
                                         {isTournamentDate(date) && (
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <Trophy size={14} color="#ffa500" />
-                                                <span style={{ color: '#ffa500', fontWeight: '600' }}>Tournament</span>
+                                                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(255, 165, 0, 0.2)', border: '1px solid #ffa500' }}></div>
+                                                <span style={{ color: '#aaa' }}>Tournament</span>
                                             </div>
                                         )}
                                     </div>
