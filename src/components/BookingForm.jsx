@@ -4,7 +4,7 @@ import { updateDoc, doc, getDoc } from 'firebase/firestore';
 import { getAvailability, subscribeToAvailability, createBooking, checkUserBlacklist, deleteBooking } from '../services/bookingService';
 import { getAuth } from 'firebase/auth'; // Import getAuth
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, AlertCircle, Info, Trophy } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
 import CryptoJS from 'crypto-js';
@@ -47,9 +47,25 @@ const BookingForm = () => {
         '2026-08-18': { start: 480, end: 1080 },
         '2026-08-19': { start: 480, end: 1080 },
         '2026-08-20': { start: 480, end: 1080 },
-        '2026-08-21': { start: 480, end: 1080 }
+        '2026-08-21': { start: 480, end: 1080 },
+        '2026-08-22': { start: 480, end: 1080 }
     };
     const isTournamentDate = (d) => !!tournamentSettings[d];
+
+    const formatTournamentTime = (tInfo) => {
+        if (!tInfo) return '';
+        const { start, end } = tInfo;
+        if (start === 0 && end >= 1440) return 'All Day';
+        const formatMin = (m) => {
+            let h = Math.floor(m / 60);
+            const min = m % 60;
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            if (h === 0) h = 12;
+            return `${h}:${min < 10 ? '0' + min : min} ${ampm}`;
+        };
+        return `${formatMin(start)} - ${formatMin(end)}`;
+    };
 
     const [date, setDate] = useState(getLocalDate());
     const [duration, setDuration] = useState(30); // Default 30 minutes
@@ -512,6 +528,29 @@ const BookingForm = () => {
                                             style={{ paddingLeft: '3rem' }}
                                         />
                                     </div>
+                                    {isTournamentDate(date) && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -5 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '0.5rem',
+                                                marginTop: '0.6rem',
+                                                padding: '0.4rem 0.9rem',
+                                                borderRadius: '50px',
+                                                background: 'rgba(255, 165, 0, 0.15)',
+                                                border: '1px solid rgba(255, 165, 0, 0.5)',
+                                                color: '#FFA500',
+                                                fontSize: '0.85rem',
+                                                fontWeight: '600',
+                                                boxShadow: '0 0 12px rgba(255, 165, 0, 0.2)'
+                                            }}
+                                        >
+                                            <Trophy size={16} color="#FFA500" />
+                                            <span>Tournament Scheduled ({formatTournamentTime(tournamentSettings[date])})</span>
+                                        </motion.div>
+                                    )}
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-gray)', fontWeight: '500' }}>Duration</label>
@@ -585,8 +624,8 @@ const BookingForm = () => {
                                         </div>
                                         {isTournamentDate(date) && (
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(255, 165, 0, 0.2)', border: '1px solid #ffa500' }}></div>
-                                                <span style={{ color: '#aaa' }}>Tournament</span>
+                                                <Trophy size={14} color="#ffa500" />
+                                                <span style={{ color: '#ffa500', fontWeight: '600' }}>Tournament</span>
                                             </div>
                                         )}
                                     </div>
