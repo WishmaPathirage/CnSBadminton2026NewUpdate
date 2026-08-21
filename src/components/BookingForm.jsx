@@ -528,29 +528,6 @@ const BookingForm = () => {
                                             style={{ paddingLeft: '3rem' }}
                                         />
                                     </div>
-                                    {isTournamentDate(date) && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: -5 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            style={{
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                gap: '0.5rem',
-                                                marginTop: '0.6rem',
-                                                padding: '0.4rem 0.9rem',
-                                                borderRadius: '50px',
-                                                background: 'rgba(255, 165, 0, 0.15)',
-                                                border: '1px solid rgba(255, 165, 0, 0.5)',
-                                                color: '#FFA500',
-                                                fontSize: '0.85rem',
-                                                fontWeight: '600',
-                                                boxShadow: '0 0 12px rgba(255, 165, 0, 0.2)'
-                                            }}
-                                        >
-                                            <Trophy size={16} color="#FFA500" />
-                                            <span>Tournament Scheduled ({formatTournamentTime(tournamentSettings[date])})</span>
-                                        </motion.div>
-                                    )}
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-gray)', fontWeight: '500' }}>Duration</label>
