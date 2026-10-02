@@ -84,7 +84,7 @@ const Hero = () => {
                         marginBottom: '1rem',
                         display: 'inline-block' 
                     }}>
-                        Welcome to C & S Badminton Complex (PVT) Ltd, Galle
+                        Welcome to C & S Badminton Complex (PVT) Ltd, Galle, Sri Lanka
                     </h2>
                     <h1 style={{
                         fontSize: 'clamp(2.5rem, 10vw, 5rem)',
