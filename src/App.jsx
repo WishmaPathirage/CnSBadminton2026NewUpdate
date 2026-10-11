@@ -23,7 +23,6 @@ import RefundPolicy from './pages/RefundPolicy';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import StringingBooking from './components/StringingBooking';
-import TournamentPopup from './components/TournamentPopup';
 
 const LandingPage = () => {
   const location = useLocation();
@@ -45,7 +44,6 @@ const LandingPage = () => {
 
   return (
     <div className="app-container" style={{ position: 'relative', width: '100%', overflowX: 'hidden' }}>
-      <TournamentPopup />
       <NotificationBar />
 
       <div id="home"><Hero /></div>
