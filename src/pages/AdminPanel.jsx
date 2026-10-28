@@ -1495,69 +1495,62 @@ const AdminPanel = () => {
                                                                             animate={{ opacity: 1 }}
                                                                             style={{
                                                                                 background: isWeb
-                                                                                    ? 'linear-gradient(135deg, rgba(0, 210, 255, 0.05) 0%, #222 45%, #1e1e1e 100%)'
-                                                                                    : 'linear-gradient(135deg, rgba(255, 159, 28, 0.05) 0%, #222 45%, #1e1e1e 100%)',
-                                                                                border: isWeb ? '1px solid rgba(0, 210, 255, 0.22)' : '1px solid rgba(255, 159, 28, 0.22)',
+                                                                                    ? 'linear-gradient(135deg, rgba(0, 229, 255, 0.05) 0%, #202020 40%, #1a1a1a 100%)'
+                                                                                    : 'linear-gradient(135deg, rgba(255, 159, 28, 0.05) 0%, #202020 40%, #1a1a1a 100%)',
+                                                                                border: isWeb ? '1px solid rgba(0, 229, 255, 0.28)' : '1px solid rgba(255, 159, 28, 0.28)',
                                                                                 borderLeft: `5px solid ${statusColor}`,
                                                                                 borderRadius: '12px',
-                                                                                padding: '1.2rem',
-                                                                                position: 'relative',
-                                                                                overflow: 'hidden',
+                                                                                padding: '1rem 1.1rem',
                                                                                 display: 'flex',
                                                                                 flexDirection: 'column',
-                                                                                gap: '0.8rem',
-                                                                                boxShadow: isWeb ? '0 4px 15px rgba(0, 210, 255, 0.06)' : '0 4px 15px rgba(255, 159, 28, 0.06)'
+                                                                                gap: '0.75rem',
+                                                                                boxShadow: isWeb ? '0 4px 15px rgba(0, 229, 255, 0.06)' : '0 4px 15px rgba(255, 159, 28, 0.06)'
                                                                             }}
                                                                         >
-                                                                            {/* Status and Origin Badges */}
+                                                                            {/* Top Row: Origin Tag & Status Badge (Clean non-overlapping header) */}
                                                                             <div style={{ 
-                                                                                position: 'absolute', 
-                                                                                top: '1rem', 
-                                                                                right: '1rem', 
                                                                                 display: 'flex', 
                                                                                 alignItems: 'center', 
-                                                                                gap: '0.4rem', 
-                                                                                flexWrap: 'wrap', 
-                                                                                justifyContent: 'flex-end',
-                                                                                maxWidth: '70%'
+                                                                                justifyContent: 'space-between', 
+                                                                                gap: '0.5rem',
+                                                                                paddingBottom: '0.5rem',
+                                                                                borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
                                                                             }}>
                                                                                 {/* Identity Origin Tag */}
                                                                                 {isWeb ? (
                                                                                     <span
-                                                                                        title="Booked through the Website"
+                                                                                        title="Website Booking"
                                                                                         style={{
-                                                                                            fontSize: '0.68rem',
+                                                                                            fontSize: '0.7rem',
                                                                                             fontWeight: '800',
-                                                                                            padding: '0.22rem 0.55rem',
+                                                                                            padding: '0.24rem 0.55rem',
                                                                                             borderRadius: '6px',
-                                                                                            background: 'rgba(0, 210, 255, 0.16)',
-                                                                                            border: '1px solid rgba(0, 210, 255, 0.45)',
+                                                                                            background: 'rgba(0, 229, 255, 0.14)',
+                                                                                            border: '1px solid rgba(0, 229, 255, 0.45)',
                                                                                             color: '#00e5ff',
-                                                                                            letterSpacing: '0.5px',
+                                                                                            letterSpacing: '0.6px',
                                                                                             display: 'inline-flex',
                                                                                             alignItems: 'center',
-                                                                                            gap: '0.3rem',
-                                                                                            boxShadow: '0 0 10px rgba(0, 210, 255, 0.15)'
+                                                                                            gap: '0.35rem'
                                                                                         }}
                                                                                     >
                                                                                         <Globe size={11} strokeWidth={2.5} /> WEB
                                                                                     </span>
                                                                                 ) : (
                                                                                     <span
-                                                                                        title="Manual Admin Booking"
+                                                                                        title="Manual Booking"
                                                                                         style={{
-                                                                                            fontSize: '0.68rem',
+                                                                                            fontSize: '0.7rem',
                                                                                             fontWeight: '800',
-                                                                                            padding: '0.22rem 0.55rem',
+                                                                                            padding: '0.24rem 0.55rem',
                                                                                             borderRadius: '6px',
-                                                                                            background: 'rgba(255, 159, 28, 0.16)',
+                                                                                            background: 'rgba(255, 159, 28, 0.14)',
                                                                                             border: '1px solid rgba(255, 159, 28, 0.45)',
                                                                                             color: '#ff9f1c',
-                                                                                            letterSpacing: '0.5px',
+                                                                                            letterSpacing: '0.6px',
                                                                                             display: 'inline-flex',
                                                                                             alignItems: 'center',
-                                                                                            gap: '0.3rem',
-                                                                                            boxShadow: '0 0 10px rgba(255, 159, 28, 0.15)'
+                                                                                            gap: '0.35rem'
                                                                                         }}
                                                                                     >
                                                                                         <PenTool size={11} strokeWidth={2.5} /> MANUAL
@@ -1568,25 +1561,37 @@ const AdminPanel = () => {
                                                                                 <span style={{
                                                                                     fontSize: '0.7rem',
                                                                                     fontWeight: '800',
-                                                                                    padding: '0.3rem 0.6rem',
+                                                                                    padding: '0.24rem 0.55rem',
                                                                                     borderRadius: '6px',
                                                                                     background: statusColor,
                                                                                     color: '#000',
-                                                                                    letterSpacing: '0.5px'
+                                                                                    letterSpacing: '0.5px',
+                                                                                    whiteSpace: 'nowrap'
                                                                                 }}>
                                                                                     {statusText}
                                                                                 </span>
                                                                             </div>
 
-                                                                            {/* Time Range */}
-                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
-                                                                                <div style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
-                                                                                    {booking.startTime}
+                                                                            {/* Time Range Row */}
+                                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
+                                                                                    <div style={{ fontWeight: '800', fontSize: '1.35rem', letterSpacing: '-0.5px' }}>
+                                                                                        {booking.startTime}
+                                                                                    </div>
+                                                                                    <div style={{ opacity: 0.4, fontSize: '0.85rem' }}>→</div>
+                                                                                    <div style={{ fontWeight: '600', fontSize: '1.05rem', opacity: 0.65 }}>
+                                                                                        {endTime}
+                                                                                    </div>
                                                                                 </div>
-                                                                                <div style={{ opacity: 0.4, fontSize: '0.8rem' }}>→</div>
-                                                                                <div style={{ fontWeight: '500', fontSize: '1rem', opacity: 0.5 }}>
-                                                                                    {endTime}
-                                                                                </div>
+                                                                                <span style={{
+                                                                                    fontSize: '0.72rem',
+                                                                                    color: 'rgba(255,255,255,0.4)',
+                                                                                    background: 'rgba(255,255,255,0.05)',
+                                                                                    padding: '0.15rem 0.45rem',
+                                                                                    borderRadius: '4px'
+                                                                                }}>
+                                                                                    {booking.duration || 60}m
+                                                                                </span>
                                                                             </div>
 
                                                                             {/* User Details */}
@@ -1904,69 +1909,62 @@ const AdminPanel = () => {
                                                         animate={{ opacity: 1, y: 0 }}
                                                         style={{
                                                             background: isWeb
-                                                                ? 'linear-gradient(135deg, rgba(0, 210, 255, 0.05) 0%, #222 45%, #1e1e1e 100%)'
-                                                                : 'linear-gradient(135deg, rgba(255, 159, 28, 0.05) 0%, #222 45%, #1e1e1e 100%)',
-                                                            border: isWeb ? '1px solid rgba(0, 210, 255, 0.22)' : '1px solid rgba(255, 159, 28, 0.22)',
+                                                                ? 'linear-gradient(135deg, rgba(0, 229, 255, 0.05) 0%, #202020 40%, #1a1a1a 100%)'
+                                                                : 'linear-gradient(135deg, rgba(255, 159, 28, 0.05) 0%, #202020 40%, #1a1a1a 100%)',
+                                                            border: isWeb ? '1px solid rgba(0, 229, 255, 0.28)' : '1px solid rgba(255, 159, 28, 0.28)',
                                                             borderLeft: `5px solid ${statusColor}`,
                                                             borderRadius: '12px',
-                                                            padding: '1.2rem',
-                                                            position: 'relative',
-                                                            overflow: 'hidden',
+                                                            padding: '1rem 1.1rem',
                                                             display: 'flex',
                                                             flexDirection: 'column',
-                                                            gap: '0.8rem',
-                                                            boxShadow: isWeb ? '0 4px 15px rgba(0, 210, 255, 0.06)' : '0 4px 15px rgba(255, 159, 28, 0.06)'
+                                                            gap: '0.75rem',
+                                                            boxShadow: isWeb ? '0 4px 15px rgba(0, 229, 255, 0.06)' : '0 4px 15px rgba(255, 159, 28, 0.06)'
                                                         }}
                                                     >
-                                                        {/* Status & Origin Badges */}
+                                                        {/* Top Row: Origin Tag & Status Badge (Clean non-overlapping header) */}
                                                         <div style={{ 
-                                                            position: 'absolute', 
-                                                            top: '1rem', 
-                                                            right: '1rem',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '0.4rem',
-                                                            flexWrap: 'wrap',
-                                                            justifyContent: 'flex-end',
-                                                            maxWidth: '70%'
+                                                            display: 'flex', 
+                                                            alignItems: 'center', 
+                                                            justifyContent: 'space-between', 
+                                                            gap: '0.5rem',
+                                                            paddingBottom: '0.5rem',
+                                                            borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
                                                         }}>
                                                             {/* Identity Origin Tag */}
                                                             {isWeb ? (
                                                                 <span
-                                                                    title="Booked through the Website"
+                                                                    title="Website Booking"
                                                                     style={{
-                                                                        fontSize: '0.68rem',
+                                                                        fontSize: '0.7rem',
                                                                         fontWeight: '800',
-                                                                        padding: '0.22rem 0.55rem',
+                                                                        padding: '0.24rem 0.55rem',
                                                                         borderRadius: '6px',
-                                                                        background: 'rgba(0, 210, 255, 0.16)',
-                                                                        border: '1px solid rgba(0, 210, 255, 0.45)',
+                                                                        background: 'rgba(0, 229, 255, 0.14)',
+                                                                        border: '1px solid rgba(0, 229, 255, 0.45)',
                                                                         color: '#00e5ff',
-                                                                        letterSpacing: '0.5px',
+                                                                        letterSpacing: '0.6px',
                                                                         display: 'inline-flex',
                                                                         alignItems: 'center',
-                                                                        gap: '0.3rem',
-                                                                        boxShadow: '0 0 10px rgba(0, 210, 255, 0.15)'
+                                                                        gap: '0.35rem'
                                                                     }}
                                                                 >
                                                                     <Globe size={11} strokeWidth={2.5} /> WEB
                                                                 </span>
                                                             ) : (
                                                                 <span
-                                                                    title="Manual Admin Booking"
+                                                                    title="Manual Booking"
                                                                     style={{
-                                                                        fontSize: '0.68rem',
+                                                                        fontSize: '0.7rem',
                                                                         fontWeight: '800',
-                                                                        padding: '0.22rem 0.55rem',
+                                                                        padding: '0.24rem 0.55rem',
                                                                         borderRadius: '6px',
-                                                                        background: 'rgba(255, 159, 28, 0.16)',
+                                                                        background: 'rgba(255, 159, 28, 0.14)',
                                                                         border: '1px solid rgba(255, 159, 28, 0.45)',
                                                                         color: '#ff9f1c',
-                                                                        letterSpacing: '0.5px',
+                                                                        letterSpacing: '0.6px',
                                                                         display: 'inline-flex',
                                                                         alignItems: 'center',
-                                                                        gap: '0.3rem',
-                                                                        boxShadow: '0 0 10px rgba(255, 159, 28, 0.15)'
+                                                                        gap: '0.35rem'
                                                                     }}
                                                                 >
                                                                     <PenTool size={11} strokeWidth={2.5} /> MANUAL
@@ -1976,25 +1974,37 @@ const AdminPanel = () => {
                                                             <span style={{
                                                                 fontSize: '0.7rem',
                                                                 fontWeight: '800',
-                                                                padding: '0.3rem 0.6rem',
+                                                                padding: '0.24rem 0.55rem',
                                                                 borderRadius: '6px',
                                                                 background: statusColor,
                                                                 color: '#000',
-                                                                letterSpacing: '0.5px'
+                                                                letterSpacing: '0.5px',
+                                                                whiteSpace: 'nowrap'
                                                             }}>
                                                                 PENDING
                                                             </span>
                                                         </div>
 
-                                                        {/* Time Range */}
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
-                                                            <div style={{ fontWeight: '800', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>
-                                                                {booking.startTime}
+                                                        {/* Time Range Row */}
+                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
+                                                                <div style={{ fontWeight: '800', fontSize: '1.35rem', letterSpacing: '-0.5px' }}>
+                                                                    {booking.startTime}
+                                                                </div>
+                                                                <div style={{ opacity: 0.4, fontSize: '0.85rem' }}>→</div>
+                                                                <div style={{ fontWeight: '600', fontSize: '1.05rem', opacity: 0.65 }}>
+                                                                    {endTime}
+                                                                </div>
                                                             </div>
-                                                            <div style={{ opacity: 0.4, fontSize: '0.8rem' }}>→</div>
-                                                            <div style={{ fontWeight: '500', fontSize: '1rem', opacity: 0.5 }}>
-                                                                {endTime}
-                                                            </div>
+                                                            <span style={{
+                                                                fontSize: '0.72rem',
+                                                                color: 'rgba(255,255,255,0.4)',
+                                                                background: 'rgba(255,255,255,0.05)',
+                                                                padding: '0.15rem 0.45rem',
+                                                                borderRadius: '4px'
+                                                            }}>
+                                                                {booking.duration || 60}m
+                                                            </span>
                                                         </div>
 
                                                         {/* User Details */}
