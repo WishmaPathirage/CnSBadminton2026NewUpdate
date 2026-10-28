@@ -36,17 +36,52 @@ export const getBookingsByUser = async (userId) => {
     }
 };
 
+// Helper to identify booking origin (Manual vs Website)
+export const isManualBooking = (booking) => {
+    if (!booking) return false;
+    // Explicit markers
+    if (booking.bookingSource === 'manual' || booking.source === 'manual' || booking.isManual === true) {
+        return true;
+    }
+    if (booking.bookingSource === 'website' || booking.source === 'website' || booking.source === 'web' || booking.isManual === false) {
+        return false;
+    }
+    // Permanent templates or virtual perm bookings created by admin
+    if (booking.id?.toString().startsWith('perm-') || booking.dayOfWeek) {
+        return true;
+    }
+    // Admin manual bookings have userId === 'admin-manual'
+    if (booking.userId === 'admin-manual' || booking.userId === 'admin') {
+        return true;
+    }
+    // Default fallback: website booking
+    return false;
+};
+
 export const createBooking = async (bookingDetails) => {
     try {
+        const detectedSource = bookingDetails.source || bookingDetails.bookingSource || (bookingDetails.userId === 'admin-manual' ? 'manual' : 'website');
+        const isManual = bookingDetails.isManual !== undefined ? bookingDetails.isManual : (detectedSource === 'manual');
+
         // Add new booking to Firestore
         const docRef = await addDoc(collection(db, BOOKINGS_COL), {
             ...bookingDetails,
+            source: detectedSource,
+            bookingSource: detectedSource,
+            isManual: isManual,
             status: bookingDetails.status || 'pending',
             createdAt: new Date().toISOString()
         });
 
         // Return the new booking with its generated ID
-        return { id: docRef.id, ...bookingDetails, status: bookingDetails.status || 'pending' };
+        return { 
+            id: docRef.id, 
+            ...bookingDetails, 
+            source: detectedSource,
+            bookingSource: detectedSource,
+            isManual: isManual,
+            status: bookingDetails.status || 'pending' 
+        };
     } catch (error) {
         console.error("Error creating booking:", error);
         throw error;
@@ -278,6 +313,9 @@ export const createPermanentBooking = async (details) => {
     try {
         await addDoc(collection(db, 'permanent_bookings'), {
             ...details,
+            source: 'manual',
+            bookingSource: 'manual',
+            isManual: true,
             createdAt: new Date().toISOString()
         });
     } catch (error) {

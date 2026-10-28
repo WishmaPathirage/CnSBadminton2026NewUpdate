@@ -425,6 +425,9 @@ const BookingForm = () => {
                     amount: totalAmount,
                     orderId: orderId,
                     status: 'pending_payment',
+                    bookingSource: 'website',
+                    source: 'website',
+                    isManual: false,
                     
                     // Add-on Selections
                     needRackets,
